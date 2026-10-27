@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Main application -->
+    <menuitem
+        id="cafe_social_root_menu"
+        name="Cafe Social Marketing"
+        sequence="30"
+    />
+
+    <!-- Main working area -->
+    <menuitem
+        id="cafe_social_content_menu"
+        name="Social Marketing"
+        parent="cafe_social_root_menu"
+        sequence="10"
+    />
+
+    <menuitem
+        id="cafe_social_post_menu"
+        name="Posts"
+        parent="cafe_social_content_menu"
+        action="cafe_social_post_action"
+        sequence="10"
+    />
+
+    <menuitem
+        id="cafe_social_campaign_menu"
+        name="Campaigns"
+        parent="cafe_social_content_menu"
+        action="cafe_social_campaign_action"
+        sequence="20"
+    />
+
+    <menuitem
+        id="cafe_social_template_menu"
+        name="Templates"
+        parent="cafe_social_content_menu"
+        action="cafe_social_post_template_action"
+        sequence="30"
+    />
+
+
+    <menuitem id="cafe_social_calendar_menu" name="Content Calendar"
+              parent="cafe_social_content_menu" action="cafe_social_calendar_action" sequence="15"/>
+
+    <menuitem id="cafe_campaign_calendar_menu" name="Campaign Calendar"
+              parent="cafe_social_content_menu" action="cafe_campaign_calendar_action" sequence="25"/>
+
+    <!-- Configuration -->
+    <menuitem
+        id="cafe_social_configuration_menu"
+        name="Configuration"
+        parent="cafe_social_root_menu"
+        sequence="90"
+    />
+
+    <menuitem
+        id="cafe_social_branch_menu"
+        name="Branches"
+        parent="cafe_social_configuration_menu"
+        action="cafe_social_branch_action"
+        sequence="10"
+    />
+
+    <menuitem
+        id="cafe_social_account_menu"
+        name="Social Accounts"
+        parent="cafe_social_configuration_menu"
+        action="cafe_social_account_action"
+        sequence="20"
+    />
+
+</odoo>

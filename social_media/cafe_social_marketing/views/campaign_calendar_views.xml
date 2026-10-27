@@ -1,0 +1,59 @@
+<odoo>
+    <record id="cafe_campaign_duration_form" model="ir.ui.view">
+        <field name="name">cafe.social.campaign.duration.form</field>
+        <field name="model">cafe.social.campaign</field>
+        <field name="inherit_id" ref="cafe_social_campaign_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='date_end']" position="after">
+                <field name="duration_days" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="cafe_campaign_calendar_view" model="ir.ui.view">
+        <field name="name">cafe.social.campaign.calendar</field>
+        <field name="model">cafe.social.campaign</field>
+        <field name="arch" type="xml">
+            <calendar string="Campaign Calendar" date_start="date_start" date_stop="date_end"
+                      all_day="calendar_all_day" color="branch_id" mode="month"
+                      create="false" edit="false" delete="false" quick_create="false">
+                <field name="name"/>
+                <field name="calendar_all_day" invisible="1"/>
+                <field name="branch_id" filters="1"/>
+                <field name="product_id"/>
+                <field name="discount"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="duration_days"/>
+                <field name="state"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="cafe_campaign_calendar_search" model="ir.ui.view">
+        <field name="name">cafe.social.campaign.calendar.search</field>
+        <field name="model">cafe.social.campaign</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="branch_id"/>
+                <field name="product_id"/>
+                <separator/>
+                <filter name="active" string="Active" domain="[('state', '=', 'active')]"/>
+                <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="completed" string="Completed" domain="[('state', '=', 'completed')]"/>
+                <filter name="cancelled" string="Cancelled" domain="[('state', '=', 'cancelled')]"/>
+                <separator/>
+                <filter name="group_branch" string="Group by Branch" context="{'group_by': 'branch_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="cafe_campaign_calendar_action" model="ir.actions.act_window">
+        <field name="name">Campaign Calendar</field>
+        <field name="res_model">cafe.social.campaign</field>
+        <field name="view_mode">calendar,list,form</field>
+        <field name="view_id" ref="cafe_campaign_calendar_view"/>
+        <field name="search_view_id" ref="cafe_campaign_calendar_search"/>
+    </record>
+</odoo>

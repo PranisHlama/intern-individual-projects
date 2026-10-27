@@ -1,0 +1,145 @@
+<odoo>
+
+    <!-- Extend Post Form -->
+    <record id="cafe_social_post_ai_view_form" model="ir.ui.view">
+
+        <field name="name">cafe.social.post.ai.view.form</field>
+
+        <field name="model">cafe.social.post</field>
+
+        <field
+            name="inherit_id"
+            ref="cafe_social_post_view_form"
+        />
+
+        <field name="arch" type="xml">
+
+            <!-- AI Review button -->
+            <xpath
+                expr="//header/button[@name='action_validate_post']"
+                position="before"
+            >
+
+                <button
+                    name="action_ai_review"
+                    string="AI Review"
+                    type="object"
+                    class="btn-secondary"
+                    invisible="state != 'draft'"
+                />
+
+            </xpath>
+
+
+            <!-- AI Review panel -->
+            <xpath
+                expr="//field[@name='preview_html']/ancestor::group[1]"
+                position="after"
+            >
+
+                <group string="AI Content Review">
+
+                    <group>
+
+                        <field
+                            name="ai_review_status"
+                            readonly="1"
+                        />
+
+                        <field
+                            name="ai_overall_status"
+                            readonly="1"
+                            invisible="ai_review_status != 'reviewed'"
+                        />
+
+                        <field
+                            name="ai_reviewed_at"
+                            readonly="1"
+                            invisible="not ai_reviewed_at"
+                        />
+
+                    </group>
+
+
+                    <group>
+
+                        <field
+                            name="ai_tone"
+                            readonly="1"
+                            invisible="ai_review_status != 'reviewed'"
+                        />
+
+                        <field
+                            name="ai_clarity"
+                            readonly="1"
+                            invisible="ai_review_status != 'reviewed'"
+                        />
+
+                    </group>
+
+
+                    <group>
+
+                        <field
+                            name="ai_issues"
+                            readonly="1"
+                            invisible="ai_review_status != 'reviewed'"
+                        />
+
+                    </group>
+
+
+                    <group string="AI Suggested Rewrite">
+
+                        <field
+                            name="ai_suggested_rewrite"
+                            readonly="1"
+                            nolabel="1"
+                            invisible="ai_review_status != 'reviewed'"
+                        />
+
+                        <button
+                            name="action_apply_ai_suggestion"
+                            string="Apply AI Suggestion"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="not ai_suggested_rewrite or state != 'draft'"
+                        />
+
+                    </group>
+
+                </group>
+
+            </xpath>
+
+        </field>
+
+    </record>
+
+
+    <!-- Extend List View -->
+    <record id="cafe_social_post_ai_view_list" model="ir.ui.view">
+
+        <field name="name">cafe.social.post.ai.view.list</field>
+
+        <field name="model">cafe.social.post</field>
+
+        <field
+            name="inherit_id"
+            ref="cafe_social_post_view_list"
+        />
+
+        <field name="arch" type="xml">
+
+            <field
+                name="validation_status"
+                position="after"
+            >
+                <field name="ai_review_status"/>
+            </field>
+
+        </field>
+
+    </record>
+
+</odoo>

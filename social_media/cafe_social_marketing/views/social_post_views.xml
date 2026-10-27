@@ -1,0 +1,353 @@
+<odoo>
+
+    <!-- LIST VIEW -->
+    <record id="cafe_social_post_view_list" model="ir.ui.view">
+        <field name="name">cafe.social.post.view.list</field>
+        <field name="model">cafe.social.post</field>
+        <field name="arch" type="xml">
+            <list string="Social Posts">
+                <field name="name"/>
+                <field name="branch_id"/>
+                <field name="campaign_id"/>
+                <field name="social_account_ids" widget="many2many_tags"/>
+                <field name="scheduled_at"/>
+                <field name="published_at"/>
+                <field name="validation_status"/>
+                <field name="approval_state"/>
+                <field name="tiktok_remote_status" optional="hide"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+
+    <!-- FORM VIEW -->
+    <record id="cafe_social_post_view_form" model="ir.ui.view">
+        <field name="name">cafe.social.post.view.form</field>
+        <field name="model">cafe.social.post</field>
+
+        <field name="arch" type="xml">
+            <form string="Social Post">
+
+                <header>
+
+                    <!-- Compliance -->
+                    <button
+                        name="action_validate_post"
+                        string="Validate Post"
+                        type="object"
+                        class="btn-secondary"
+                        invisible="state in ['published', 'cancelled']"
+                    />
+
+                    <!-- Approval -->
+                    <button
+                        name="action_submit_review"
+                        string="Submit for Review"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state != 'draft' or validation_status != 'passed' or approval_state not in ['not_submitted', 'rejected']"
+                    />
+
+                    <button
+                        name="action_approve"
+                        string="Approve"
+                        type="object"
+                        class="btn-primary"
+                        groups="cafe_social_marketing.group_cafe_social_manager"
+                        invisible="state != 'draft' or approval_state != 'pending'"
+                    />
+
+                    <button
+                        name="action_reject"
+                        string="Reject"
+                        type="object"
+                        groups="cafe_social_marketing.group_cafe_social_manager"
+                        invisible="state != 'draft' or approval_state != 'pending'"
+                    />
+
+                    <button
+                        name="action_reset_approval"
+                        string="Reset Approval"
+                        type="object"
+                        invisible="state != 'draft' or approval_state not in ['approved', 'rejected']"
+                    />
+
+                    <!-- Publishing -->
+                    <button
+                        name="action_schedule"
+                        string="Schedule"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state != 'draft' or approval_state != 'approved'"
+                    />
+
+                    <button
+                        name="action_publish"
+                        string="Publish Now"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state not in ['draft', 'scheduled'] or approval_state != 'approved'"
+                    />
+
+                    <button
+                        name="action_cancel"
+                        string="Cancel"
+                        type="object"
+                        invisible="state in ['cancelled', 'published']"
+                    />
+
+                    <button
+                        name="action_reset_draft"
+                        string="Reset to Draft"
+                        type="object"
+                        invisible="state not in ['scheduled', 'cancelled']"
+                    />
+
+                    <field
+                        name="state"
+                        widget="statusbar"
+                        statusbar_visible="draft,scheduled,published,cancelled"
+                    />
+
+                </header>
+
+
+                <sheet>
+
+                    <field name="has_tiktok_account" invisible="1"/>
+
+                    <!-- BASIC INFORMATION -->
+                    <group>
+
+                        <group>
+
+                            <field
+                                name="name"
+                                readonly="state == 'published'"
+                            />
+
+                            <field
+                                name="branch_id"
+                                readonly="state == 'published'"
+                            />
+
+                            <field
+                                name="campaign_id"
+                                domain="[('branch_id', '=', branch_id)]"
+                                readonly="state == 'published'"
+                            />
+
+                            <field
+                                name="template_id"
+                                domain="['|', ('branch_id', '=', False), ('branch_id', '=', branch_id)]"
+                                readonly="state == 'published'"
+                            />
+
+                            <button
+                                name="action_apply_template"
+                                string="Apply Template"
+                                type="object"
+                                class="btn-secondary"
+                                invisible="not template_id or state == 'published'"
+                            />
+
+                        </group>
+
+
+                        <group>
+
+                            <field
+                                name="social_account_ids"
+                                widget="many2many_tags"
+                                domain="[('branch_id', '=', branch_id)]"
+                                readonly="state == 'published'"
+                            />
+
+                            <field
+                                name="scheduled_at"
+                                invisible="state == 'published'"
+                            />
+
+                            <field
+                                name="published_at"
+                                readonly="1"
+                                invisible="not published_at"
+                            />
+
+                        </group>
+
+                    </group>
+
+
+                    <!-- POST CONTENT -->
+                    <group string="Post Content">
+                        <field
+                            name="message"
+                            placeholder="Write your social media post..."
+                            readonly="state == 'published'"
+                        />
+                    </group>
+
+
+                    <!-- MEDIA -->
+                    <group string="Media">
+                        <field
+                            name="attachment_ids"
+                            widget="many2many_binary"
+                            readonly="state == 'published'"
+                        />
+                        <field
+                            name="video_file"
+                            filename="video_filename"
+                            readonly="state == 'published'"
+                        />
+                        <field name="video_filename" invisible="1"/>
+                    </group>
+
+                    <!-- TIKTOK -->
+                    <group
+                        string="TikTok Integration"
+                        invisible="not has_tiktok_account"
+                    >
+                        <group>
+                            <field name="tiktok_publish_id" readonly="1"/>
+                            <field name="tiktok_remote_status" readonly="1"/>
+                            <field
+                                name="tiktok_uploaded_at"
+                                readonly="1"
+                                invisible="not tiktok_uploaded_at"
+                            />
+                        </group>
+                        <group>
+                            <button
+                                name="action_upload_tiktok_draft"
+                                string="Upload Video to TikTok Draft"
+                                type="object"
+                                class="btn-primary"
+                                groups="cafe_social_marketing.group_cafe_social_manager"
+                                invisible="approval_state != 'approved' or not video_file"
+                            />
+                            <button
+                                name="action_check_tiktok_status"
+                                string="Check TikTok Status"
+                                type="object"
+                                class="btn-secondary"
+                                groups="cafe_social_marketing.group_cafe_social_manager"
+                                invisible="not tiktok_publish_id"
+                            />
+                        </group>
+                        <field
+                            name="tiktok_status_message"
+                            readonly="1"
+                            nolabel="1"
+                            invisible="not tiktok_status_message"
+                        />
+                    </group>
+
+
+                    <!-- POST PREVIEW -->
+                    <group string="Post Preview" col="1">
+
+                        <field
+                           name="preview_html"
+                           widget="html"
+                           readonly="1"
+                           nolabel="1"
+                           class="w-100"
+                        />
+
+                   </group>
+
+
+                    <!-- COMPLIANCE -->
+                    <group string="Compliance Validation">
+
+                        <group>
+                            <field
+                                name="validation_status"
+                                readonly="1"
+                            />
+
+                            <field
+                                name="validated_at"
+                                readonly="1"
+                                invisible="not validated_at"
+                            />
+                        </group>
+
+                        <group>
+                            <field
+                                name="validation_result"
+                                readonly="1"
+                                nolabel="1"
+                                placeholder="Click Validate Post to run compliance checks."
+                            />
+                        </group>
+
+                    </group>
+
+
+                    <!-- APPROVAL -->
+                    <group string="Approval">
+
+                        <group>
+                            <field
+                                name="approval_state"
+                                readonly="1"
+                            />
+
+                            <field
+                                name="submitted_at"
+                                readonly="1"
+                                invisible="not submitted_at"
+                            />
+                        </group>
+
+                        <group>
+                            <field
+                                name="approved_by_id"
+                                readonly="1"
+                                invisible="approval_state != 'approved'"
+                            />
+
+                            <field
+                                name="approved_at"
+                                readonly="1"
+                                invisible="approval_state != 'approved'"
+                            />
+                        </group>
+
+                    </group>
+
+                </sheet>
+
+                <chatter/>
+
+            </form>
+        </field>
+    </record>
+
+
+    <!-- SEARCH VIEW -->
+    <record id="cafe_social_post_view_search" model="ir.ui.view">
+        <field name="name">cafe.social.post.view.search</field>
+        <field name="model">cafe.social.post</field>
+
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+            </search>
+        </field>
+    </record>
+
+
+    <!-- ACTION -->
+    <record id="cafe_social_post_action" model="ir.actions.act_window">
+        <field name="name">Posts</field>
+        <field name="res_model">cafe.social.post</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="cafe_social_post_view_search"/>
+    </record>
+
+</odoo>

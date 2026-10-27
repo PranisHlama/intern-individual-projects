@@ -19,3 +19,6 @@ dist/
 build/
 coverage/
 *.log
+
+# Local credential files
+*.env

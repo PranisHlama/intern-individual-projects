@@ -1,0 +1,84 @@
+<odoo>
+
+    <!-- LIST VIEW -->
+
+    <record id="cafe_social_post_template_view_list" model="ir.ui.view">
+        <field name="name">cafe.social.post.template.view.list</field>
+        <field name="model">cafe.social.post.template</field>
+
+        <field name="arch" type="xml">
+            <list string="Post Templates">
+                <field name="name"/>
+                <field name="branch_id"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+
+    <!-- FORM VIEW -->
+
+    <record id="cafe_social_post_template_view_form" model="ir.ui.view">
+        <field name="name">cafe.social.post.template.view.form</field>
+        <field name="model">cafe.social.post.template</field>
+
+        <field name="arch" type="xml">
+
+            <form string="Post Template">
+
+                <sheet>
+
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="branch_id"/>
+                        </group>
+
+                        <group>
+                            <field name="active"/>
+                        </group>
+                    </group>
+
+
+                    <div class="alert alert-info" role="alert">
+                        <strong>Available placeholders</strong>
+                        <br/>
+                        {{branch}} - Cafe branch
+                        <br/>
+                        {{campaign}} - Campaign name
+                        <br/>
+                        {{product}} - Campaign product
+                        <br/>
+                        {{discount}} - Campaign discount
+                        <br/>
+                        {{start_date}} - Campaign start date
+                        <br/>
+                        {{end_date}} - Campaign end date
+                    </div>
+
+
+                    <group string="Template Content">
+                        <field
+                            name="message"
+                            nolabel="1"
+                            placeholder="Example: Get {{discount}}% off {{product}} at our {{branch}} branch!"
+                        />
+                    </group>
+
+                </sheet>
+
+            </form>
+
+        </field>
+    </record>
+
+
+    <!-- ACTION -->
+
+    <record id="cafe_social_post_template_action" model="ir.actions.act_window">
+        <field name="name">Templates</field>
+        <field name="res_model">cafe.social.post.template</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

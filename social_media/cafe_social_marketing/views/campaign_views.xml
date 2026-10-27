@@ -1,0 +1,121 @@
+<odoo>
+
+    <!-- LIST VIEW -->
+
+    <record id="cafe_social_campaign_view_list" model="ir.ui.view">
+        <field name="name">cafe.social.campaign.view.list</field>
+        <field name="model">cafe.social.campaign</field>
+
+        <field name="arch" type="xml">
+            <list string="Campaigns">
+                <field name="name"/>
+                <field name="branch_id"/>
+                <field name="product_id"/>
+                <field name="discount"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+
+    <!-- FORM VIEW -->
+
+    <record id="cafe_social_campaign_view_form" model="ir.ui.view">
+        <field name="name">cafe.social.campaign.view.form</field>
+        <field name="model">cafe.social.campaign</field>
+
+        <field name="arch" type="xml">
+
+            <form string="Social Campaign">
+
+                <header>
+
+                    <button
+                        name="action_activate"
+                        string="Activate"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state != 'draft'"
+                    />
+
+                    <button
+                        name="action_complete"
+                        string="Complete"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state != 'active'"
+                    />
+
+                    <button
+                        name="action_cancel"
+                        string="Cancel"
+                        type="object"
+                        invisible="state not in ['draft', 'active']"
+                    />
+
+                    <button
+                        name="action_reset_draft"
+                        string="Reset to Draft"
+                        type="object"
+                        invisible="state not in ['completed', 'cancelled']"
+                    />
+
+                    <field
+                        name="state"
+                        widget="statusbar"
+                        statusbar_visible="draft,active,completed,cancelled"
+                    />
+
+                </header>
+
+
+                <sheet>
+
+                    <group>
+
+                        <group>
+                            <field name="name"/>
+                            <field name="branch_id"/>
+                            <field name="product_id"/>
+                            <field name="discount"/>
+                        </group>
+
+                        <group>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                        </group>
+
+                    </group>
+
+
+                    <group string="Publishing">
+
+                        <field
+                            name="social_account_ids"
+                            widget="many2many_tags"
+                            domain="[('branch_id', '=', branch_id)]"
+                        />
+
+                    </group>
+
+                </sheet>
+
+                <chatter/>
+
+            </form>
+
+        </field>
+    </record>
+
+
+    <!-- ACTION -->
+
+    <record id="cafe_social_campaign_action" model="ir.actions.act_window">
+        <field name="name">Campaigns</field>
+        <field name="res_model">cafe.social.campaign</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

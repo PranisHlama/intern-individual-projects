@@ -1,0 +1,78 @@
+<odoo>
+
+    <!-- Application Category -->
+    <record id="module_category_cafe_social_marketing"
+            model="ir.module.category">
+
+        <field name="name">Cafe Social Marketing</field>
+
+        <field name="description">
+            Access levels for Cafe Social Marketing.
+        </field>
+
+        <field name="sequence">30</field>
+
+    </record>
+
+
+    <!-- Odoo 20 privilege scope -->
+    <record id="privilege_cafe_social_marketing"
+            model="res.groups.privilege">
+
+        <field name="name">Cafe Social Marketing</field>
+
+        <field
+            name="category_id"
+            ref="module_category_cafe_social_marketing"
+        />
+
+        <field name="sequence">30</field>
+
+    </record>
+
+
+    <!-- Marketing User -->
+    <record id="group_cafe_social_user"
+            model="res.groups">
+
+        <field name="name">Marketing User</field>
+
+        <field
+            name="privilege_id"
+            ref="privilege_cafe_social_marketing"
+        />
+
+        <field name="sequence">10</field>
+
+        <field name="comment">
+            Can create, edit, validate, and submit social posts for approval.
+        </field>
+
+    </record>
+
+
+    <!-- Marketing Manager -->
+    <record id="group_cafe_social_manager"
+            model="res.groups">
+
+        <field name="name">Marketing Manager</field>
+
+        <field
+            name="privilege_id"
+            ref="privilege_cafe_social_marketing"
+        />
+
+        <field name="sequence">20</field>
+
+        <field
+            name="implied_ids"
+            eval="[(4, ref('group_cafe_social_user'))]"
+        />
+
+        <field name="comment">
+            Can manage social marketing posts and approve or reject submitted posts.
+        </field>
+
+    </record>
+
+</odoo>

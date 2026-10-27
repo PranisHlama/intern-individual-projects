@@ -1,0 +1,32 @@
+<odoo>
+    <record id="cafe_social_account_facebook_form" model="ir.ui.view">
+        <field name="name">cafe.social.account.facebook.form</field>
+        <field name="model">cafe.social.account</field>
+        <field name="inherit_id" ref="cafe_social_account_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <group string="Facebook Page Integration" invisible="platform != 'facebook'">
+                    <field name="facebook_page_id"/>
+                    <field name="facebook_token_env" groups="cafe_social_marketing.group_cafe_social_manager"/>
+                    <div class="text-muted">Text or single-photo publishing. Enter the token environment variable name, not the token. Tokens are configured in Docker.</div>
+                </group>
+            </xpath>
+        </field>
+    </record>
+    <record id="cafe_social_post_facebook_form" model="ir.ui.view">
+        <field name="name">cafe.social.post.facebook.form</field>
+        <field name="model">cafe.social.post</field>
+        <field name="inherit_id" ref="cafe_social_post_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <group string="Facebook Publishing Result">
+                    <field name="facebook_publish_status"/>
+                    <field name="facebook_post_id"/>
+                    <field name="facebook_photo_id"/>
+                    <field name="facebook_publish_error"/>
+                    <div class="text-muted">Publish Now and Schedule send text or one JPEG/PNG image with its caption to one Facebook Page. Multiple photos, Facebook video and Instagram publishing are not implemented.</div>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

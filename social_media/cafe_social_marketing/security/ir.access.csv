@@ -1,0 +1,12 @@
+id,name,model_id,group_id/id,operation,domain
+access_cafe_social_branch_user,cafe.social.branch.user,cafe.social.branch,cafe_social_marketing.group_cafe_social_user,cru,
+access_cafe_social_account_user,cafe.social.account.user,cafe.social.account,cafe_social_marketing.group_cafe_social_user,cru,
+access_cafe_social_campaign_user,cafe.social.campaign.user,cafe.social.campaign,cafe_social_marketing.group_cafe_social_user,cru,
+access_cafe_social_post_user,cafe.social.post.user,cafe.social.post,cafe_social_marketing.group_cafe_social_user,cru,
+access_cafe_social_template_user,cafe.social.post.template.user,cafe.social.post.template,cafe_social_marketing.group_cafe_social_user,cru,
+access_cafe_social_branch_manager,cafe.social.branch.manager,cafe.social.branch,cafe_social_marketing.group_cafe_social_manager,crud,
+access_cafe_social_account_manager,cafe.social.account.manager,cafe.social.account,cafe_social_marketing.group_cafe_social_manager,crud,
+access_cafe_social_campaign_manager,cafe.social.campaign.manager,cafe.social.campaign,cafe_social_marketing.group_cafe_social_manager,crud,
+access_cafe_social_post_manager,cafe.social.post.manager,cafe.social.post,cafe_social_marketing.group_cafe_social_manager,crud,
+access_cafe_social_template_manager,cafe.social.post.template.manager,cafe.social.post.template,cafe_social_marketing.group_cafe_social_manager,crud,
+access_cafe_request_changes_manager,cafe.social.request.changes.manager,cafe.social.request.changes,cafe_social_marketing.group_cafe_social_manager,crud,
