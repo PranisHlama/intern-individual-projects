@@ -9,6 +9,12 @@
 .DS_Store
 Thumbs.db
 
+node_modules/
+.pi/
+.specify/
+specs/
+dist/
+
 # Dependencies and generated files
 node_modules/
 .venv/
