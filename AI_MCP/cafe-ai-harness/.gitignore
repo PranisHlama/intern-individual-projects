@@ -1,0 +1,7 @@
+node_modules/
+.pi/
+.specify/
+ai_chat/
+.env
+specs/
+dist/

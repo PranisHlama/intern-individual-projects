@@ -1,0 +1,25 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "plugins": ["@typescript-eslint"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended-type-checked",
+    "plugin:@typescript-eslint/strict-type-checked",
+    "prettier"
+  ],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/consistent-type-imports": "error",
+    "@typescript-eslint/no-floating-promises": "warn",
+    "@typescript-eslint/await-thenable": "error",
+    "@typescript-eslint/no-misused-promises": "error"
+  },
+  "ignorePatterns": ["dist/", "node_modules/", "*.config.*"]
+}
