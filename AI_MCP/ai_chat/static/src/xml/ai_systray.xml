@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<templates xml:space="preserve">
+
+    <t t-name="ai_chat.AIChatSystray">
+
+        <li class="ai_chat_systray_item">
+
+            <!-- Navbar AI button -->
+
+            <button
+                type="button"
+                class="ai_chat_nav_button"
+                title="AI Chat"
+                t-on-click="this.toggle"
+            >
+                <span class="ai_chat_nav_label">
+                    AI
+                </span>
+            </button>
+
+
+            <!-- Floating chat -->
+
+            <div
+                t-if="this.state.open"
+                class="ai_chat_overlay"
+            >
+
+                <div class="ai_chat_panel">
+
+                    <!-- Header -->
+
+                    <div class="ai_chat_header">
+
+                        <div class="ai_chat_header_info">
+
+                            <div class="ai_chat_title">
+                                AI Chat
+                            </div>
+
+                            <div class="ai_chat_status">
+                                Odoo Assistant
+                            </div>
+
+                        </div>
+
+
+                        <div class="ai_chat_header_model">
+                            <t t-if="this.state.modelsLoaded">
+                                <t t-if="this.state.models.length > 0">
+                                    <div class="ai_chat_model_wrapper">
+                                        <select
+                                            class="ai_chat_model_select"
+                                            t-att-value="this.state.selectedModelId"
+                                            t-on-change="(ev) => this.onModelSelect(ev.target.value)"
+                                            t-att-disabled="this.state.loading"
+                                        >
+                                            <t t-foreach="this.state.models" t-as="model" t-key="model.modelId">
+                                                <option t-att-value="model.modelId">
+                                                    <span class="ai_chat_model_provider" t-att-data-provider="model.provider" />
+                                                    <span class="ai_chat_model_name" t-esc="model.displayName" />
+                                                </option>
+                                            </t>
+                                        </select>
+                                        <span class="ai_chat_model_dropdown_arrow" />
+                                    </div>
+                                </t>
+                                <t t-elif="!this.state.loadingModels">
+                                    <span class="ai_chat_no_models">
+                                        No models configured
+                                    </span>
+                                </t>
+                                <t t-else="">
+                                    <span class="ai_chat_loading_models">
+                                        Loading models…
+                                    </span>
+                                </t>
+                            </t>
+                        </div>
+
+
+                        <div class="ai_chat_header_actions">
+
+                            <button
+                                type="button"
+                                class="ai_chat_new"
+                                title="New Chat"
+                                t-att-disabled="
+                                    this.state.creatingNew ||
+                                    this.state.loading
+                                "
+                                t-on-click="this.askNewChat"
+                            >
+                                +
+                            </button>
+
+                            <button
+                                type="button"
+                                class="ai_chat_close"
+                                title="Close"
+                                t-on-click="this.close"
+                            >
+                                ×
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Messages -->
+
+                    <div class="ai_chat_messages">
+
+                        <t
+                            t-if="this.state.loadingHistory"
+                        >
+                            <div class="ai_chat_loading">
+                                Loading conversation…
+                            </div>
+                        </t>
+
+
+                        <t
+                            t-elif="
+                                !this.state.messages.length
+                            "
+                        >
+
+                            <div class="ai_chat_empty">
+
+                                <div class="ai_chat_empty_mark">
+                                    ✦
+                                </div>
+
+                                <div class="ai_chat_empty_title">
+                                    How can I help?
+                                </div>
+
+                                <div class="ai_chat_empty_text">
+                                    Ask about your ERP data.
+                                </div>
+
+                            </div>
+
+                        </t>
+
+
+                        <!-- Conversation -->
+
+                        <t
+                            t-foreach="this.state.messages"
+                            t-as="message"
+                            t-key="message_index"
+                        >
+
+                            <div
+                                t-att-class="
+                                    message.role === 'user'
+                                    ? 'ai_chat_message ai_chat_user'
+                                    : 'ai_chat_message ai_chat_assistant'
+                                "
+                            >
+
+                                <div
+                                    class="ai_chat_message_text"
+                                >
+
+                                    <t
+                                        t-if="
+                                            message.role ===
+                                            'assistant'
+                                        "
+                                        t-out="
+                                            this.renderMessage(
+                                                message.content
+                                            )
+                                        "
+                                    />
+
+                                    <t
+                                        t-else=""
+                                        t-out="
+                                            message.content
+                                        "
+                                    />
+
+                                </div>
+
+                            </div>
+
+                        </t>
+
+
+                        <!-- AI thinking indicator -->
+
+                        <t
+                            t-if="this.state.loading"
+                        >
+
+                            <div
+                                class="
+                                    ai_chat_message
+                                    ai_chat_assistant
+                                "
+                            >
+
+                                <div
+                                    class="
+                                        ai_chat_thinking
+                                    "
+                                >
+
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+
+                                </div>
+
+                            </div>
+
+                        </t>
+
+                    </div>
+
+
+                    <!-- Composer -->
+
+                    <div class="ai_chat_composer">
+
+                        <textarea
+                            class="ai_chat_input"
+                            rows="1"
+                            placeholder="Ask anything..."
+                            t-att-value="
+                                this.state.message
+                            "
+                            t-on-input="this.onInput"
+                            t-on-keydown="this.onKeydown"
+                        />
+
+                        <button
+                            type="button"
+                            class="ai_chat_send"
+                            title="Send"
+                            t-att-disabled="
+                                this.state.loading ||
+                                this.state.creatingNew ||
+                                !this.state.message.trim()
+                            "
+                            t-on-click="this.send"
+                        >
+                            ↑
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- New Chat confirmation -->
+
+                <t
+                    t-if="this.state.confirmingNew"
+                >
+
+                    <div
+                        class="ai_chat_confirm_backdrop"
+                    >
+
+                        <div
+                            class="ai_chat_confirm"
+                        >
+
+                            <div
+                                class="ai_chat_confirm_title"
+                            >
+                                Start a new chat?
+                            </div>
+
+                            <div
+                                class="ai_chat_confirm_text"
+                            >
+                                Your current conversation
+                                will be deleted.
+                            </div>
+
+                            <div
+                                class="ai_chat_confirm_actions"
+                            >
+
+                                <button
+                                    type="button"
+                                    class="
+                                        ai_chat_confirm_cancel
+                                    "
+                                    t-on-click="
+                                        this.cancelNewChat
+                                    "
+                                    t-att-disabled="
+                                        this.state.creatingNew
+                                    "
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="
+                                        ai_chat_confirm_delete
+                                    "
+                                    t-on-click="
+                                        this.confirmNewChat
+                                    "
+                                    t-att-disabled="
+                                        this.state.creatingNew
+                                    "
+                                >
+                                    <t
+                                        t-if="
+                                            this.state.creatingNew
+                                        "
+                                    >
+                                        Creating…
+                                    </t>
+
+                                    <t
+                                        t-else=""
+                                    >
+                                        Start New Chat
+                                    </t>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </t>
+
+            </div>
+
+        </li>
+
+    </t>
+
+</templates>
