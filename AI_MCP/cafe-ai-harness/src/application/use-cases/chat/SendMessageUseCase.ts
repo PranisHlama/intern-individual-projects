@@ -2,7 +2,7 @@ import { Conversation } from "@domain/entities/Conversation.js";
 import { Message } from "@domain/entities/Message.js";
 import { ToolCall } from "@domain/entities/ToolCall.js";
 import type { MCPClient } from "@domain/ports/MCPClient.js";
-import type { LLMClient, LLMMessage, LLMTool, LLMToolCall } from "@domain/ports/LLMClient.js";
+import type { LLMClient, LLMMessage, LLMTool, LLMToolCall, LLMCompletion } from "@domain/ports/LLMClient.js";
 import type { Logger } from "@domain/ports/Logger.js";
 import type { ConversationStore } from "@domain/ports/ConversationStore.js";
 import type { MCPTool } from "@shared/types/mcp.js";
@@ -76,8 +76,11 @@ export class SendMessageUseCase {
         const errorMsg = failedCalls.map((tc) => `${tc.getName()}: ${tc.getError()}`).join("; ");
         this.logger.warn("Tool execution failed, returning error directly", { correlationId: correlationIdStr, errors: errorMsg });
 
+        // Provide human-readable error
+        const humanError = failedCalls.map((tc) => this.formatToolResultHuman(tc.getName(), tc.getError() ?? "Unknown error")).join("\n\n");
+
         const assistantMessage = Message.createAssistantMessage(
-          `Tool error: ${errorMsg}`,
+          humanError || `Tool error: ${errorMsg}`,
           toolCalls
         );
         conversation.addMessage(assistantMessage);
@@ -89,19 +92,15 @@ export class SendMessageUseCase {
       const toolMessages = this.buildToolMessages(toolCalls);
       llmMessages.push(...toolMessages);
 
-      try {
-        llmCompletion = await llmClient.complete(llmMessages, llmTools, modelId);
-        if (!llmCompletion.content || llmCompletion.content.trim() === "") {
-          this.logger.warn("LLM returned empty, returning tool results", { correlationId: correlationIdStr });
-          const toolResults = toolCalls.map((tc) => this.formatToolResult(tc.getName(), tc.getResult())).join("\n\n");
-          llmCompletion = { content: toolResults || "No results available", toolCalls: [] };
-        }
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : "Unknown error";
-        this.logger.warn("Second LLM call failed, returning tool results", { correlationId: correlationIdStr, error: errorMsg });
-        const toolResults = toolCalls.map((tc) => this.formatToolResult(tc.getName(), tc.getResult())).join("\n\n");
-        llmCompletion = { content: toolResults || "No results available", toolCalls: [] };
-      }
+      // Call #2: Format results as markdown with retry
+      llmCompletion = await this.completeWithFormattingRetry(
+        llmClient,
+        llmMessages,
+        llmTools,
+        modelId,
+        toolCalls,
+        correlationIdStr
+      );
     }
 
     const assistantMessage = Message.createAssistantMessage(
@@ -114,6 +113,58 @@ export class SendMessageUseCase {
     this.logger.info("Chat message processed", { correlationId: correlationIdStr, userId: input.userId });
 
     return { reply: llmCompletion.content, toolCalls };
+  }
+
+  /**
+   * Call LLM to format tool results as markdown with retry logic.
+   * NVIDIA models (Nemotron, etc.) support OpenAI-style tool calling.
+   * Retries on timeout, empty response, or API errors.
+   */
+  private async completeWithFormattingRetry(
+    llmClient: LLMClient,
+    messages: LLMMessage[],
+    tools: LLMTool[],
+    modelId: string,
+    toolCalls: ToolCall[],
+    correlationId: string
+  ): Promise<LLMCompletion> {
+    const maxRetries = 1;
+    const retryDelayMs = 500;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        this.logger.debug("Formatting call attempt", { correlationId, attempt: attempt + 1, maxRetries: maxRetries + 1 });
+        const completion = await llmClient.complete(messages, tools, modelId);
+
+        if (completion.content && completion.content.trim().length > 0) {
+          if (attempt > 0) {
+            this.logger.info("Formatting call succeeded on retry", { correlationId, attempt: attempt + 1 });
+          }
+          return completion;
+        }
+
+        this.logger.warn("LLM returned empty content", { correlationId, attempt: attempt + 1 });
+        if (attempt === maxRetries) {
+          this.logger.warn("All formatting attempts returned empty, using fallback", { correlationId });
+          const fallback = this.formatHumanReadableFallback(toolCalls);
+          return { content: fallback || "No results available", toolCalls: [], usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 } };
+        }
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : "Unknown error";
+        this.logger.warn("Formatting call failed", { correlationId, attempt: attempt + 1, error: errorMsg });
+
+        if (attempt === maxRetries) {
+          this.logger.warn("All formatting retries exhausted, using fallback", { correlationId });
+          const fallback = this.formatHumanReadableFallback(toolCalls);
+          return { content: fallback || "No results available", toolCalls: [], usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 } };
+        }
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+    }
+
+    const fallback = this.formatHumanReadableFallback(toolCalls);
+    return { content: fallback || "No results available", toolCalls: [], usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 } };
   }
 
   private mapToLLMTools(mcpTools: MCPTool[]): LLMTool[] {
@@ -628,28 +679,56 @@ export class SendMessageUseCase {
   and permitted by the available tools.
   
   # RESPONSE FORMAT
-  
+
   Always respond in a readable, natural format appropriate to the request.
-  
+
+  ## MARKDOWN FORMATTING RULES (MANDATORY)
+
+  You MUST use Markdown for all structured responses. The frontend renders Markdown.
+
+  ### Tables
+  Use pipe tables for tabular data (orders, products, inventory):
+  \`\`\`markdown
+  | Order | Status | Product | Qty | Assigned |
+  |-------|--------|---------|-----|----------|
+  | WH/MO/00002 | confirmed | Coffee Pack 120g | 1 | John |
+  | WH/MO/00001 | progress | Coffee Pack 120g | 1 | Jane |
+  \`\`\`
+
+  ### Code/Identifiers
+  Use inline \`code\` for: order names (WH/MO/00002), product codes, IDs, SKUs.
+
+  ### Emphasis
+  Use **bold** for key metrics, statuses, names. Use *italic* for secondary info.
+
+  ### Lists
+  Use bullet points for details, numbered lists for steps.
+
+  ### Code Blocks
+  Use \`\`\`json or \`\`\`sql ONLY when user explicitly requests raw data.
+
+  ### Headings
+  Use ## for main sections, ### for subsections.
+
   For ordinary questions:
   - Answer directly.
   - Use simple, professional language.
   - Avoid unnecessary greetings, filler, and repetition.
-  
+
   For factual ERP queries:
   - Include relevant names, quantities, units, prices, statuses, and
     references supported by the returned data.
   - Clearly state when something could not be verified.
-  
+
   For multi-item results:
   - Use a concise list or compact Markdown table when appropriate.
   - Do not dump raw JSON or internal identifiers.
-  
+
   For successful operations:
   - State what was actually completed.
   - Include the record reference and status when useful.
   - Mention any remaining action the user must take.
-  
+
   For failed operations:
   - Explain what could not be completed.
   - Give the reason in human-readable language.
@@ -736,6 +815,198 @@ export class SendMessageUseCase {
       } else {
         lines.push(`${key}: ${value}`);
       }
+    }
+    return lines.join("\n");
+  }
+
+  /**
+   * Generate a human-readable fallback response when the LLM fails to format tool results.
+   * This replaces the raw JSON summary with a user-friendly explanation.
+   */
+  private formatHumanReadableFallback(toolCalls: ToolCall[]): string {
+    const parts = toolCalls.map((tc) => this.formatToolResultHuman(tc.getName(), tc.getResult()));
+    return parts.join("\n\n");
+  }
+
+  private formatToolResultHuman(toolName: string, result: unknown): string {
+    if (result === null || result === undefined) {
+      return `I couldn't retrieve any results for ${toolName}.`;
+    }
+
+    const str = String(result);
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(str);
+    } catch {
+      return `I received a response from ${toolName}, but couldn't parse it properly.`;
+    }
+
+    switch (toolName) {
+      case "get_manufacturing_orders":
+        return this.formatManufacturingOrdersHuman(parsed);
+      case "get_manufacturing_order":
+        return this.formatManufacturingOrderHuman(parsed);
+      case "search_knowledge":
+        return this.formatKnowledgeSearchHuman(parsed);
+      default:
+        return this.formatGenericHuman(toolName, parsed);
+    }
+  }
+
+  private formatManufacturingOrdersHuman(data: Record<string, unknown>): string {
+    const orders = data.orders as Array<Record<string, unknown>> | undefined;
+    const totalCount = data.total_count as number | undefined;
+    const limit = data.limit as number | undefined;
+    const offset = data.offset as number | undefined;
+
+    if (!orders || orders.length === 0) {
+      return "I couldn't find any manufacturing orders matching your criteria.";
+    }
+
+    // Return Markdown table for proper frontend rendering
+    const lines = [];
+    lines.push(`Found **${totalCount ?? orders.length}** manufacturing order${(totalCount ?? orders.length) !== 1 ? "s" : ""}:`);
+    lines.push("");
+    lines.push("| Order | Status | Product | Qty | Produced | Assigned | Scheduled |");
+    lines.push("|-------|--------|---------|-----|----------|----------|-----------|");
+    for (const order of orders) {
+      const name = order.name as string | undefined ?? "Unknown";
+      const state = order.state as string | undefined ?? "unknown";
+      const productName = order.product_name as string | undefined ?? "-";
+      const qty = order.product_qty as number | undefined ?? 0;
+      const produced = order.qty_produced as number | undefined ?? 0;
+      const userName = order.user_name as string | undefined ?? "-";
+      const date = order.date_planned_start as string | undefined ?? "-";
+      lines.push(`| \`${name}\` | ${state} | ${productName} | ${qty} | ${produced} | ${userName} | ${date} |`);
+    }
+
+    const effectiveOffset = offset ?? 0;
+    if ((limit ?? 0) > 0 && effectiveOffset + orders.length < (totalCount ?? orders.length)) {
+      lines.push("");
+      lines.push(`*Showing ${effectiveOffset + 1}–${effectiveOffset + orders.length} of ${totalCount}. Use pagination to see more.*`);
+    }
+
+    return lines.join("\n");
+  }
+
+  private formatManufacturingOrderHuman(data: Record<string, unknown>): string {
+    const order = data.order as Record<string, unknown> | undefined;
+    if (!order) {
+      return "I couldn't retrieve the manufacturing order details.";
+    }
+
+    // Return Markdown for proper frontend rendering
+    const lines = [];
+    const name = order.name as string | undefined ?? "Unknown";
+    const state = order.state as string | undefined ?? "unknown";
+    const productName = order.product_name as string | undefined ?? "-";
+    const qty = order.product_qty as number | undefined ?? 0;
+    const produced = order.qty_produced as number | undefined ?? 0;
+    const producing = order.qty_producing as number | undefined ?? 0;
+    const userName = order.user_name as string | undefined ?? "-";
+    const bomName = order.bom_name as string | undefined ?? "-";
+    const notes = order.notes as string | undefined ?? "-";
+    const dateStart = order.date_start as string | undefined ?? "-";
+    const dateFinished = order.date_finished as string | undefined ?? "-";
+
+    lines.push(`## Manufacturing Order: \`${name}\``);
+    lines.push("");
+    lines.push("| Field | Value |");
+    lines.push("|-------|-------|");
+    lines.push(`| **Status** | ${state} |`);
+    lines.push(`| **Product** | ${productName} |`);
+    lines.push(`| **Planned Qty** | ${qty} |`);
+    lines.push(`| **Produced** | ${produced} |`);
+    lines.push(`| **Producing** | ${producing} |`);
+    lines.push(`| **Responsible** | ${userName} |`);
+    lines.push(`| **BoM** | ${bomName} |`);
+    lines.push(`| **Started** | ${dateStart} |`);
+    lines.push(`| **Finished** | ${dateFinished} |`);
+    lines.push(`| **Notes** | ${notes} |`);
+
+    // BOM lines
+    const bomLines = data.bom_lines as Array<Record<string, unknown>> | undefined;
+    if (bomLines && bomLines.length > 0) {
+      lines.push("");
+      lines.push("### Components");
+      lines.push("");
+      lines.push("| Component | Qty | UoM |");
+      lines.push("|-----------|-----|-----|");
+      for (const line of bomLines) {
+        const pname = line.product_name as string | undefined ?? "Unknown";
+        const pqty = line.product_qty as number | undefined ?? 0;
+        const puname = line.product_uom_name as string | undefined ?? "-";
+        lines.push(`| ${pname} | ${pqty} | ${puname} |`);
+      }
+    }
+
+    // Work orders
+    const workOrders = data.work_orders as Array<Record<string, unknown>> | undefined;
+    if (workOrders && workOrders.length > 0) {
+      lines.push("");
+      lines.push("### Work Orders");
+      lines.push("");
+      lines.push("| Work Order | Operation | Workcenter | Status |");
+      lines.push("|------------|-----------|------------|--------|");
+      for (const wo of workOrders) {
+        const woname = wo.name as string | undefined ?? "Unknown";
+        const opname = wo.operation_name as string | undefined ?? "-";
+        const wcname = wo.workcenter_name as string | undefined ?? "-";
+        const wostate = wo.state as string | undefined ?? "unknown";
+        lines.push(`| \`${woname}\` | ${opname} | ${wcname} | ${wostate} |`);
+      }
+    }
+
+    return lines.join("\n");
+  }
+
+  private formatKnowledgeSearchHuman(data: Record<string, unknown>): string {
+    const results = data.results as Array<Record<string, unknown>> | undefined;
+    if (!results || results.length === 0) {
+      return "I couldn't find any relevant information in the knowledge base.";
+    }
+
+    const lines = [];
+    lines.push(`Found **${results.length}** relevant document${results.length !== 1 ? "s" : ""}:`);
+    lines.push("");
+    lines.push("| Document | Relevance | Preview |");
+    lines.push("|----------|-----------|---------|");
+    for (const r of results.slice(0, 5)) {
+      const title = r.title as string | undefined ?? "Untitled";
+      const content = r.content as string | undefined ?? "";
+      const score = r.score as number | undefined;
+      const preview = content.slice(0, 150).replace(/\n/g, " ");
+      const relevance = score !== undefined ? `${(score * 100).toFixed(0)}%` : "N/A";
+      lines.push(`| ${title} | ${relevance} | ${preview}${content.length > 150 ? "..." : ""} |`);
+    }
+    return lines.join("\n");
+  }
+
+  private formatGenericHuman(toolName: string, data: Record<string, unknown>): string {
+    // Check for error
+    if (data.error || data.success === false) {
+      const error = data.error as string | undefined;
+      const msg = data.message as string | undefined;
+      return `**Error in \`${toolName}\`**: ${error ?? msg ?? "Unknown error"}\n\nPlease try again or contact support if this persists.`;
+    }
+
+    // Check for success with data
+    const keys = Object.keys(data).filter(k => k !== "success");
+    if (keys.length === 0) {
+      return `**\`${toolName}\` completed successfully.**`;
+    }
+
+    // Summarize key fields as markdown table
+    const lines = [`**\`${toolName}\` Results:**`, ""];
+    lines.push("| Field | Value |");
+    lines.push("|-------|-------|");
+    for (const k of keys.slice(0, 8)) {
+      const v = data[k];
+      let valStr: string;
+      if (Array.isArray(v)) valStr = `${v.length} items`;
+      else if (typeof v === "object" && v !== null) valStr = `{${Object.keys(v).slice(0, 3).join(", ")}}`;
+      else valStr = String(v);
+      lines.push(`| ${k} | ${valStr} |`);
     }
     return lines.join("\n");
   }
