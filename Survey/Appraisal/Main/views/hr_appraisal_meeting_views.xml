@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_hr_appraisal_meeting_form" model="ir.ui.view">
+        <field name="name">hr.appraisal.meeting.form</field>
+        <field name="model">hr.appraisal.meeting</field>
+        <field name="arch" type="xml">
+            <form string="Appraisal Review Meeting">
+                <header>
+                    <button name="action_mark_held" string="Mark Held &amp; Attended" type="object" class="oe_highlight"
+                            invisible="state == 'held'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="scheduled,held"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Session Title"/>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="appraisal_id"/>
+                            <field name="employee_id"/>
+                            <field name="manager_id"/>
+                            <field name="calendar_event_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="start_datetime"/>
+                            <field name="duration" widget="float_time"/>
+                            <field name="location"/>
+                            <field name="video_url" widget="url"/>
+                            <field name="employee_attended"/>
+                            <field name="manager_attended"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Meeting Agenda" name="agenda">
+                            <field name="agenda" placeholder="Topics to cover during the appraisal session..."/>
+                        </page>
+                        <page string="Discussion Notes &amp; Decisions" name="notes">
+                            <field name="meeting_notes" placeholder="Notes captured during the meeting, agreed action items..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_hr_appraisal_meeting_tree" model="ir.ui.view">
+        <field name="name">hr.appraisal.meeting.list</field>
+        <field name="model">hr.appraisal.meeting</field>
+        <field name="arch" type="xml">
+            <list string="Appraisal Meetings">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="manager_id"/>
+                <field name="start_datetime"/>
+                <field name="duration" widget="float_time"/>
+                <field name="location"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_hr_appraisal_meeting_calendar" model="ir.ui.view">
+        <field name="name">hr.appraisal.meeting.calendar</field>
+        <field name="model">hr.appraisal.meeting</field>
+        <field name="arch" type="xml">
+            <calendar string="Appraisal Meetings" date_start="start_datetime" date_stop="stop_datetime" color="manager_id" event_open_popup="true">
+                <field name="employee_id"/>
+                <field name="manager_id"/>
+                <field name="state"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="action_hr_appraisal_meeting" model="ir.actions.act_window">
+        <field name="name">Appraisal Review Sessions</field>
+        <field name="res_model">hr.appraisal.meeting</field>
+        <field name="view_mode">calendar,list,form</field>
+    </record>
+</odoo>

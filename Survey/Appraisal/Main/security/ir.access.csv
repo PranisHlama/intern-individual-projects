@@ -1,0 +1,102 @@
+id,name,model_id,group_id/id,operation,domain
+hr_appraisal_company_rule,Appraisal Multi-Company,hr.appraisal,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+hr_appraisal_plan_company_rule,Appraisal Plan Multi-Company,hr.appraisal.plan,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+hr_appraisal_goal_company_rule,Appraisal Goal Multi-Company,hr.appraisal.goal,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+hr_appraisal_template_company_rule,Appraisal Template Multi-Company,hr.appraisal.template,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+hr_appraisal_competency_company_rule,Appraisal Competency Multi-Company,hr.appraisal.competency,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+
+access_hr_appraisal_user,hr.appraisal.user,hr.appraisal,hr_appraisal_pro.group_appraisal_user,ru,"[('employee_id.user_id', '=', user.id)]"
+access_hr_appraisal_manager,hr.appraisal.manager,hr.appraisal,hr_appraisal_pro.group_appraisal_manager,cru,"['|', ('employee_id.user_id', '=', user.id), '|', ('manager_id.user_id', '=', user.id), ('employee_id.parent_id.user_id', '=', user.id)]"
+access_hr_appraisal_officer,hr.appraisal.officer,hr.appraisal,hr_appraisal_pro.group_appraisal_officer,crud,
+access_hr_appraisal_admin,hr.appraisal.admin,hr.appraisal,hr_appraisal_pro.group_appraisal_manager_hr,crud,
+
+access_hr_appraisal_tag_user,hr.appraisal.tag.user,hr.appraisal.tag,hr_appraisal_pro.group_appraisal_user,r,
+access_hr_appraisal_tag_officer,hr.appraisal.tag.officer,hr.appraisal.tag,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_stage_user,hr.appraisal.stage.user,hr.appraisal.stage,hr_appraisal_pro.group_appraisal_user,r,
+access_hr_appraisal_stage_officer,hr.appraisal.stage.officer,hr.appraisal.stage,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_template_user,hr.appraisal.template.user,hr.appraisal.template,hr_appraisal_pro.group_appraisal_user,r,
+access_hr_appraisal_template_officer,hr.appraisal.template.officer,hr.appraisal.template,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_template_section_user,hr.appraisal.template.section.user,hr.appraisal.template.section,hr_appraisal_pro.group_appraisal_user,r,
+access_hr_appraisal_template_section_officer,hr.appraisal.template.section.officer,hr.appraisal.template.section,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_template_question_user,hr.appraisal.template.question.user,hr.appraisal.template.question,hr_appraisal_pro.group_appraisal_user,r,
+access_hr_appraisal_template_question_officer,hr.appraisal.template.question.officer,hr.appraisal.template.question,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_question_choice_user,hr.appraisal.question.choice.user,hr.appraisal.question.choice,hr_appraisal_pro.group_appraisal_user,r,
+access_hr_appraisal_question_choice_officer,hr.appraisal.question.choice.officer,hr.appraisal.question.choice,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_matrix_row_user,hr.appraisal.matrix.row.user,hr.appraisal.matrix.row,hr_appraisal_pro.group_appraisal_user,r,
+access_hr_appraisal_matrix_row_officer,hr.appraisal.matrix.row.officer,hr.appraisal.matrix.row,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_matrix_col_user,hr.appraisal.matrix.col.user,hr.appraisal.matrix.col,hr_appraisal_pro.group_appraisal_user,r,
+access_hr_appraisal_matrix_col_officer,hr.appraisal.matrix.col.officer,hr.appraisal.matrix.col,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_competency_category_user,hr.appraisal.competency.category.user,hr.appraisal.competency.category,hr_appraisal_pro.group_appraisal_user,r,
+access_hr_appraisal_competency_category_officer,hr.appraisal.competency.category.officer,hr.appraisal.competency.category,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_competency_user,hr.appraisal.competency.user,hr.appraisal.competency,hr_appraisal_pro.group_appraisal_user,r,
+access_hr_appraisal_competency_officer,hr.appraisal.competency.officer,hr.appraisal.competency,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_rating_scale_user,hr.appraisal.rating.scale.user,hr.appraisal.rating.scale,hr_appraisal_pro.group_appraisal_user,r,
+access_hr_appraisal_rating_scale_officer,hr.appraisal.rating.scale.officer,hr.appraisal.rating.scale,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_rating_scale_level_user,hr.appraisal.rating.scale.level.user,hr.appraisal.rating.scale.level,hr_appraisal_pro.group_appraisal_user,r,
+access_hr_appraisal_rating_scale_level_officer,hr.appraisal.rating.scale.level.officer,hr.appraisal.rating.scale.level,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_competency_eval_user,hr.appraisal.competency.evaluation.user,hr.appraisal.competency.evaluation,hr_appraisal_pro.group_appraisal_user,ru,
+access_hr_appraisal_competency_eval_mgr,hr.appraisal.competency.evaluation.mgr,hr.appraisal.competency.evaluation,hr_appraisal_pro.group_appraisal_manager,cru,
+access_hr_appraisal_competency_eval_officer,hr.appraisal.competency.evaluation.officer,hr.appraisal.competency.evaluation,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_goal_user,hr.appraisal.goal.user,hr.appraisal.goal,hr_appraisal_pro.group_appraisal_user,cru,"[('employee_id.user_id', '=', user.id)]"
+access_hr_appraisal_goal_mgr,hr.appraisal.goal.mgr,hr.appraisal.goal,hr_appraisal_pro.group_appraisal_manager,crud,"['|', ('employee_id.user_id', '=', user.id), '|', ('manager_id.user_id', '=', user.id), ('employee_id.parent_id.user_id', '=', user.id)]"
+access_hr_appraisal_goal_officer,hr.appraisal.goal.officer,hr.appraisal.goal,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_goal_template_user,hr.appraisal.goal.template.user,hr.appraisal.goal.template,hr_appraisal_pro.group_appraisal_user,cru,
+access_hr_appraisal_goal_template_mgr,hr.appraisal.goal.template.mgr,hr.appraisal.goal.template,hr_appraisal_pro.group_appraisal_manager,crud,
+access_hr_appraisal_goal_template_officer,hr.appraisal.goal.template.officer,hr.appraisal.goal.template,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_skill_eval_user,hr.appraisal.skill.evaluation.user,hr.appraisal.skill.evaluation,hr_appraisal_pro.group_appraisal_user,r,
+access_hr_appraisal_skill_eval_mgr,hr.appraisal.skill.evaluation.mgr,hr.appraisal.skill.evaluation,hr_appraisal_pro.group_appraisal_manager,cru,
+access_hr_appraisal_skill_eval_officer,hr.appraisal.skill.evaluation.officer,hr.appraisal.skill.evaluation,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_career_user,hr.appraisal.career.plan.user,hr.appraisal.career.plan,hr_appraisal_pro.group_appraisal_user,cru,
+access_hr_appraisal_career_mgr,hr.appraisal.career.plan.mgr,hr.appraisal.career.plan,hr_appraisal_pro.group_appraisal_manager,cru,
+access_hr_appraisal_career_officer,hr.appraisal.career.plan.officer,hr.appraisal.career.plan,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_meeting_user,hr.appraisal.meeting.user,hr.appraisal.meeting,hr_appraisal_pro.group_appraisal_user,r,
+access_hr_appraisal_meeting_mgr,hr.appraisal.meeting.mgr,hr.appraisal.meeting,hr_appraisal_pro.group_appraisal_manager,cru,
+access_hr_appraisal_meeting_officer,hr.appraisal.meeting.officer,hr.appraisal.meeting,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_audit_log_officer,hr.appraisal.audit.log.officer,hr.appraisal.audit.log,hr_appraisal_pro.group_appraisal_officer,r,
+access_hr_appraisal_audit_log_admin,hr.appraisal.audit.log.admin,hr.appraisal.audit.log,hr_appraisal_pro.group_appraisal_manager_hr,crud,
+
+access_hr_appraisal_answer_user,hr.appraisal.answer.user,hr.appraisal.answer,hr_appraisal_pro.group_appraisal_user,cru,
+access_hr_appraisal_answer_mgr,hr.appraisal.answer.mgr,hr.appraisal.answer,hr_appraisal_pro.group_appraisal_manager,cru,
+access_hr_appraisal_answer_officer,hr.appraisal.answer.officer,hr.appraisal.answer,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_answer_matrix_user,hr.appraisal.answer.matrix.user,hr.appraisal.answer.matrix,hr_appraisal_pro.group_appraisal_user,cru,
+access_hr_appraisal_answer_matrix_mgr,hr.appraisal.answer.matrix.mgr,hr.appraisal.answer.matrix,hr_appraisal_pro.group_appraisal_manager,cru,
+access_hr_appraisal_answer_matrix_officer,hr.appraisal.answer.matrix.officer,hr.appraisal.answer.matrix,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_plan_user,hr.appraisal.plan.user,hr.appraisal.plan,hr_appraisal_pro.group_appraisal_user,r,
+access_hr_appraisal_plan_officer,hr.appraisal.plan.officer,hr.appraisal.plan,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_analysis_user,hr.appraisal.analysis.user,hr.appraisal.analysis,hr_appraisal_pro.group_appraisal_user,r,
+access_hr_appraisal_analysis_officer,hr.appraisal.analysis.officer,hr.appraisal.analysis,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_create_wizard,access_hr_appraisal_create_wizard,hr.appraisal.create.wizard,hr_appraisal_pro.group_appraisal_user,crud,
+access_hr_appraisal_bulk_manager_wizard,access_hr_appraisal_bulk_manager_wizard,hr.appraisal.bulk.manager.wizard,hr_appraisal_pro.group_appraisal_user,crud,
+access_hr_appraisal_bulk_deadline_wizard,access_hr_appraisal_bulk_deadline_wizard,hr.appraisal.bulk.deadline.wizard,hr_appraisal_pro.group_appraisal_user,crud,
+access_hr_appraisal_reminder_wizard,access_hr_appraisal_reminder_wizard,hr.appraisal.reminder.wizard,hr_appraisal_pro.group_appraisal_user,crud,
+access_hr_appraisal_report_export_wizard,access_hr_appraisal_report_export_wizard,hr.appraisal.report.export.wizard,hr_appraisal_pro.group_appraisal_user,crud,
+
+access_hr_appraisal_survey_user,hr.appraisal.survey.user,hr.appraisal.survey,hr_appraisal_pro.group_appraisal_user,cru,
+access_hr_appraisal_survey_mgr,hr.appraisal.survey.mgr,hr.appraisal.survey,hr_appraisal_pro.group_appraisal_manager,crud,
+access_hr_appraisal_survey_officer,hr.appraisal.survey.officer,hr.appraisal.survey,hr_appraisal_pro.group_appraisal_officer,crud,
+
+access_hr_appraisal_survey_answer_user,hr.appraisal.survey.answer.user,hr.appraisal.survey.answer,hr_appraisal_pro.group_appraisal_user,cru,
+access_hr_appraisal_survey_answer_mgr,hr.appraisal.survey.answer.mgr,hr.appraisal.survey.answer,hr_appraisal_pro.group_appraisal_manager,crud,
+access_hr_appraisal_survey_answer_officer,hr.appraisal.survey.answer.officer,hr.appraisal.survey.answer,hr_appraisal_pro.group_appraisal_officer,crud,

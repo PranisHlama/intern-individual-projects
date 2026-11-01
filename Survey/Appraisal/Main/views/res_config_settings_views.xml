@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_appraisals" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.hr.appraisal</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="75"/>
+        <field name="inherit_id" ref="hr.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Appraisals Pro" string="Appraisals Pro" name="hr_appraisal_pro" groups="hr_appraisal_pro.group_appraisal_manager_hr">
+                    <block title="Appraisal Cadence &amp; Recurrence">
+                        <setting id="appraisal_frequency_setting" title="Default Review Cadence" help="Establish baseline cadence for recurring reviews across the organization.">
+                            <field name="appraisal_plan_frequency"/>
+                        </setting>
+                        <setting id="appraisal_auto_lead_setting" title="Automation Windows" help="Lead time to pre-generate records and overall completion window.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="appraisal_auto_lead_days" class="col-lg-4 o_light_label" string="Lead Generation Days"/>
+                                    <field name="appraisal_auto_lead_days"/>
+                                </div>
+                                <div class="row mt8">
+                                    <label for="appraisal_duration_days" class="col-lg-4 o_light_label" string="Duration Days"/>
+                                    <field name="appraisal_duration_days"/>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+
+                    <block title="Appraisal Workflow &amp; Governance">
+                        <setting id="appraisal_governance_setting" title="Workflow Controls" help="Configure required approval steps for appraisals.">
+                            <div class="content-group">
+                                <div>
+                                    <field name="appraisal_self_assessment_required"/>
+                                    <label for="appraisal_self_assessment_required" string="Mandate Employee Self-Assessment"/>
+                                </div>
+                                <div>
+                                    <field name="appraisal_hr_validation_required"/>
+                                    <label for="appraisal_hr_validation_required" string="Mandate HR Committee Sign-Off"/>
+                                </div>
+                                <div>
+                                    <field name="appraisal_auto_sync_skills"/>
+                                    <label for="appraisal_auto_sync_skills" string="Automatically Sync Validated Skills to Employee Profiles"/>
+                                </div>
+                            </div>
+                        </setting>
+
+                        <setting id="appraisal_defaults_setting" title="Default Questionnaires &amp; Scales" help="Default templates applied when new appraisals are initialized.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="appraisal_default_rating_scale_id" class="col-lg-4 o_light_label" string="Default Scale"/>
+                                    <field name="appraisal_default_rating_scale_id"/>
+                                </div>
+                                <div class="row mt8">
+                                    <label for="appraisal_default_template_id" class="col-lg-4 o_light_label" string="Default Questionnaire"/>
+                                    <field name="appraisal_default_template_id"/>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_hr_appraisal_config_settings" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="context">{'module': 'hr_appraisal_pro'}</field>
+    </record>
+</odoo>

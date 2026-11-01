@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="seq_hr_appraisal" model="ir.sequence">
+            <field name="name">Appraisal Sequence</field>
+            <field name="code">hr.appraisal</field>
+            <field name="prefix">APP/%(year)s/</field>
+            <field name="padding">4</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+        </record>
+
+        <record id="stage_appraisal_draft" model="hr.appraisal.stage">
+            <field name="name">Draft</field>
+            <field name="sequence">10</field>
+            <field name="stage_type">draft</field>
+            <field name="fold" eval="False"/>
+            <field name="requirements">Appraisal is being configured. Goals, competencies, and questionnaire assigned.</field>
+        </record>
+
+        <record id="stage_appraisal_waiting_self" model="hr.appraisal.stage">
+            <field name="name">Waiting Self Assessment</field>
+            <field name="sequence">20</field>
+            <field name="stage_type">waiting_self</field>
+            <field name="fold" eval="False"/>
+            <field name="auto_activity_user">employee</field>
+            <field name="auto_activity_summary">Complete Your Self-Assessment Questionnaire</field>
+            <field name="requirements">Employee reviews personal objectives, completes self-questionnaire, and rates competencies.</field>
+        </record>
+
+        <record id="stage_appraisal_self_done" model="hr.appraisal.stage">
+            <field name="name">Self Assessment Submitted</field>
+            <field name="sequence">30</field>
+            <field name="stage_type">self_done</field>
+            <field name="fold" eval="False"/>
+            <field name="requirements">Employee has submitted self-assessment. Ready for manager review.</field>
+        </record>
+
+        <record id="stage_appraisal_waiting_manager" model="hr.appraisal.stage">
+            <field name="name">Waiting Manager Review</field>
+            <field name="sequence">40</field>
+            <field name="stage_type">waiting_manager</field>
+            <field name="fold" eval="False"/>
+            <field name="auto_activity_user">manager</field>
+            <field name="auto_activity_summary">Conduct Subordinate Evaluation &amp; Schedule Review Meeting</field>
+            <field name="requirements">Manager evaluates employee performance, rates competencies, records strengths, and submits feedback.</field>
+        </record>
+
+        <record id="stage_appraisal_manager_done" model="hr.appraisal.stage">
+            <field name="name">Manager Review Completed</field>
+            <field name="sequence">50</field>
+            <field name="stage_type">manager_done</field>
+            <field name="fold" eval="False"/>
+            <field name="requirements">Manager review completed. Ready for HR calibration and committee sign-off.</field>
+        </record>
+
+        <record id="stage_appraisal_waiting_hr" model="hr.appraisal.stage">
+            <field name="name">Waiting HR Validation</field>
+            <field name="sequence">60</field>
+            <field name="stage_type">waiting_hr</field>
+            <field name="fold" eval="False"/>
+            <field name="auto_activity_user">hr</field>
+            <field name="auto_activity_summary">HR Calibration &amp; Final Appraisal Approval</field>
+            <field name="requirements">HR reviews score distribution, checks calibration, and validates final decisions.</field>
+        </record>
+
+        <record id="stage_appraisal_done" model="hr.appraisal.stage">
+            <field name="name">Completed</field>
+            <field name="sequence">70</field>
+            <field name="stage_type">done</field>
+            <field name="fold" eval="False"/>
+            <field name="requirements">Appraisal cycle completed and locked. Skills updated and career plans initialized.</field>
+        </record>
+
+        <record id="stage_appraisal_cancel" model="hr.appraisal.stage">
+            <field name="name">Cancelled</field>
+            <field name="sequence">80</field>
+            <field name="stage_type">cancel</field>
+            <field name="fold" eval="True"/>
+            <field name="requirements">Appraisal aborted due to employee departure, leave of absence, or cycle cancellation.</field>
+        </record>
+
+        <record id="rating_scale_standard_5" model="hr.appraisal.rating.scale">
+            <field name="name">Standard 5-Point Rating Scale</field>
+        </record>
+
+        <record id="scale_level_5" model="hr.appraisal.rating.scale.level">
+            <field name="scale_id" ref="rating_scale_standard_5"/>
+            <field name="name">Exceeds Expectations</field>
+            <field name="score_value">5.0</field>
+            <field name="sequence">10</field>
+            <field name="description">Consistently delivers results far above standard expectations; exceptional role model.</field>
+            <field name="color">10</field>
+        </record>
+
+        <record id="scale_level_4" model="hr.appraisal.rating.scale.level">
+            <field name="scale_id" ref="rating_scale_standard_5"/>
+            <field name="name">Meets Expectations Plus</field>
+            <field name="score_value">4.0</field>
+            <field name="sequence">20</field>
+            <field name="description">Exceeds job requirements in multiple core areas; very strong contributor.</field>
+            <field name="color">4</field>
+        </record>
+
+        <record id="scale_level_3" model="hr.appraisal.rating.scale.level">
+            <field name="scale_id" ref="rating_scale_standard_5"/>
+            <field name="name">Meets Expectations</field>
+            <field name="score_value">3.0</field>
+            <field name="sequence">30</field>
+            <field name="description">Consistently fulfills all position requirements and objectives satisfactorily.</field>
+            <field name="color">3</field>
+        </record>
+
+        <record id="scale_level_2" model="hr.appraisal.rating.scale.level">
+            <field name="scale_id" ref="rating_scale_standard_5"/>
+            <field name="name">Needs Improvement</field>
+            <field name="score_value">2.0</field>
+            <field name="sequence">40</field>
+            <field name="description">Fails to meet expectations in some key areas; improvement plan recommended.</field>
+            <field name="color">2</field>
+        </record>
+
+        <record id="scale_level_1" model="hr.appraisal.rating.scale.level">
+            <field name="scale_id" ref="rating_scale_standard_5"/>
+            <field name="name">Unsatisfactory</field>
+            <field name="score_value">1.0</field>
+            <field name="sequence">50</field>
+            <field name="description">Consistently performs below acceptable baseline standards.</field>
+            <field name="color">1</field>
+        </record>
+
+        <record id="comp_cat_core" model="hr.appraisal.competency.category">
+            <field name="name">Core Organizational Competencies</field>
+            <field name="sequence">10</field>
+            <field name="description">Fundamental behavioral attributes expected across all company personnel.</field>
+        </record>
+
+        <record id="comp_cat_technical" model="hr.appraisal.competency.category">
+            <field name="name">Technical &amp; Operational Excellence</field>
+            <field name="sequence">20</field>
+            <field name="description">Job execution, discipline, domain expertise, and output quality.</field>
+        </record>
+
+        <record id="comp_cat_leadership" model="hr.appraisal.competency.category">
+            <field name="name">Leadership &amp; Ownership</field>
+            <field name="sequence">30</field>
+            <field name="description">Initiative, decision making, mentorship, and vision.</field>
+        </record>
+
+        <record id="comp_comm" model="hr.appraisal.competency">
+            <field name="name">Communication &amp; Influence</field>
+            <field name="category_id" ref="comp_cat_core"/>
+            <field name="default_weight">1.0</field>
+            <field name="description">Communicates transparently, concisely, and constructively across teams and leadership.</field>
+        </record>
+
+        <record id="comp_teamwork" model="hr.appraisal.competency">
+            <field name="name">Teamwork &amp; Cross-Functional Collaboration</field>
+            <field name="category_id" ref="comp_cat_core"/>
+            <field name="default_weight">1.0</field>
+            <field name="description">Fosters an inclusive, supportive environment and collaborates effectively to achieve joint outcomes.</field>
+        </record>
+
+        <record id="comp_problem_solving" model="hr.appraisal.competency">
+            <field name="name">Problem Solving &amp; Critical Thinking</field>
+            <field name="category_id" ref="comp_cat_technical"/>
+            <field name="default_weight">1.2</field>
+            <field name="description">Analyzes root causes systematically, develops practical solutions, and handles complex challenges.</field>
+        </record>
+
+        <record id="comp_quality" model="hr.appraisal.competency">
+            <field name="name">Quality of Work &amp; Delivery Reliability</field>
+            <field name="category_id" ref="comp_cat_technical"/>
+            <field name="default_weight">1.2</field>
+            <field name="description">Maintains high engineering/work standards, minimizes errors, and delivers on commitments timely.</field>
+        </record>
+
+        <record id="comp_initiative" model="hr.appraisal.competency">
+            <field name="name">Initiative &amp; Continuous Learning</field>
+            <field name="category_id" ref="comp_cat_leadership"/>
+            <field name="default_weight">1.0</field>
+            <field name="description">Proactively identifies opportunities for improvement and embraces new skills and methods.</field>
+        </record>
+
+        <record id="comp_cat_hospitality" model="hr.appraisal.competency.category">
+            <field name="name">Hospitality &amp; Guest Service</field>
+            <field name="sequence">15</field>
+            <field name="description">Customer care, greeting standards, dining room warmth, and complaint recovery.</field>
+        </record>
+
+        <record id="comp_espresso_craft" model="hr.appraisal.competency">
+            <field name="name">Espresso Extraction &amp; Beverage Craftsmanship</field>
+            <field name="category_id" ref="comp_cat_technical"/>
+            <field name="default_weight">1.5</field>
+            <field name="description">Maintains brew ratios, grinder calibration, milk texture, and latte art consistency.</field>
+        </record>
+
+        <record id="comp_food_safety" model="hr.appraisal.competency">
+            <field name="name">Food Hygiene, HACCP &amp; Station Cleanliness</field>
+            <field name="category_id" ref="comp_cat_technical"/>
+            <field name="default_weight">1.5</field>
+            <field name="description">Adheres to food handling protocols, refrigeration logs, cross-contamination safety, and sanitized work areas.</field>
+        </record>
+
+        <record id="comp_punctuality" model="hr.appraisal.competency">
+            <field name="name">Shift Punctuality &amp; Operational Reliability</field>
+            <field name="category_id" ref="comp_cat_core"/>
+            <field name="default_weight">1.2</field>
+            <field name="description">Arrives prepared before shift commencement, manages breaks responsibly, and maintains consistent attendance.</field>
+        </record>
+
+        <record id="comp_pos_accuracy" model="hr.appraisal.competency">
+            <field name="name">POS Transaction Speed &amp; Till Reconciliation</field>
+            <field name="category_id" ref="comp_cat_technical"/>
+            <field name="default_weight">1.2</field>
+            <field name="description">Executes order taking accurately, processes transactions swiftly, and reconciles cash/card totals with zero variance.</field>
+        </record>
+    </data>
+
+    <record id="goal_template_ref0001" model="hr.appraisal.goal.template">
+        <field name="name">Master Espresso Dialing &amp; Extraction Consistency</field>
+        <field name="recommended_for">Junior Barista, Barista</field>
+        <field name="sub_goals">1:2 Brew Ratio Calibration   28-32s Extraction Target   Zero Sour/Bitter Batch Waste</field>
+        <field name="description">Calibrate espresso grinders each morning and maintain consistent brew ratios across peak morning shifts.</field>
+    </record>
+    <record id="goal_template_ref0002" model="hr.appraisal.goal.template">
+        <field name="name">Latte Art Competency: Rosette &amp; Tulip Patterns</field>
+        <field name="recommended_for">Junior Barista, Barista</field>
+        <field name="sub_goals">Microfoam Silk Texture   3-Tier Tulip Pour   Consistent Rosette Symmetry</field>
+        <field name="description">Consistently pour clean multi-tier tulip and rosette latte art on all 8oz and 12oz milk beverages.</field>
+    </record>
+    <record id="goal_template_ref0003" model="hr.appraisal.goal.template">
+        <field name="name">HACCP Food Safety &amp; Temperature Control Compliance</field>
+        <field name="recommended_for">Kitchen Assistant, Cook, Kitchen Staff</field>
+        <field name="sub_goals">Daily Fridge Temp Logs   FIFO Storage Rotation   Sanitization Station Logs</field>
+        <field name="description">Maintain 100% compliance with kitchen health safety regulations, cross-contamination rules, and temperature checks.</field>
+    </record>
+    <record id="goal_template_ref0004" model="hr.appraisal.goal.template">
+        <field name="name">Kitchen Prep Speed &amp; Waste Reduction</field>
+        <field name="recommended_for">Kitchen Assistant, Prep Cook</field>
+        <field name="sub_goals">Complete Morning Prep by 8:45 AM   Reduce Food Waste by 15%   Standardized Portioning</field>
+        <field name="description">Streamline morning food prep workflows to ensure fresh ingredients ready before café opening while minimizing prep waste.</field>
+    </record>
+    <record id="goal_template_ref0005" model="hr.appraisal.goal.template">
+        <field name="name">POS Daily Cash Reconciliation &amp; Zero Till Discrepancy</field>
+        <field name="recommended_for">Cashier, Front of House</field>
+        <field name="sub_goals">End-of-Shift Till Balanced within $1   Zero Void Errors   100% Card Slip Matching</field>
+        <field name="description">Balance daily point-of-sale cash registers with total accuracy and reconcile merchant slips at shift close.</field>
+    </record>
+    <record id="goal_template_ref0006" model="hr.appraisal.goal.template">
+        <field name="name">Customer Hospitality &amp; Table Turnaround Speed</field>
+        <field name="recommended_for">Waiter/Waitress, Service Staff</field>
+        <field name="sub_goals">30s Guest Greeting   Under 2-min Table Sanitization   95%+ Positive Feedback</field>
+        <field name="description">Deliver attentive, warm hospitality, promptly greet incoming guests, and maintain clean tables during peak hours.</field>
+    </record>
+    <record id="goal_template_ref0007" model="hr.appraisal.goal.template">
+        <field name="name">Shift Punctuality &amp; Shift Handover Discipline</field>
+        <field name="recommended_for">All Operational Staff (Bar, Service, Kitchen, Cashier)</field>
+        <field name="sub_goals">Zero Unexcused Tardiness   10-min Advance Arrival   Structured Station Handover</field>
+        <field name="description">Ensure punctual arrival for all scheduled shifts, clock in promptly, and complete seamless handover notes.</field>
+    </record>
+    <record id="goal_template_gt0008" model="hr.appraisal.goal.template">
+        <field name="name">Espresso Machine Preventative Maintenance &amp; Care</field>
+        <field name="recommended_for">Head Barista, Senior Barista</field>
+        <field name="sub_goals">Daily Chemical Backflush   Weekly Shower Screen Soak   Grinder Burr Inspection</field>
+        <field name="description">Oversee preventative maintenance of commercial espresso machines, groupheads, and grinders to extend equipment lifespan.</field>
+    </record>
+    <record id="goal_template_gt0009" model="hr.appraisal.goal.template">
+        <field name="name">New Barista Onboarding &amp; Recipe Training</field>
+        <field name="recommended_for">Head Barista, Shift Supervisor</field>
+        <field name="sub_goals">2-Week Barista Training Matrix   Drink Recipe Speed Testing   Milk Steaming Mentorship</field>
+        <field name="description">Train and mentor junior baristas on café beverage standards, espresso consistency, and station efficiency.</field>
+    </record>
+</odoo>

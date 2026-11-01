@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_hr_appraisal_competency_form" model="ir.ui.view">
+        <field name="name">hr.appraisal.competency.form</field>
+        <field name="model">hr.appraisal.competency</field>
+        <field name="arch" type="xml">
+            <form string="Competency">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Competency Title"/>
+                        <h1><field name="name" placeholder="e.g. Strategic Vision &amp; Leadership"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="category_id"/>
+                            <field name="default_weight"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Behavioral Descriptors" name="description">
+                            <field name="description" placeholder="Specify behaviors that exemplify this competency at each level..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_hr_appraisal_competency_tree" model="ir.ui.view">
+        <field name="name">hr.appraisal.competency.list</field>
+        <field name="model">hr.appraisal.competency</field>
+        <field name="arch" type="xml">
+            <list string="Competencies">
+                <field name="name"/>
+                <field name="category_id"/>
+                <field name="default_weight"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_hr_appraisal_competency" model="ir.actions.act_window">
+        <field name="name">Competencies</field>
+        <field name="res_model">hr.appraisal.competency</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_hr_appraisal_competency_category_tree" model="ir.ui.view">
+        <field name="name">hr.appraisal.competency.category.list</field>
+        <field name="model">hr.appraisal.competency.category</field>
+        <field name="arch" type="xml">
+            <list string="Competency Categories" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="description"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_hr_appraisal_competency_category" model="ir.actions.act_window">
+        <field name="name">Competency Categories</field>
+        <field name="res_model">hr.appraisal.competency.category</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <record id="view_hr_appraisal_rating_scale_form" model="ir.ui.view">
+        <field name="name">hr.appraisal.rating.scale.form</field>
+        <field name="model">hr.appraisal.rating.scale</field>
+        <field name="arch" type="xml">
+            <form string="Rating Scale">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Scale Name"/>
+                        <h1><field name="name" placeholder="e.g. 5-Point Performance Scale"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="min_score"/>
+                            <field name="max_score"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Scale Levels" name="levels">
+                            <field name="level_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="score_value"/>
+                                    <field name="color" widget="color_picker"/>
+                                    <field name="description"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_hr_appraisal_rating_scale_tree" model="ir.ui.view">
+        <field name="name">hr.appraisal.rating.scale.list</field>
+        <field name="model">hr.appraisal.rating.scale</field>
+        <field name="arch" type="xml">
+            <list string="Rating Scales">
+                <field name="name"/>
+                <field name="min_score"/>
+                <field name="max_score"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_hr_appraisal_rating_scale" model="ir.actions.act_window">
+        <field name="name">Rating Scales</field>
+        <field name="res_model">hr.appraisal.rating.scale</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

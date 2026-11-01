@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_hr_appraisal_search" model="ir.ui.view">
+        <field name="name">hr.appraisal.search</field>
+        <field name="model">hr.appraisal</field>
+        <field name="arch" type="xml">
+            <search string="Search Appraisals">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="manager_id"/>
+                <field name="department_id"/>
+                <field name="plan_id"/>
+                <field name="tag_ids"/>
+
+                <filter string="Active Appraisals" name="filter_active" domain="[('state', 'not in', ['done', 'cancel'])]"/>
+                <filter string="My Appraisals" name="my_appraisals" domain="[('employee_id.user_id', '=', uid)]"/>
+                <filter string="My Team" name="my_team" domain="['|', ('manager_id.user_id', '=', uid), ('employee_id.parent_id.user_id', '=', uid)]"/>
+                <separator/>
+                <filter string="Waiting Self Assessment" name="waiting_self" domain="[('state', '=', 'waiting_self')]"/>
+                <filter string="Waiting Manager Review" name="waiting_manager" domain="[('state', '=', 'waiting_manager')]"/>
+                <filter string="Waiting HR Validation" name="waiting_hr" domain="[('state', '=', 'waiting_hr')]"/>
+                <filter string="Completed" name="done" domain="[('state', '=', 'done')]"/>
+                <separator/>
+                <filter string="Overdue" name="overdue" domain="[('is_overdue', '=', True)]"/>
+                <filter string="High / Urgent Priority" name="high_priority" domain="[('priority', 'in', ['2', '3'])]"/>
+
+                <group>
+                    <filter string="Stage" name="group_stage" context="{'group_by': 'stage_id'}"/>
+                    <filter string="Manager" name="group_manager" context="{'group_by': 'manager_id'}"/>
+                    <filter string="Department" name="group_department" context="{'group_by': 'department_id'}"/>
+                    <filter string="Appraisal Plan" name="group_plan" context="{'group_by': 'plan_id'}"/>
+                    <filter string="Company" name="group_company" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                    <filter string="Deadline Month" name="group_date_close" context="{'group_by': 'date_close:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_hr_appraisal_all" model="ir.actions.act_window">
+        <field name="name">Appraisals</field>
+        <field name="res_model">hr.appraisal</field>
+        <field name="view_mode">kanban,list,form,calendar,pivot,graph,activity</field>
+        <field name="search_view_id" ref="view_hr_appraisal_search"/>
+        <field name="context">{'search_default_filter_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Launch your organization's performance appraisal process!
+            </p>
+        </field>
+    </record>
+
+    <record id="action_hr_appraisal_my" model="ir.actions.act_window">
+        <field name="name">My Appraisals</field>
+        <field name="res_model">hr.appraisal</field>
+        <field name="view_mode">list,form,calendar</field>
+        <field name="domain">[('employee_id.user_id', '=', uid)]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                You currently have no appraisals assigned.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_hr_appraisal_subordinates" model="ir.actions.act_window">
+        <field name="name">My Team Appraisals</field>
+        <field name="res_model">hr.appraisal</field>
+        <field name="view_mode">kanban,list,form,calendar</field>
+        <field name="domain">['|', ('manager_id.user_id', '=', uid), ('employee_id.parent_id.user_id', '=', uid)]</field>
+    </record>
+
+    <record id="view_hr_appraisal_tree" model="ir.ui.view">
+        <field name="name">hr.appraisal.list</field>
+        <field name="model">hr.appraisal</field>
+        <field name="arch" type="xml">
+            <list string="Appraisals" decoration-danger="is_overdue" decoration-muted="state == 'cancel'" decoration-success="state == 'done'">
+                <field name="name"/>
+                <field name="priority" widget="priority" nolabel="1"/>
+                <field name="employee_id"/>
+                <field name="manager_id"/>
+                <field name="department_id"/>
+                <field name="review_period"/>
+                <field name="date_close"/>
+                <field name="final_score" widget="badge"/>
+                <field name="stage_id" widget="badge"/>
+                <field name="is_overdue" column_invisible="True"/>
+                <field name="state" column_invisible="True"/>
+                <field name="activity_ids" widget="list_activity"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_hr_appraisal_form" model="ir.ui.view">
+        <field name="name">hr.appraisal.form</field>
+        <field name="model">hr.appraisal</field>
+        <field name="arch" type="xml">
+            <form string="Employee Appraisal">
+                <header>
+                    <button name="action_send_self_assessment" string="Request Self Assessment" type="object" class="oe_highlight"
+                            invisible="state != 'draft'"/>
+                    <button name="action_submit_self_assessment" string="Submit Self Assessment" type="object" class="oe_highlight"
+                            invisible="state != 'waiting_self'"/>
+                    <button name="action_start_manager_review" string="Start Manager Review" type="object" class="oe_highlight"
+                            invisible="state != 'self_done'"/>
+                    <button name="action_submit_manager_review" string="Submit Manager Review" type="object" class="oe_highlight"
+                            invisible="state != 'waiting_manager'"/>
+                    <button name="action_send_hr_validation" string="Request HR Calibration" type="object" class="oe_highlight"
+                            invisible="state != 'manager_done'"/>
+                    <button name="action_validate_hr" string="HR Final Approval &amp; Complete" type="object" class="btn-success"
+                            invisible="state != 'waiting_hr'" groups="hr_appraisal_pro.group_appraisal_officer"/>
+                    <button name="action_schedule_meeting" string="Schedule 1-on-1 Review Meeting" type="object" class="btn-secondary"
+                            invisible="state in ['done', 'cancel']"/>
+                    <button name="action_carry_forward_unfinished_goals" string="Carry Forward Goals" type="object" class="btn-secondary"
+                            invisible="state != 'done'"/>
+                    <button name="action_reopen" string="Reopen Cycle" type="object" class="btn-warning"
+                            invisible="state not in ['done', 'cancel']" groups="hr_appraisal_pro.group_appraisal_manager_hr"/>
+                    <button name="action_open_self_survey" string="Self Assessment" type="object" class="btn-outline-primary"
+                            invisible="1"/>
+                    <button name="action_open_manager_survey" string="Manager Evaluation" type="object" class="btn-outline-primary"
+                            invisible="1"/>
+                    <button name="action_open_peer_survey" string="Peer Assessment" type="object" class="btn-outline-secondary"
+                            invisible="1"/>
+
+                    <field name="stage_id" widget="statusbar" options="{'clickable': '0'}"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" icon="edit_square" type="action" name="%(action_hr_appraisal_survey)d"
+                                context="{'search_default_appraisal_id': id, 'default_appraisal_id': id, 'default_employee_id': employee_id}">
+                            <field name="survey_count" widget="statinfo" string="Surveys"/>
+                        </button>
+                        <button class="oe_stat_button" icon="task" type="action" name="%(action_hr_appraisal_goal)d"
+                                context="{'search_default_appraisal_id': id, 'default_appraisal_id': id, 'default_employee_id': employee_id}">
+                            <field name="goal_count" widget="statinfo" string="Goals"/>
+                        </button>
+                        <button class="oe_stat_button" icon="calendar_today" type="action" name="%(action_hr_appraisal_meeting)d"
+                                context="{'search_default_appraisal_id': id, 'default_appraisal_id': id}">
+                            <field name="meeting_count" widget="statinfo" string="Meetings"/>
+                        </button>
+                    </div>
+
+                    <widget name="web_ribbon" title="Completed" bg_color="text-bg-success" invisible="state != 'done'"/>
+                    <widget name="web_ribbon" title="Cancelled" bg_color="text-bg-danger" invisible="state != 'cancel'"/>
+                    <widget name="web_ribbon" title="Overdue" bg_color="text-bg-warning" invisible="not is_overdue or state in ['done', 'cancel']"/>
+
+                    <div class="oe_title">
+                        <div class="d-flex align-items-center">
+                            <field name="priority" widget="priority" class="me-3"/>
+                            <h1 class="my-0"><field name="name"/></h1>
+                        </div>
+                    </div>
+
+                    <group>
+                        <group string="Employee &amp; Reviewer">
+                            <field name="employee_id" readonly="state != 'draft'"/>
+                            <field name="manager_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="is_overdue" invisible="1"/>
+                            <field name="state" invisible="1"/>
+                        </group>
+                        <group string="Schedule &amp; Period">
+                            <field name="date_start"/>
+                            <field name="date_close"/>
+                            <field name="date_completed" invisible="not date_completed"/>
+                            <field name="plan_id"/>
+                            <field name="rating_scale_id"/>
+                            <field name="hr_responsible_id"/>
+                        </group>
+                    </group>
+
+                    <div class="card p-3 my-3 bg-light border-0 shadow-sm">
+                        <div class="row text-center">
+                            <div class="col-md-3 border-end">
+                                <span class="text-muted small">Competency Score</span>
+                                <h3 class="my-1 text-primary"><field name="competency_score"/> / 5.0</h3>
+                            </div>
+                            <div class="col-md-3 border-end">
+                                <span class="text-muted small">Goal Score</span>
+                                <h3 class="my-1 text-info"><field name="goal_score"/> / 5.0</h3>
+                            </div>
+                            <div class="col-md-3 border-end">
+                                <span class="text-muted small">Calculated Score</span>
+                                <h3 class="my-1 text-secondary"><field name="calculated_score"/> / 5.0</h3>
+                            </div>
+                            <div class="col-md-3">
+                                <span class="text-muted small">Final Overall Rating</span>
+                                <h2 class="my-1 text-success fw-bold"><field name="final_score"/> / 5.0</h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <notebook>
+
+                        <page string="Self Assessment" name="self_assessment">
+                            <group>
+                                <group>
+                                    <field name="self_assessment_status" widget="badge"/>
+                                    <field name="self_assessment_date"/>
+                                </group>
+                                <group>
+                                    <field name="self_assessment_progress" widget="progressbar"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Competency Ratings" name="competencies">
+                            <field name="competency_line_ids">
+                                <list editable="bottom">
+                                    <field name="category_id"/>
+                                    <field name="competency_id"/>
+                                    <field name="weight"/>
+                                    <field name="self_rating_id"/>
+                                    <field name="self_score"/>
+                                    <field name="manager_rating_id"/>
+                                    <field name="manager_score"/>
+                                    <field name="hr_rating_id" groups="hr_appraisal_pro.group_appraisal_officer"/>
+                                    <field name="final_score" widget="badge"/>
+                                    <field name="manager_comments"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Meetings &amp; Discussion" name="meetings">
+                            <field name="meeting_ids">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="start_datetime"/>
+                                    <field name="duration" widget="float_time"/>
+                                    <field name="video_url" widget="url"/>
+                                    <field name="location"/>
+                                    <field name="employee_attended"/>
+                                    <field name="manager_attended"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_hr_appraisal_kanban" model="ir.ui.view">
+        <field name="name">hr.appraisal.kanban</field>
+        <field name="model">hr.appraisal</field>
+        <field name="arch" type="xml">
+            <kanban class="o_appraisal_kanban" sample="1">
+                <header>
+                    <button name="action_launch_campaign" string="Launch Campaign" type="object" class="btn btn-secondary"/>
+                </header>
+                <field name="employee_id"/>
+                <field name="date_close"/>
+                <field name="manager_id"/>
+                <field name="state"/>
+                <field name="avatar_128"/>
+                <field name="manager_avatar_128"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex align-items-center o_appraisal_kanban_card p-2">
+                            <div class="o_kanban_image me-3">
+                                <t t-if="record.avatar_128.raw_value">
+                                    <field name="avatar_128" widget="image" class="o_image_64_cover rounded"/>
+                                </t>
+                                <t t-else="">
+                                    <div class="o_appraisal_avatar_placeholder d-flex align-items-center justify-content-center text-white fw-bold">
+                                        <t t-out="(record.employee_id.value || 'S').charAt(0).toUpperCase()"/>
+                                    </div>
+                                </t>
+                            </div>
+                            <div class="o_kanban_details flex-grow-1 position-relative">
+                                <strong class="o_kanban_record_title text-truncate d-block mb-1">
+                                    <field name="employee_id"/>
+                                </strong>
+                                <div class="text-muted small mb-2">
+                                    <field name="date_close" options="{'format': 'MMM d'}"/>
+                                </div>
+                                <div class="o_kanban_card_bottom d-flex align-items-center justify-content-end gap-2">
+                                    <span class="text-muted o_activity_clock"><i class="fa fa-regular fa-clock" title="Deadline / Schedule" role="img" aria-label="Clock"/></span>
+                                    <t t-if="record.manager_avatar_128.raw_value">
+                                        <field name="manager_avatar_128" widget="image" class="rounded-circle o_image_24_cover"/>
+                                    </t>
+                                    <t t-else="">
+                                        <div class="o_manager_avatar_circle d-flex align-items-center justify-content-center text-white fw-bold">
+                                            <t t-out="(record.manager_id.value || 'R').charAt(0).toUpperCase()"/>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_hr_appraisal_calendar" model="ir.ui.view">
+        <field name="name">hr.appraisal.calendar</field>
+        <field name="model">hr.appraisal</field>
+        <field name="arch" type="xml">
+            <calendar string="Appraisals" date_start="date_start" date_stop="date_close" color="department_id" mode="month">
+                <field name="employee_id"/>
+                <field name="stage_id"/>
+                <field name="final_score"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_hr_appraisal_pivot" model="ir.ui.view">
+        <field name="name">hr.appraisal.pivot</field>
+        <field name="model">hr.appraisal</field>
+        <field name="arch" type="xml">
+            <pivot string="Appraisal Performance Metrics" sample="1">
+                <field name="department_id" type="row"/>
+                <field name="stage_id" type="col"/>
+                <field name="final_score" type="measure"/>
+                <field name="competency_score" type="measure"/>
+                <field name="goal_score" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_hr_appraisal_graph" model="ir.ui.view">
+        <field name="name">hr.appraisal.graph</field>
+        <field name="model">hr.appraisal</field>
+        <field name="arch" type="xml">
+            <graph string="Average Performance Score by Department" type="bar" sample="1">
+                <field name="department_id"/>
+                <field name="final_score" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_hr_appraisal_activity" model="ir.ui.view">
+        <field name="name">hr.appraisal.activity</field>
+        <field name="model">hr.appraisal</field>
+        <field name="arch" type="xml">
+            <activity string="Appraisal Review Activities">
+                <templates>
+                    <div t-name="activity-box">
+                        <div>
+                            <field name="name" display="full" class="fw-bold"/>
+                            <field name="employee_id" muted="1" display="full"/>
+                        </div>
+                    </div>
+                </templates>
+            </activity>
+        </field>
+    </record>
+</odoo>

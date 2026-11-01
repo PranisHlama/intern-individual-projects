@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_hr_appraisal_bulk_manager_wizard_form" model="ir.ui.view">
+        <field name="name">hr.appraisal.bulk.manager.wizard.form</field>
+        <field name="model">hr.appraisal.bulk.manager.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Reassign Reviewing Manager">
+                <group>
+                    <field name="manager_id"/>
+                    <field name="reason"/>
+                </group>
+                <footer>
+                    <button name="action_apply_manager" string="Reassign Reviewer" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_hr_appraisal_bulk_manager_wizard" model="ir.actions.act_window">
+        <field name="name">Reassign Manager</field>
+        <field name="res_model">hr.appraisal.bulk.manager.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="model_hr_appraisal"/>
+        <field name="binding_view_types">list</field>
+        <field name="group_ids" eval="[(4, ref('hr_appraisal_pro.group_appraisal_officer'))]"/>
+    </record>
+</odoo>

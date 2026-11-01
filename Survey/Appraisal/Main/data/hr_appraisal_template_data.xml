@@ -1,0 +1,551 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="template_cafe_operational" model="hr.appraisal.template">
+        <field name="name">Café Operational Staff Comprehensive Review</field>
+        <field name="target_role">both</field>
+        <field name="description"><![CDATA[
+            <p>Comprehensive performance and skills appraisal for operational café team members including Baristas, Service Staff, Cashiers, and Kitchen Assistants.</p>
+        ]]></field>
+    </record>
+
+    <record id="sec_station_craft" model="hr.appraisal.template.section">
+        <field name="template_id" ref="template_cafe_operational"/>
+        <field name="name">Station Craft &amp; Product Quality</field>
+        <field name="sequence">10</field>
+        <field name="description">Evaluation of technical workstation discipline, recipe consistency, speed, and hygiene.</field>
+    </record>
+
+    <record id="sec_hospitality_team" model="hr.appraisal.template.section">
+        <field name="template_id" ref="template_cafe_operational"/>
+        <field name="name">Hospitality, Customer Care &amp; Teamwork</field>
+        <field name="sequence">20</field>
+        <field name="description">Assessment of customer service, guest engagement, and supportive peer collaboration.</field>
+    </record>
+
+    <record id="sec_punctuality_discipline" model="hr.appraisal.template.section">
+        <field name="template_id" ref="template_cafe_operational"/>
+        <field name="name">Punctuality, Shift Adherence &amp; Reliability</field>
+        <field name="sequence">30</field>
+        <field name="description">Review of scheduled shift adherence, break compliance, and handover discipline.</field>
+    </record>
+
+    <record id="sec_growth_career" model="hr.appraisal.template.section">
+        <field name="template_id" ref="template_cafe_operational"/>
+        <field name="name">Growth, Training Needs &amp; Career Aspirations</field>
+        <field name="sequence">40</field>
+        <field name="description">Personal development objectives, desired certifications, and internal progression pathways.</field>
+    </record>
+
+    <record id="sec_manager_eval" model="hr.appraisal.template.section">
+        <field name="template_id" ref="template_cafe_operational"/>
+        <field name="name">Manager Summary &amp; Promotion Assessment</field>
+        <field name="sequence">50</field>
+        <field name="description">Formal supervisory feedback, promotion recommendations, and merit evaluation.</field>
+    </record>
+
+    <record id="q_matrix_station_craft" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_cafe_operational"/>
+        <field name="section_id" ref="sec_station_craft"/>
+        <field name="name">Core Station Operational Criteria Grid</field>
+        <field name="sequence">10</field>
+        <field name="question_type">matrix</field>
+        <field name="target_respondent">both</field>
+        <field name="is_required">True</field>
+        <field name="help_text">Rate current performance across core workstation execution areas.</field>
+    </record>
+
+    <record id="row_craft_consistency" model="hr.appraisal.matrix.row">
+        <field name="question_id" ref="q_matrix_station_craft"/>
+        <field name="name">Beverage / Food Recipe Consistency</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="row_craft_speed" model="hr.appraisal.matrix.row">
+        <field name="question_id" ref="q_matrix_station_craft"/>
+        <field name="name">Speed &amp; Throughput During Peak Rushes</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="row_craft_hygiene" model="hr.appraisal.matrix.row">
+        <field name="question_id" ref="q_matrix_station_craft"/>
+        <field name="name">Station Cleanliness, HACCP &amp; Sanitation</field>
+        <field name="sequence">30</field>
+    </record>
+    <record id="row_craft_waste" model="hr.appraisal.matrix.row">
+        <field name="question_id" ref="q_matrix_station_craft"/>
+        <field name="name">Waste Control &amp; Ingredient Management</field>
+        <field name="sequence">40</field>
+    </record>
+
+    <record id="col_unsatisfactory" model="hr.appraisal.matrix.col">
+        <field name="question_id" ref="q_matrix_station_craft"/>
+        <field name="name">Unsatisfactory (1)</field>
+        <field name="sequence">10</field>
+        <field name="score_value">1.0</field>
+    </record>
+    <record id="col_needs_improvement" model="hr.appraisal.matrix.col">
+        <field name="question_id" ref="q_matrix_station_craft"/>
+        <field name="name">Needs Improvement (2)</field>
+        <field name="sequence">20</field>
+        <field name="score_value">2.0</field>
+    </record>
+    <record id="col_meets_expectations" model="hr.appraisal.matrix.col">
+        <field name="question_id" ref="q_matrix_station_craft"/>
+        <field name="name">Meets Expectations (3)</field>
+        <field name="sequence">30</field>
+        <field name="score_value">3.0</field>
+    </record>
+    <record id="col_exceeds_expectations" model="hr.appraisal.matrix.col">
+        <field name="question_id" ref="q_matrix_station_craft"/>
+        <field name="name">Exceeds Expectations (5)</field>
+        <field name="sequence">40</field>
+        <field name="score_value">5.0</field>
+    </record>
+
+    <record id="q_rating_efficiency" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_cafe_operational"/>
+        <field name="section_id" ref="sec_station_craft"/>
+        <field name="name">Overall Station Mastery &amp; Technical Proficiency Rating</field>
+        <field name="sequence">20</field>
+        <field name="question_type">rating</field>
+        <field name="rating_min">1</field>
+        <field name="rating_max">5</field>
+        <field name="target_respondent">both</field>
+        <field name="is_required">True</field>
+        <field name="help_text">Rate proficiency from 1 (Novice) to 5 (Master Craftsman / Station Lead).</field>
+    </record>
+
+    <record id="q_para_achievements" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_cafe_operational"/>
+        <field name="section_id" ref="sec_station_craft"/>
+        <field name="name">Key Accomplishments &amp; Station Challenges</field>
+        <field name="sequence">30</field>
+        <field name="question_type">paragraph</field>
+        <field name="target_respondent">both</field>
+        <field name="is_required">True</field>
+        <field name="help_text">Highlight major operational contributions, high-volume shift performance, and areas where support is needed.</field>
+    </record>
+
+    <record id="q_select_teamwork" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_cafe_operational"/>
+        <field name="section_id" ref="sec_hospitality_team"/>
+        <field name="name">Cross-Station Support &amp; Collaboration</field>
+        <field name="sequence">40</field>
+        <field name="question_type">selection</field>
+        <field name="target_respondent">both</field>
+        <field name="is_required">True</field>
+        <field name="help_text">Select the description that best fits your regular involvement during rush periods.</field>
+    </record>
+
+    <record id="choice_teamwork_always" model="hr.appraisal.question.choice">
+        <field name="question_id" ref="q_select_teamwork"/>
+        <field name="name">Proactively flexes across stations without being prompted</field>
+        <field name="sequence">10</field>
+        <field name="score_value">5.0</field>
+    </record>
+    <record id="choice_teamwork_frequently" model="hr.appraisal.question.choice">
+        <field name="question_id" ref="q_select_teamwork"/>
+        <field name="name">Frequently assists teammates when requested</field>
+        <field name="sequence">20</field>
+        <field name="score_value">4.0</field>
+    </record>
+    <record id="choice_teamwork_station_only" model="hr.appraisal.question.choice">
+        <field name="question_id" ref="q_select_teamwork"/>
+        <field name="name">Focuses primarily on assigned station only</field>
+        <field name="sequence">30</field>
+        <field name="score_value">3.0</field>
+    </record>
+
+    <record id="q_mc_hospitality" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_cafe_operational"/>
+        <field name="section_id" ref="sec_hospitality_team"/>
+        <field name="name">Customer Hospitality Standards Regularly Demonstrated</field>
+        <field name="sequence">50</field>
+        <field name="question_type">multiple_choice</field>
+        <field name="target_respondent">both</field>
+        <field name="help_text">Check all areas where you consistently deliver above standards.</field>
+    </record>
+
+    <record id="choice_hosp_greeting" model="hr.appraisal.question.choice">
+        <field name="question_id" ref="q_mc_hospitality"/>
+        <field name="name">Warm guest greeting within 30 seconds of entry</field>
+        <field name="sequence">10</field>
+        <field name="score_value">1.0</field>
+    </record>
+    <record id="choice_hosp_accuracy" model="hr.appraisal.question.choice">
+        <field name="question_id" ref="q_mc_hospitality"/>
+        <field name="name">Accurate drink/food modification and dietary note handling</field>
+        <field name="sequence">20</field>
+        <field name="score_value">1.0</field>
+    </record>
+    <record id="choice_hosp_recovery" model="hr.appraisal.question.choice">
+        <field name="question_id" ref="q_mc_hospitality"/>
+        <field name="name">Graceful service recovery on mistaken or delayed orders</field>
+        <field name="sequence">30</field>
+        <field name="score_value">1.0</field>
+    </record>
+    <record id="choice_hosp_loyalty" model="hr.appraisal.question.choice">
+        <field name="question_id" ref="q_mc_hospitality"/>
+        <field name="name">Building rapport and recognizing repeat regular customers</field>
+        <field name="sequence">40</field>
+        <field name="score_value">1.0</field>
+    </record>
+
+    <record id="q_bool_punctual" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_cafe_operational"/>
+        <field name="section_id" ref="sec_punctuality_discipline"/>
+        <field name="name">Were you consistently punctual and present for all scheduled shifts this cycle?</field>
+        <field name="sequence">60</field>
+        <field name="question_type">boolean</field>
+        <field name="target_respondent">employee</field>
+        <field name="is_required">True</field>
+    </record>
+
+    <record id="q_para_punctuality" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_cafe_operational"/>
+        <field name="section_id" ref="sec_punctuality_discipline"/>
+        <field name="name">Punctuality Reflections &amp; Shift Schedule Feedback</field>
+        <field name="sequence">70</field>
+        <field name="question_type">paragraph</field>
+        <field name="target_respondent">both</field>
+        <field name="help_text">Reflect on punctuality, shift handover notes, and any shift schedule adjustments requested.</field>
+    </record>
+
+    <record id="q_select_career_goal" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_cafe_operational"/>
+        <field name="section_id" ref="sec_growth_career"/>
+        <field name="name">Target Next Internal Career Milestone</field>
+        <field name="sequence">80</field>
+        <field name="question_type">selection</field>
+        <field name="target_respondent">employee</field>
+        <field name="is_required">True</field>
+    </record>
+
+    <record id="choice_career_barista_lead" model="hr.appraisal.question.choice">
+        <field name="question_id" ref="q_select_career_goal"/>
+        <field name="name">Senior Barista / Station Lead</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="choice_career_shift_supervisor" model="hr.appraisal.question.choice">
+        <field name="question_id" ref="q_select_career_goal"/>
+        <field name="name">Shift Supervisor / Floor Lead</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="choice_career_head_barista" model="hr.appraisal.question.choice">
+        <field name="question_id" ref="q_select_career_goal"/>
+        <field name="name">Head Barista &amp; Coffee Educator</field>
+        <field name="sequence">30</field>
+    </record>
+    <record id="choice_career_kitchen_lead" model="hr.appraisal.question.choice">
+        <field name="question_id" ref="q_select_career_goal"/>
+        <field name="name">Kitchen Supervisor / Food Safety Officer</field>
+        <field name="sequence">40</field>
+    </record>
+
+    <record id="q_para_training" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_cafe_operational"/>
+        <field name="section_id" ref="sec_growth_career"/>
+        <field name="name">Desired Training, Workshops &amp; Skill Development</field>
+        <field name="sequence">90</field>
+        <field name="question_type">paragraph</field>
+        <field name="target_respondent">both</field>
+        <field name="help_text">List specific skills (e.g. Latte Art workshop, HACCP Food Safety Level 2, POS Reconciliation training).</field>
+    </record>
+
+    <record id="q_mgr_summary" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_cafe_operational"/>
+        <field name="section_id" ref="sec_manager_eval"/>
+        <field name="name">Manager Performance Synthesis &amp; Key Strengths Observed</field>
+        <field name="sequence">100</field>
+        <field name="question_type">paragraph</field>
+        <field name="target_respondent">manager</field>
+        <field name="is_required">True</field>
+        <field name="help_text">Provide structured managerial feedback on employee performance, dependability, and teamwork.</field>
+    </record>
+
+    <record id="q_mgr_promotion" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_cafe_operational"/>
+        <field name="section_id" ref="sec_manager_eval"/>
+        <field name="name">Supervisory Promotion Recommendation</field>
+        <field name="sequence">110</field>
+        <field name="question_type">selection</field>
+        <field name="target_respondent">manager</field>
+        <field name="is_required">True</field>
+    </record>
+
+    <record id="choice_promo_ready" model="hr.appraisal.question.choice">
+        <field name="question_id" ref="q_mgr_promotion"/>
+        <field name="name">Ready for Immediate Promotion</field>
+        <field name="sequence">10</field>
+        <field name="score_value">5.0</field>
+    </record>
+    <record id="choice_promo_1yr" model="hr.appraisal.question.choice">
+        <field name="question_id" ref="q_mgr_promotion"/>
+        <field name="name">High Potential - Ready within 6-12 Months</field>
+        <field name="sequence">20</field>
+        <field name="score_value">4.0</field>
+    </record>
+    <record id="choice_promo_maintain" model="hr.appraisal.question.choice">
+        <field name="question_id" ref="q_mgr_promotion"/>
+        <field name="name">Maintain Current Role - Consolidate Foundations</field>
+        <field name="sequence">30</field>
+        <field name="score_value">3.0</field>
+    </record>
+
+    <record id="template_barista_craft" model="hr.appraisal.template">
+        <field name="name">Barista &amp; Specialty Coffee Craftsmanship Assessment</field>
+        <field name="target_role">both</field>
+        <field name="description"><![CDATA[
+            <p>Targeted evaluation for Baristas and Coffee Specialists focusing on espresso calibration, sensory analysis, milk steaming, and latte art.</p>
+        ]]></field>
+    </record>
+
+    <record id="sec_barista_technical" model="hr.appraisal.template.section">
+        <field name="template_id" ref="template_barista_craft"/>
+        <field name="name">Extraction &amp; Sensory Standards</field>
+        <field name="sequence">10</field>
+    </record>
+
+    <record id="q_barista_dialing" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_barista_craft"/>
+        <field name="section_id" ref="sec_barista_technical"/>
+        <field name="name">Rate your consistency in morning grinder dialing and extraction profiling</field>
+        <field name="sequence">10</field>
+        <field name="question_type">rating</field>
+        <field name="rating_min">1</field>
+        <field name="rating_max">5</field>
+        <field name="target_respondent">both</field>
+    </record>
+
+    <record id="q_barista_latte_art" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_barista_craft"/>
+        <field name="section_id" ref="sec_barista_technical"/>
+        <field name="name">Latte Art Pours Consistently Mastered</field>
+        <field name="sequence">20</field>
+        <field name="question_type">multiple_choice</field>
+        <field name="target_respondent">both</field>
+    </record>
+    <record id="choice_art_heart" model="hr.appraisal.question.choice">
+        <field name="question_id" ref="q_barista_latte_art"/>
+        <field name="name">Solid Heart Pattern</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="choice_art_tulip" model="hr.appraisal.question.choice">
+        <field name="question_id" ref="q_barista_latte_art"/>
+        <field name="name">3+ Tier Tulip Pattern</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="choice_art_rosette" model="hr.appraisal.question.choice">
+        <field name="question_id" ref="q_barista_latte_art"/>
+        <field name="name">Fine Winged Rosette Pattern</field>
+        <field name="sequence">30</field>
+    </record>
+    <record id="choice_art_swan" model="hr.appraisal.question.choice">
+        <field name="question_id" ref="q_barista_latte_art"/>
+        <field name="name">Advanced Swan Pour</field>
+        <field name="sequence">40</field>
+    </record>
+
+    <record id="template_store_leadership" model="hr.appraisal.template">
+        <field name="name">Store Management &amp; Shift Leadership Evaluation</field>
+        <field name="target_role">both</field>
+        <field name="description"><![CDATA[
+            <p>Evaluation framework for Shift Supervisors, Head Baristas, Kitchen Leads, and Assistant Store Managers.</p>
+        ]]></field>
+    </record>
+
+    <record id="sec_lead_operations" model="hr.appraisal.template.section">
+        <field name="template_id" ref="template_store_leadership"/>
+        <field name="name">Leadership, Shift Scheduling &amp; Financial Control</field>
+        <field name="sequence">10</field>
+    </record>
+
+    <record id="q_lead_labor" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_store_leadership"/>
+        <field name="section_id" ref="sec_lead_operations"/>
+        <field name="name">Shift Labor Management &amp; Punctuality Enforcement Effectiveness</field>
+        <field name="sequence">10</field>
+        <field name="question_type">rating</field>
+        <field name="rating_min">1</field>
+        <field name="rating_max">5</field>
+        <field name="target_respondent">both</field>
+    </record>
+
+    <record id="q_lead_summary" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_store_leadership"/>
+        <field name="section_id" ref="sec_lead_operations"/>
+        <field name="name">Leadership Accomplishments, Team Morale &amp; Cost Control Initiatives</field>
+        <field name="sequence">20</field>
+        <field name="question_type">paragraph</field>
+        <field name="target_respondent">both</field>
+    </record>
+
+    <record id="template_survey_self_standard" model="hr.appraisal.template">
+        <field name="name">Employee Self-Assessment Survey</field>
+        <field name="survey_type">self</field>
+        <field name="target_role">employee</field>
+        <field name="description"><![CDATA[
+            <p>Self-reflection survey completed directly by the employee being appraised.</p>
+        ]]></field>
+    </record>
+
+    <record id="sec_survey_self_contrib" model="hr.appraisal.template.section">
+        <field name="template_id" ref="template_survey_self_standard"/>
+        <field name="name">Accomplishments &amp; Key Milestones</field>
+        <field name="sequence">10</field>
+    </record>
+
+    <record id="q_survey_self_achieve" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_survey_self_standard"/>
+        <field name="section_id" ref="sec_survey_self_contrib"/>
+        <field name="name">Key Contributions: What are your most notable accomplishments during this period?</field>
+        <field name="sequence">10</field>
+        <field name="question_type">paragraph</field>
+        <field name="target_respondent">employee</field>
+        <field name="is_required">True</field>
+    </record>
+
+    <record id="q_survey_self_rating" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_survey_self_standard"/>
+        <field name="section_id" ref="sec_survey_self_contrib"/>
+        <field name="name">Overall Self Performance Rating</field>
+        <field name="sequence">20</field>
+        <field name="question_type">rating</field>
+        <field name="rating_min">1</field>
+        <field name="rating_max">5</field>
+        <field name="target_respondent">employee</field>
+        <field name="is_required">True</field>
+    </record>
+
+    <record id="sec_survey_self_dev" model="hr.appraisal.template.section">
+        <field name="template_id" ref="template_survey_self_standard"/>
+        <field name="name">Professional Growth &amp; Aspirations</field>
+        <field name="sequence">20</field>
+    </record>
+
+    <record id="q_survey_self_growth" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_survey_self_standard"/>
+        <field name="section_id" ref="sec_survey_self_dev"/>
+        <field name="name">Development Goals: In what skills or areas would you like to expand your capabilities?</field>
+        <field name="sequence">10</field>
+        <field name="question_type">paragraph</field>
+        <field name="target_respondent">employee</field>
+    </record>
+
+    <record id="q_survey_self_career" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_survey_self_standard"/>
+        <field name="section_id" ref="sec_survey_self_dev"/>
+        <field name="name">Career Aspirations: Where do you envision your journey with the team over the next 1-2 years?</field>
+        <field name="sequence">20</field>
+        <field name="question_type">paragraph</field>
+        <field name="target_respondent">employee</field>
+    </record>
+
+    <record id="template_survey_peer_360" model="hr.appraisal.template">
+        <field name="name">Peer 360 Assessment Survey</field>
+        <field name="survey_type">peer</field>
+        <field name="target_role">peer</field>
+        <field name="description"><![CDATA[
+            <p>Peer feedback survey completed by colleagues and teammates regarding the employee being appraised.</p>
+        ]]></field>
+    </record>
+
+    <record id="sec_survey_peer_collab" model="hr.appraisal.template.section">
+        <field name="template_id" ref="template_survey_peer_360"/>
+        <field name="name">Collaboration &amp; Team Impact</field>
+        <field name="sequence">10</field>
+    </record>
+
+    <record id="q_survey_peer_teamwork" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_survey_peer_360"/>
+        <field name="section_id" ref="sec_survey_peer_collab"/>
+        <field name="name">Teamwork &amp; Supportive Attitude: How effectively does this colleague collaborate with peers?</field>
+        <field name="sequence">10</field>
+        <field name="question_type">rating</field>
+        <field name="rating_min">1</field>
+        <field name="rating_max">5</field>
+        <field name="target_respondent">peer</field>
+        <field name="is_required">True</field>
+    </record>
+
+    <record id="q_survey_peer_communication" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_survey_peer_360"/>
+        <field name="section_id" ref="sec_survey_peer_collab"/>
+        <field name="name">Communication &amp; Reliability: How dependable is this colleague during peak hours?</field>
+        <field name="sequence">20</field>
+        <field name="question_type">rating</field>
+        <field name="rating_min">1</field>
+        <field name="rating_max">5</field>
+        <field name="target_respondent">peer</field>
+    </record>
+
+    <record id="q_survey_peer_comments" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_survey_peer_360"/>
+        <field name="section_id" ref="sec_survey_peer_collab"/>
+        <field name="name">Peer Feedback: What are their greatest strengths, and what advice would you share?</field>
+        <field name="sequence">30</field>
+        <field name="question_type">paragraph</field>
+        <field name="target_respondent">peer</field>
+    </record>
+
+    <record id="template_survey_manager_standard" model="hr.appraisal.template">
+        <field name="name">Manager Performance Evaluation Survey</field>
+        <field name="survey_type">manager</field>
+        <field name="target_role">manager</field>
+        <field name="description"><![CDATA[
+            <p>Formal supervisory performance evaluation survey completed by the reviewing manager.</p>
+        ]]></field>
+    </record>
+
+    <record id="sec_survey_mgr_perf" model="hr.appraisal.template.section">
+        <field name="template_id" ref="template_survey_manager_standard"/>
+        <field name="name">Performance Execution &amp; Contribution</field>
+        <field name="sequence">10</field>
+    </record>
+
+    <record id="q_survey_mgr_quality" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_survey_manager_standard"/>
+        <field name="section_id" ref="sec_survey_mgr_perf"/>
+        <field name="name">Execution Quality &amp; Operational Standards</field>
+        <field name="sequence">10</field>
+        <field name="question_type">rating</field>
+        <field name="rating_min">1</field>
+        <field name="rating_max">5</field>
+        <field name="target_respondent">manager</field>
+        <field name="is_required">True</field>
+    </record>
+
+    <record id="q_survey_mgr_summary" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_survey_manager_standard"/>
+        <field name="section_id" ref="sec_survey_mgr_perf"/>
+        <field name="name">Manager Qualitative Review: Core achievements, reliability, and notable performance highlights.</field>
+        <field name="sequence">20</field>
+        <field name="question_type">paragraph</field>
+        <field name="target_respondent">manager</field>
+        <field name="is_required">True</field>
+    </record>
+
+    <record id="sec_survey_mgr_future" model="hr.appraisal.template.section">
+        <field name="template_id" ref="template_survey_manager_standard"/>
+        <field name="name">Talent Recommendations &amp; Leadership Next Steps</field>
+        <field name="sequence">20</field>
+    </record>
+
+    <record id="q_survey_mgr_upskill" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_survey_manager_standard"/>
+        <field name="section_id" ref="sec_survey_mgr_future"/>
+        <field name="name">Development Pathways: Recommended training, mentorship, or skill certifications.</field>
+        <field name="sequence">10</field>
+        <field name="question_type">paragraph</field>
+        <field name="target_respondent">manager</field>
+    </record>
+
+    <record id="q_survey_mgr_advancement" model="hr.appraisal.template.question">
+        <field name="template_id" ref="template_survey_manager_standard"/>
+        <field name="section_id" ref="sec_survey_mgr_future"/>
+        <field name="name">Advancement Potential: Observations regarding promotion or leadership readiness.</field>
+        <field name="sequence">20</field>
+        <field name="question_type">paragraph</field>
+        <field name="target_respondent">manager</field>
+    </record>
+
+</odoo>

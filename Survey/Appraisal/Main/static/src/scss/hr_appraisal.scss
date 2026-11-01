@@ -1,0 +1,175 @@
+:root {
+    --o-appraisal-bg: #f8f9fa;
+    --o-appraisal-navbar: #714B67;
+    --o-appraisal-control-bg: #ffffff;
+    --o-appraisal-card-bg: #ffffff;
+    --o-appraisal-card-border: #dee2e6;
+    --o-appraisal-text-main: #212529;
+    --o-appraisal-text-muted: #6c757d;
+    --o-appraisal-primary-purple: #714B67;
+    --o-appraisal-primary-hover: #5e3c55;
+    --o-appraisal-teal: #008784;
+    --o-appraisal-teal-hover: #00706d;
+    --o-appraisal-avatar-green: #28a745;
+    --o-appraisal-progress-bg: #f1f3f5;
+    --o-appraisal-progress-border: #ced4da;
+}
+.o_appraisal_kanban {
+    background-color: var(--o-appraisal-bg);
+}
+.o_appraisal_kanban_card {
+    background-color: var(--o-appraisal-card-bg);
+    border: 1px solid var(--o-appraisal-card-border);
+    border-radius: 6px;
+    width: 280px;
+    min-height: 96px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.o_appraisal_kanban_card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-color: #ced4da;
+}
+.o_appraisal_avatar_placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 4px;
+    background-color: var(--o-appraisal-avatar-green);
+    color: #ffffff;
+    font-size: 28px;
+    line-height: 60px;
+    text-align: center;
+    user-select: none;
+    font-weight: 600;
+}
+.o_manager_avatar_circle {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background-color: var(--o-appraisal-primary-purple);
+    color: #ffffff;
+    font-size: 11px;
+    line-height: 22px;
+    text-align: center;
+    font-weight: 700;
+}
+.o_activity_clock {
+    font-size: 13px;
+    color: var(--o-appraisal-text-muted);
+}
+.o_goal_title_input input {
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+    border: none !important;
+    border-bottom: 2px solid var(--o-appraisal-teal) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: var(--o-appraisal-text-main) !important;
+    padding: 4px 0 !important;
+}
+.o_goal_progress_radio .o_radio_input {
+    display: none;
+}
+.o_goal_progress_radio .form-check {
+    display: inline-block;
+    padding-left: 0;
+    margin-right: 6px;
+}
+.o_goal_progress_radio .form-check-label {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 4px;
+    border: 1px solid var(--o-appraisal-progress-border);
+    background: var(--o-appraisal-progress-bg);
+    color: var(--o-appraisal-text-main);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.o_goal_progress_radio .form-check-label:hover {
+    border-color: var(--o-appraisal-teal);
+    background: #e6f4f3;
+}
+.o_goal_progress_radio .o_radio_input:checked + .form-check-label {
+    background-color: var(--o-appraisal-teal) !important;
+    border-color: var(--o-appraisal-teal) !important;
+    color: #ffffff !important;
+}
+.o_view_nocontent_smiling_face::before {
+    content: "";
+    display: block;
+    width: 84px;
+    height: 84px;
+    margin: 0 auto 16px auto;
+    border-radius: 50%;
+    background-color: #f3e8f0;
+    background-image: radial-gradient(circle, #e9d5e5 40%, #f3e8f0 100%);
+    position: relative;
+    border: 2px solid #dabed3;
+}
+.o_facet_chip_purple {
+    background-color: #f3e8f0;
+    color: var(--o-appraisal-primary-purple);
+    border: 1px solid #d8bfd4;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 500;
+}
+.o_facet_chip_teal {
+    background-color: #e0f2f1;
+    color: var(--o-appraisal-teal);
+    border: 1px solid #b2dfdb;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 500;
+}
+.btn-appraisal-purple {
+    background-color: var(--o-appraisal-primary-purple) !important;
+    border-color: var(--o-appraisal-primary-purple) !important;
+    color: #ffffff !important;
+}
+.btn-appraisal-purple:hover {
+    background-color: var(--o-appraisal-primary-hover) !important;
+    border-color: var(--o-appraisal-primary-hover) !important;
+}
+.oi[data-icon="fa-wpforms"],
+.oi[data-icon="oi_wpforms"] {
+    --icon-font-family: 'odoo_ui_icons' !important;
+    &:before {
+        content: "oi_wpforms" !important;
+    }
+}
+.oi[data-icon="fa-bullseye"] {
+    --icon-font-family: 'Material Symbols Outlined' !important;
+    &:before {
+        content: "task" !important;
+    }
+}
+.oi[data-icon="fa-calendar-check-o"] {
+    --icon-font-family: 'Material Symbols Outlined' !important;
+    &:before {
+        content: "calendar_today" !important;
+    }
+}
+.oi[data-icon="fa-certificate"] {
+    --icon-font-family: 'Material Symbols Outlined' !important;
+    &:before {
+        content: "badge" !important;
+    }
+}
+.oi[data-icon="fa-tasks"] {
+    --icon-font-family: 'Material Symbols Outlined' !important;
+    &:before {
+        content: "task" !important;
+    }
+}

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="mail_template_appraisal_self_request" model="mail.template">
+            <field name="name">Appraisal: Self Assessment Request</field>
+            <field name="model_id" ref="model_hr_appraisal"/>
+            <field name="subject">Action Required: Your Performance Appraisal Self-Assessment ({{ object.name }})</field>
+            <field name="email_to">{{ object.employee_id.work_email or object.employee_user_id.email }}</field>
+            <field name="description">Dispatched to employee when appraisal self-assessment is requested.</field>
+            <field name="body_html" type="html">
+                <div style="font-family: 'Montserrat', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <div style="background-color: #0f172a; padding: 16px; border-radius: 6px 6px 0 0; text-align: center;">
+                        <h2 style="color: #ffffff; margin: 0; font-size: 20px;">Performance Appraisal Cycle</h2>
+                    </div>
+                    <div style="padding: 24px; color: #334155; line-height: 1.6;">
+                        <p>Dear <strong><t t-out="object.employee_id.name or 'Employee'"/></strong>,</p>
+                        <p>Your performance appraisal cycle <strong><t t-out="object.review_period"/></strong> is now officially open.</p>
+                        <p>Please take a few moments to review your goals, evaluate your competencies, and complete your self-assessment questionnaire before the deadline on <strong><t t-out="object.date_close"/></strong>.</p>
+
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a t-att-href="'/odoo/action-' + str(object.env.ref('hr_appraisal_pro.action_hr_appraisal_all').id) + '/' + str(object.id)"
+                               style="background-color: #3b82f6; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">
+                                Access Self-Assessment
+                            </a>
+                        </div>
+                        <p style="font-size: 13px; color: #64748b;">If you have any questions or need support, please reach out to your HR representative <strong><t t-out="object.hr_responsible_id.name"/></strong>.</p>
+                    </div>
+                </div>
+            </field>
+        </record>
+
+        <record id="mail_template_appraisal_manager_request" model="mail.template">
+            <field name="name">Appraisal: Manager Evaluation Request</field>
+            <field name="model_id" ref="model_hr_appraisal"/>
+            <field name="subject">Action Required: Complete Performance Review for {{ object.employee_id.name }}</field>
+            <field name="email_to">{{ object.manager_id.work_email or object.manager_user_id.email }}</field>
+            <field name="description">Dispatched to manager when employee submits self-assessment or review begins.</field>
+            <field name="body_html" type="html">
+                <div style="font-family: 'Montserrat', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <div style="background-color: #1e293b; padding: 16px; border-radius: 6px 6px 0 0; text-align: center;">
+                        <h2 style="color: #ffffff; margin: 0; font-size: 20px;">Manager Performance Review</h2>
+                    </div>
+                    <div style="padding: 24px; color: #334155; line-height: 1.6;">
+                        <p>Dear <strong><t t-out="object.manager_id.name or 'Manager'"/></strong>,</p>
+                        <p><strong><t t-out="object.employee_id.name"/></strong> has submitted their self-assessment for review period <strong><t t-out="object.review_period"/></strong>.</p>
+                        <p>You are requested to review the self-evaluation, rate competencies, provide feedback, and conduct the review meeting before <strong><t t-out="object.date_close"/></strong>.</p>
+
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a t-att-href="'/odoo/action-' + str(object.env.ref('hr_appraisal_pro.action_hr_appraisal_all').id) + '/' + str(object.id)"
+                               style="background-color: #059669; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">
+                                Complete Manager Review
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </field>
+        </record>
+
+        <record id="mail_template_appraisal_deadline_reminder" model="mail.template">
+            <field name="name">Appraisal: Deadline Reminder</field>
+            <field name="model_id" ref="model_hr_appraisal"/>
+            <field name="subject">Reminder: Appraisal Deadline Approaching for {{ object.name }}</field>
+            <field name="email_to">{{ object.employee_id.work_email or object.employee_user_id.email }}</field>
+            <field name="email_cc">{{ object.manager_id.work_email or object.manager_user_id.email }}</field>
+            <field name="description">Dispatched as deadline approaches.</field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f59e0b; border-radius: 8px;">
+                    <h3 style="color: #d97706;">Appraisal Deadline Notice</h3>
+                    <p>This is an automated reminder that the appraisal for <strong><t t-out="object.employee_id.name"/></strong> is due on <strong><t t-out="object.date_close"/></strong>.</p>
+                    <p>Current Stage: <strong><t t-out="object.stage_id.name"/></strong></p>
+                    <p>Please finalize all outstanding submissions and ratings to prevent escalation.</p>
+                </div>
+            </field>
+        </record>
+
+        <record id="mail_template_appraisal_escalation" model="mail.template">
+            <field name="name">Appraisal: Overdue Review Escalation</field>
+            <field name="model_id" ref="model_hr_appraisal"/>
+            <field name="subject">ESCALATION: Overdue Appraisal for {{ object.employee_id.name }}</field>
+            <field name="email_to">{{ object.hr_responsible_id.email }}</field>
+            <field name="email_cc">{{ object.manager_id.work_email }}</field>
+            <field name="description">Dispatched when appraisal is overdue past deadline.</field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 2px solid #ef4444; border-radius: 8px;">
+                    <h3 style="color: #b91c1c;">OVERDUE APPRAISAL ALERT</h3>
+                    <p>The performance appraisal for <strong><t t-out="object.employee_id.name"/></strong> (Reviewer: <t t-out="object.manager_id.name"/>) has passed its deadline of <strong><t t-out="object.date_close"/></strong> without completion.</p>
+                    <p>Immediate action is required to unblock the evaluation process.</p>
+                </div>
+            </field>
+        </record>
+
+        <record id="mail_template_appraisal_completed" model="mail.template">
+            <field name="name">Appraisal: Cycle Completed</field>
+            <field name="model_id" ref="model_hr_appraisal"/>
+            <field name="subject">Appraisal Completed: {{ object.name }} - {{ object.review_period }}</field>
+            <field name="email_to">{{ object.employee_id.work_email or object.employee_user_id.email }}</field>
+            <field name="email_cc">{{ object.manager_id.work_email or object.manager_user_id.email }}</field>
+            <field name="description">Dispatched when appraisal is formally finalized by HR.</field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #10b981; border-radius: 8px;">
+                    <h2 style="color: #047857;">Appraisal Review Completed</h2>
+                    <p>Dear <strong><t t-out="object.employee_id.name"/></strong>,</p>
+                    <p>Your performance review for <strong><t t-out="object.review_period"/></strong> has been calibrated and formally finalized on <strong><t t-out="object.date_completed"/></strong>.</p>
+                    <p>Final Score: <strong><t t-out="object.final_score"/> / 5.0</strong></p>
+                    <p>Thank you for your active participation and commitment to personal and organizational growth!</p>
+                </div>
+            </field>
+        </record>
+    </data>
+</odoo>

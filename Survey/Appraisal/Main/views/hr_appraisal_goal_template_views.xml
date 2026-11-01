@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_hr_appraisal_goal_template_tree" model="ir.ui.view">
+        <field name="name">hr.appraisal.goal.template.list</field>
+        <field name="model">hr.appraisal.goal.template</field>
+        <field name="arch" type="xml">
+            <list string="Goals Template Library">
+                <field name="name" string="Name"/>
+                <field name="recommended_for" string="Recommended for"/>
+                <field name="sub_goals" string="Sub Goals"/>
+                <field name="weight" string="Weight (%)"/>
+                <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                <button name="action_create_goal" string="Use Template" type="object" class="btn btn-sm btn-primary" icon="fa-plus"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_hr_appraisal_goal_template_form" model="ir.ui.view">
+        <field name="name">hr.appraisal.goal.template.form</field>
+        <field name="model">hr.appraisal.goal.template</field>
+        <field name="arch" type="xml">
+            <form string="Goal Template">
+                <header>
+                    <button name="action_create_goal" string="Create Goal from Template" type="object" class="oe_highlight btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Template Name"/>
+                        <h1><field name="name" placeholder="e.g. Master Espresso Calibration"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="recommended_for"/>
+                            <field name="sub_goals"/>
+                        </group>
+                        <group>
+                            <field name="weight"/>
+                            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description" name="description">
+                            <field name="description" placeholder="Goal template guidance and key results..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_hr_appraisal_goal_template_search" model="ir.ui.view">
+        <field name="name">hr.appraisal.goal.template.search</field>
+        <field name="model">hr.appraisal.goal.template</field>
+        <field name="arch" type="xml">
+            <search string="Search Goals Template Library">
+                <field name="name"/>
+                <field name="recommended_for"/>
+                <field name="sub_goals"/>
+                <field name="tag_ids"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_hr_appraisal_goal_template" model="ir.actions.act_window">
+        <field name="name">Goals Template Library</field>
+        <field name="res_model">hr.appraisal.goal.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_hr_appraisal_goal_template_search"/>
+        <field name="help" type="html">
+            <div class="o_view_nocontent">
+                <div class="o_nocontent_help">
+                    <p class="o_view_nocontent_smiling_face">
+                        Create new goals Template
+                    </p>
+                    <p>
+                        Assign Goals to motivate your Employees and keep track of their objectives between Appraisals.
+                    </p>
+                </div>
+            </div>
+        </field>
+    </record>
+
+    <record id="action_hr_appraisal_goal_template_modal" model="ir.actions.act_window">
+        <field name="name">Goals Template Library</field>
+        <field name="res_model">hr.appraisal.goal.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_hr_appraisal_goal_template_search"/>
+        <field name="target">new</field>
+    </record>
+</odoo>

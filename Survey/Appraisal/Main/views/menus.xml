@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_hr_appraisal_root"
+              name="Appraisals"
+              sequence="75"
+              groups="hr_appraisal_pro.group_appraisal_user"
+              web_icon="hr_appraisal_pro,static/description/icon.png"/>
+
+    <menuitem id="menu_hr_appraisal_main"
+              name="Appraisals"
+              parent="menu_hr_appraisal_root"
+              action="action_hr_appraisal_all"
+              sequence="10"/>
+
+    <menuitem id="menu_hr_appraisal_goals_main"
+              name="Goals"
+              parent="menu_hr_appraisal_root"
+              action="action_hr_appraisal_goal"
+              sequence="20"/>
+
+    <menuitem id="menu_hr_appraisal_surveys_main"
+              name="Surveys"
+              parent="menu_hr_appraisal_root"
+              action="action_hr_appraisal_survey"
+              sequence="25"/>
+
+    <menuitem id="menu_hr_appraisal_reporting"
+              name="Reporting"
+              parent="menu_hr_appraisal_root"
+              sequence="30"/>
+
+    <menuitem id="menu_hr_appraisal_analysis_item"
+              name="Appraisal Analysis"
+              parent="menu_hr_appraisal_reporting"
+              action="action_hr_appraisal_analysis_report"
+              sequence="10"/>
+
+    <menuitem id="menu_hr_appraisal_skill_report_item"
+              name="Skills Evolution"
+              parent="menu_hr_appraisal_reporting"
+              action="action_hr_appraisal_skill_report"
+              sequence="20"/>
+
+    <menuitem id="menu_hr_appraisal_export"
+              name="Export Data"
+              parent="menu_hr_appraisal_reporting"
+              action="action_hr_appraisal_report_export_wizard"
+              sequence="30"/>
+
+    <menuitem id="menu_hr_appraisal_configuration"
+              name="Configuration"
+              parent="menu_hr_appraisal_root"
+              groups="hr_appraisal_pro.group_appraisal_officer"
+              sequence="40"/>
+
+    <menuitem id="menu_hr_appraisal_settings"
+              name="Settings"
+              parent="menu_hr_appraisal_configuration"
+              action="action_hr_appraisal_config_settings"
+              groups="hr_appraisal_pro.group_appraisal_manager_hr"
+              sequence="10"/>
+
+    <menuitem id="menu_hr_appraisal_stages"
+              name="Stages"
+              parent="menu_hr_appraisal_configuration"
+              action="action_hr_appraisal_stage"
+              sequence="20"/>
+
+    <menuitem id="menu_hr_appraisal_goal_templates"
+              name="Goal Templates"
+              parent="menu_hr_appraisal_configuration"
+              action="action_hr_appraisal_goal_template"
+              sequence="25"/>
+
+    <menuitem id="menu_hr_appraisal_templates"
+              name="Questionnaires"
+              parent="menu_hr_appraisal_configuration"
+              action="action_hr_appraisal_template"
+              sequence="30"/>
+
+    <menuitem id="menu_hr_appraisal_competencies"
+              name="Competencies"
+              parent="menu_hr_appraisal_configuration"
+              action="action_hr_appraisal_competency"
+              sequence="40"/>
+
+    <menuitem id="menu_hr_appraisal_competency_categories"
+              name="Competency Categories"
+              parent="menu_hr_appraisal_configuration"
+              action="action_hr_appraisal_competency_category"
+              sequence="50"/>
+
+    <menuitem id="menu_hr_appraisal_rating_scales"
+              name="Rating Scales"
+              parent="menu_hr_appraisal_configuration"
+              action="action_hr_appraisal_rating_scale"
+              sequence="60"/>
+
+    <menuitem id="menu_hr_appraisal_plans"
+              name="Appraisal Plans"
+              parent="menu_hr_appraisal_configuration"
+              action="action_hr_appraisal_plan"
+              sequence="70"/>
+</odoo>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_hr_appraisal_reminder_wizard_form" model="ir.ui.view">
+        <field name="name">hr.appraisal.reminder.wizard.form</field>
+        <field name="model">hr.appraisal.reminder.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Send Direct Appraisal Reminders">
+                <group>
+                    <field name="target_recipient" widget="radio"/>
+                    <field name="subject"/>
+                </group>
+                <notebook>
+                    <page string="Message Body" name="message">
+                        <field name="message"/>
+                    </page>
+                </notebook>
+                <footer>
+                    <button name="action_send_reminders" string="Dispatch Reminders" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_hr_appraisal_reminder_wizard" model="ir.actions.act_window">
+        <field name="name">Send Reminders</field>
+        <field name="res_model">hr.appraisal.reminder.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="model_hr_appraisal"/>
+        <field name="binding_view_types">list</field>
+        <field name="group_ids" eval="[(4, ref('hr_appraisal_pro.group_appraisal_officer'))]"/>
+    </record>
+</odoo>

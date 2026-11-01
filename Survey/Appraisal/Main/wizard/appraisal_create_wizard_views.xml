@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_hr_appraisal_create_wizard_form" model="ir.ui.view">
+        <field name="name">hr.appraisal.create.wizard.form</field>
+        <field name="model">hr.appraisal.create.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Launch Appraisal Batch">
+                <group>
+                    <group string="Appraisal Plan &amp; Configuration">
+                        <field name="plan_id"/>
+                        <field name="review_period"/>
+                        <field name="template_id"/>
+                        <field name="rating_scale_id"/>
+                        <field name="company_id" groups="base.group_multi_company"/>
+                    </group>
+                    <group string="Timeline &amp; Execution">
+                        <field name="date_start"/>
+                        <field name="date_close"/>
+                        <field name="send_self_immediately"/>
+                    </group>
+                </group>
+                <notebook>
+                    <page string="Employee Filter" name="target_filter">
+                        <group>
+                            <field name="department_ids" widget="many2many_tags" placeholder="Select departments..."/>
+                            <field name="employee_ids" widget="many2many_tags" placeholder="Specific employees (leave empty for entire department/company)..."/>
+                        </group>
+                    </page>
+                </notebook>
+                <footer>
+                    <button name="action_create_appraisals" string="Generate Appraisals" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_hr_appraisal_create_wizard" model="ir.actions.act_window">
+        <field name="name">Launch Appraisals</field>
+        <field name="res_model">hr.appraisal.create.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

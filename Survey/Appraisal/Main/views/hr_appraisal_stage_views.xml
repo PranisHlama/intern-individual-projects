@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_hr_appraisal_stage_form" model="ir.ui.view">
+        <field name="name">hr.appraisal.stage.form</field>
+        <field name="model">hr.appraisal.stage</field>
+        <field name="arch" type="xml">
+            <form string="Appraisal Stage">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Stage Name"/>
+                        <h1><field name="name" placeholder="e.g. In Progress"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="stage_type"/>
+                            <field name="sequence"/>
+                            <field name="fold"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="mail_template_id"/>
+                            <field name="auto_activity_type_id"/>
+                            <field name="auto_activity_summary" invisible="not auto_activity_type_id"/>
+                            <field name="auto_activity_user" invisible="not auto_activity_type_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Stage Guidelines" name="guidelines">
+                            <field name="description" placeholder="Guidance displayed to users during this stage..."/>
+                        </page>
+                        <page string="Completion Requirements" name="requirements">
+                            <field name="requirements" placeholder="Checklist or criteria to proceed to next stage..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_hr_appraisal_stage_tree" model="ir.ui.view">
+        <field name="name">hr.appraisal.stage.list</field>
+        <field name="model">hr.appraisal.stage</field>
+        <field name="arch" type="xml">
+            <list string="Appraisal Stages" default_order="sequence, id">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="stage_type" widget="badge"/>
+                <field name="mail_template_id"/>
+                <field name="fold"/>
+                <field name="appraisal_count"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_hr_appraisal_stage" model="ir.actions.act_window">
+        <field name="name">Appraisal Stages</field>
+        <field name="res_model">hr.appraisal.stage</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create the stages for your appraisal pipeline!
+            </p>
+        </field>
+    </record>
+</odoo>

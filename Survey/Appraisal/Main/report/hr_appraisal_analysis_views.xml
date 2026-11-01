@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_hr_appraisal_analysis_graph" model="ir.ui.view">
+        <field name="name">hr.appraisal.analysis.graph</field>
+        <field name="model">hr.appraisal.analysis</field>
+        <field name="arch" type="xml">
+            <graph string="Appraisal Analysis" type="bar" sample="1">
+                <field name="department_id"/>
+                <field name="final_score" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_hr_appraisal_analysis_pivot" model="ir.ui.view">
+        <field name="name">hr.appraisal.analysis.pivot</field>
+        <field name="model">hr.appraisal.analysis</field>
+        <field name="arch" type="xml">
+            <pivot string="Appraisal Performance &amp; Trends" sample="1">
+                <field name="department_id" type="row"/>
+                <field name="stage_id" type="col"/>
+                <field name="appraisal_count" type="measure"/>
+                <field name="final_score" type="measure"/>
+                <field name="competency_score" type="measure"/>
+                <field name="goal_score" type="measure"/>
+                <field name="days_to_complete" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_hr_appraisal_analysis_search" model="ir.ui.view">
+        <field name="name">hr.appraisal.analysis.search</field>
+        <field name="model">hr.appraisal.analysis</field>
+        <field name="arch" type="xml">
+            <search string="Appraisal Analysis Filters">
+                <field name="employee_id"/>
+                <field name="manager_id"/>
+                <field name="department_id"/>
+                <field name="job_id"/>
+                <field name="plan_id"/>
+                <filter string="Last 365 days" name="last_365_days" domain="[('date_close', '&gt;=', (context_today() - datetime.timedelta(days=365)).strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter string="Completed" name="done" domain="[('state', '=', 'done')]"/>
+                <filter string="Active Cycles" name="active" domain="[('state', 'not in', ['done', 'cancel'])]"/>
+                <filter string="Overdue" name="overdue" domain="[('is_overdue', '=', True)]"/>
+                <group>
+                    <filter string="Department" name="group_department" context="{'group_by': 'department_id'}"/>
+                    <filter string="Final Score" name="group_final_score" context="{'group_by': 'final_score'}"/>
+                    <filter string="Manager" name="group_manager" context="{'group_by': 'manager_id'}"/>
+                    <filter string="Job Position" name="group_job" context="{'group_by': 'job_id'}"/>
+                    <filter string="Stage" name="group_stage" context="{'group_by': 'stage_id'}"/>
+                    <filter string="Deadline Month" name="group_date_close" context="{'group_by': 'date_close:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_hr_appraisal_analysis_report" model="ir.actions.act_window">
+        <field name="name">Appraisal Analysis</field>
+        <field name="res_model">hr.appraisal.analysis</field>
+        <field name="view_mode">graph,pivot</field>
+        <field name="search_view_id" ref="view_hr_appraisal_analysis_search"/>
+        <field name="context">{'search_default_last_365_days': 1, 'search_default_group_department': 1}</field>
+    </record>
+
+    <record id="action_hr_appraisal_skill_report" model="ir.actions.act_window">
+        <field name="name">Skills Evolution</field>
+        <field name="res_model">hr.appraisal.skill.evaluation</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="context">{'group_by': 'skill_type_id'}</field>
+    </record>
+</odoo>

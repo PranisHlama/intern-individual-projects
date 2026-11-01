@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_employee_form_appraisal_inherit" model="ir.ui.view">
+        <field name="name">hr.employee.form.appraisal.inherit</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button class="oe_stat_button" icon="badge" type="object" name="action_open_appraisals">
+                    <field name="appraisal_count" widget="statinfo" string="Appraisals"/>
+                </button>
+                <button class="oe_stat_button" icon="task" type="object" name="action_open_goals">
+                    <field name="goal_count" widget="statinfo" string="Active Goals"/>
+                </button>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Appraisal &amp; Performance" name="appraisals_overview">
+                    <group>
+                        <group string="Appraisal Summary">
+                            <field name="last_appraisal_date"/>
+                            <field name="last_appraisal_score" widget="badge"/>
+                            <field name="next_appraisal_date"/>
+                            <field name="ongoing_appraisal_id"/>
+                            <field name="goal_progress" widget="progressbar"/>
+                        </group>
+                    </group>
+                    <field name="appraisal_ids">
+                        <list string="Appraisal Records" decoration-success="state == 'done'" decoration-danger="is_overdue">
+                            <field name="name"/>
+                            <field name="review_period"/>
+                            <field name="manager_id"/>
+                            <field name="date_close"/>
+                            <field name="final_score"/>
+                            <field name="stage_id" widget="badge"/>
+                            <field name="is_overdue" column_invisible="True"/>
+                            <field name="state" column_invisible="True"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
