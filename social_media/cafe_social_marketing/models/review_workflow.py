@@ -26,6 +26,11 @@ class SocialPostReview(models.Model):
         if self.facebook_post_id or self.facebook_publish_status == "unknown":
             raise ValidationError("Reconcile the existing Facebook result before changing this post.")
 
+        if (getattr(self, "instagram_container_id", False)
+                or getattr(self, "instagram_media_id", False)
+                or getattr(self, "instagram_publish_status", False) == "unknown"):
+            raise ValidationError("An Instagram attempt already exists. Check its result before creating a replacement post.")
+
     def action_open_request_changes(self):
         self._check_request_changes()
         return {

@@ -68,7 +68,7 @@ class FacebookPost(models.Model):
         if len(self.social_account_ids) != 1 or self.social_account_ids.platform != "facebook":
             raise ValidationError(
                 "Publish/Schedule currently supports exactly one Facebook account. "
-                "TikTok uses its separate draft-upload action; Instagram publishing is not implemented."
+                "Select one Facebook or Instagram account. TikTok uses its separate draft-upload action."
             )
         if self.video_file:
             raise ValidationError(
@@ -135,9 +135,22 @@ class FacebookPost(models.Model):
             super(FacebookPost, post).write({"facebook_approved_photo_hash": hashes.get(post.id, False)})
         return result
 
+    def _social_publish_preflight(self):
+        return self._facebook_preflight()
+
+    def _write_publish_result(self, vals):
+        # Internal adapter-only path: callers cannot use this through RPC.
+        return super(FacebookPost, self).write(vals)
+
+    def _publish_validation_failure(self, error):
+        return self._write_publish_result({
+            "state": "draft", "facebook_publish_status": "failed",
+            "facebook_publish_error": str(error),
+        })
+
     def action_schedule(self):
         for post in self:
-            post._facebook_preflight()
+            post._social_publish_preflight()
         return super().action_schedule()
 
     def action_publish(self):
@@ -187,8 +200,7 @@ class FacebookPost(models.Model):
             try:
                 post.action_publish()
             except ValidationError as exc:
-                super(FacebookPost, post).write({"state": "draft", "facebook_publish_status": "failed",
-                            "facebook_publish_error": str(exc)})
+                post._publish_validation_failure(exc)
 
     def write(self, vals):
         if {"facebook_post_id", "facebook_photo_id", "facebook_approved_photo_hash", "facebook_publish_status", "facebook_publish_error"}.intersection(vals):

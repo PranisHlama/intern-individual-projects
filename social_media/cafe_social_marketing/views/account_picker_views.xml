@@ -1,0 +1,35 @@
+<odoo>
+    <record id="cafe_social_account_picker_form" model="ir.ui.view">
+        <field name="name">cafe.social.account.picker.form</field>
+        <field name="model">cafe.social.account.picker</field>
+        <field name="arch" type="xml">
+            <form string="Add Social Account">
+                <div class="p-3">
+                    <p class="mb-4">Choose a platform to set up your social account.</p>
+                    <div class="d-flex flex-wrap justify-content-center gap-3">
+                        <button name="action_facebook" type="object" string="Facebook" title="Set up a Facebook account" class="btn btn-light d-flex flex-column align-items-center gap-3 p-4" style="min-width:145px; border:1px solid #d8dadd; border-radius:8px;">
+                            <img src="/cafe_social_marketing/static/src/img/facebook.svg" width="64" height="64" alt="Facebook"/>
+                            <span class="fw-bold">Facebook</span>
+                        </button>
+                        <button name="action_instagram" type="object" string="Instagram" title="Set up an Instagram account" class="btn btn-light d-flex flex-column align-items-center gap-3 p-4" style="min-width:145px; border:1px solid #d8dadd; border-radius:8px;">
+                            <img src="/cafe_social_marketing/static/src/img/instagram.svg" width="64" height="64" alt="Instagram"/>
+                            <span class="fw-bold">Instagram</span>
+                        </button>
+                        <button name="action_tiktok" type="object" string="TikTok" title="Set up a TikTok account" class="btn btn-light d-flex flex-column align-items-center gap-3 p-4" style="min-width:145px; border:1px solid #d8dadd; border-radius:8px;">
+                            <img src="/cafe_social_marketing/static/src/img/tiktok.svg" width="64" height="64" alt="TikTok"/>
+                            <span class="fw-bold">TikTok</span>
+                        </button>
+                    </div>
+                </div>
+                <footer><button string="Cancel" special="cancel" class="btn-secondary"/></footer>
+            </form>
+        </field>
+    </record>
+    <record id="cafe_social_account_picker_action" model="ir.actions.act_window">
+        <field name="name">Add Social Account</field>
+        <field name="res_model">cafe.social.account.picker</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="cafe_social_account_picker_form"/>
+        <field name="target">new</field>
+    </record>
+</odoo>

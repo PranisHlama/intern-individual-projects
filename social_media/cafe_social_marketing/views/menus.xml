@@ -63,6 +63,9 @@
         sequence="10"
     />
 
+    <menuitem id="cafe_social_add_account_menu" name="Add Social Account"
+              parent="cafe_social_configuration_menu" action="cafe_social_account_picker_action" sequence="15"/>
+
     <menuitem
         id="cafe_social_account_menu"
         name="Social Accounts"

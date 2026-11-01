@@ -116,6 +116,7 @@
                 <sheet>
 
                     <field name="has_tiktok_account" invisible="1"/>
+                    <field name="publishing_platform" invisible="1"/>
 
                     <!-- BASIC INFORMATION -->
                     <group>

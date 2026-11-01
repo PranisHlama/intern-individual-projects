@@ -19,12 +19,12 @@
         <field name="inherit_id" ref="cafe_social_post_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//sheet" position="inside">
-                <group string="Facebook Publishing Result">
+                <group string="Facebook Publishing Result" invisible="publishing_platform != 'facebook'">
                     <field name="facebook_publish_status"/>
                     <field name="facebook_post_id"/>
                     <field name="facebook_photo_id"/>
                     <field name="facebook_publish_error"/>
-                    <div class="text-muted">Publish Now and Schedule send text or one JPEG/PNG image with its caption to one Facebook Page. Multiple photos, Facebook video and Instagram publishing are not implemented.</div>
+                    <div class="text-muted">Publish Now and Schedule send text or one JPEG/PNG image with its caption to one Facebook Page. Multiple photos and Facebook video are not implemented. Instagram uses a separate Instagram account and public JPEG URL.</div>
                 </group>
             </xpath>
         </field>

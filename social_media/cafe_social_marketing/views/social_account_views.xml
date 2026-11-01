@@ -6,6 +6,9 @@
         <field name="model">cafe.social.account</field>
         <field name="arch" type="xml">
             <list string="Social Accounts">
+                <header>
+                    <button name="%(cafe_social_account_picker_action)d" type="action" string="Add Social Account" icon="fa-plus" display="always" class="btn-primary"/>
+                </header>
                 <field name="name"/>
                 <field name="platform"/>
                 <field name="handle"/>
@@ -20,6 +23,9 @@
         <field name="model">cafe.social.account</field>
         <field name="arch" type="xml">
             <form string="Social Account">
+                <header>
+                    <button name="%(cafe_social_account_picker_action)d" type="action" string="Add Social Account" icon="fa-plus"/>
+                </header>
                 <sheet>
                     <group>
                         <group>

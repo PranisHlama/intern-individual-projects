@@ -10,3 +10,4 @@ access_cafe_social_campaign_manager,cafe.social.campaign.manager,cafe.social.cam
 access_cafe_social_post_manager,cafe.social.post.manager,cafe.social.post,cafe_social_marketing.group_cafe_social_manager,crud,
 access_cafe_social_template_manager,cafe.social.post.template.manager,cafe.social.post.template,cafe_social_marketing.group_cafe_social_manager,crud,
 access_cafe_request_changes_manager,cafe.social.request.changes.manager,cafe.social.request.changes,cafe_social_marketing.group_cafe_social_manager,crud,
+access_cafe_account_picker_user,cafe.social.account.picker.user,cafe.social.account.picker,cafe_social_marketing.group_cafe_social_user,cru,

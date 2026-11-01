@@ -1,0 +1,47 @@
+<odoo>
+    <record id="cafe_social_account_instagram_form" model="ir.ui.view">
+        <field name="name">cafe.social.account.instagram.form</field>
+        <field name="model">cafe.social.account</field>
+        <field name="inherit_id" ref="cafe_social_account_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <group string="Instagram Integration" invisible="platform != 'instagram'">
+                    <field name="instagram_user_id"/>
+                    <field name="instagram_token_env" groups="cafe_social_marketing.group_cafe_social_manager"/>
+                    <div class="text-muted">Use the professional Instagram account ID and a Docker token variable name. This adapter uses the Instagram API with Facebook Login.</div>
+                </group>
+            </xpath>
+        </field>
+    </record>
+    <record id="cafe_social_post_instagram_form" model="ir.ui.view">
+        <field name="name">cafe.social.post.instagram.form</field>
+        <field name="model">cafe.social.post</field>
+        <field name="inherit_id" ref="cafe_social_post_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_publish']" position="replace">
+                <button name="action_publish" string="Publish to Facebook" icon="fa-facebook-official" type="object" class="btn-primary"
+                    invisible="publishing_platform != 'facebook' or state not in ['draft', 'scheduled'] or approval_state != 'approved'"/>
+                <button name="action_publish" string="Publish / Check Instagram" icon="fa-instagram" type="object" class="btn-primary"
+                    invisible="publishing_platform != 'instagram' or state not in ['draft', 'scheduled'] or approval_state != 'approved'"/>
+            </xpath>
+            <xpath expr="//button[@name='action_schedule']" position="replace">
+                <button name="action_schedule" string="Schedule Facebook" icon="fa-facebook-official" type="object" class="btn-primary"
+                    invisible="publishing_platform != 'facebook' or state != 'draft' or approval_state != 'approved'"/>
+                <button name="action_schedule" string="Schedule Instagram" icon="fa-instagram" type="object" class="btn-primary"
+                    invisible="publishing_platform != 'instagram' or state != 'draft' or approval_state != 'approved'"/>
+            </xpath>
+            <xpath expr="//sheet" position="inside">
+                <group string="Instagram Publishing" invisible="publishing_platform != 'instagram'">
+                    <div class="text-muted">Attach one JPEG photo using the post's Attachments field. It is uploaded to public image hosting when publishing starts. No image server or pasted URL is needed.</div>
+                    <field name="instagram_image_url" invisible="not instagram_image_url" readonly="state == 'published' or instagram_container_id or instagram_publish_status == 'unknown'"/>
+                    <field name="instagram_publish_status"/>
+                    <field name="instagram_hosted_image_url" widget="url" invisible="not instagram_hosted_image_url"/>
+                    <field name="instagram_container_id"/>
+                    <field name="instagram_media_id"/>
+                    <field name="instagram_publish_error"/>
+                    <div class="text-muted">JPEG photos only, up to 8 MiB. Existing URL-based posts remain supported; their URL and image must stay reachable and unchanged until publication.</div>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>
