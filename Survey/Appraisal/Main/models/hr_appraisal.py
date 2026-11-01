@@ -562,89 +562,81 @@ class HrAppraisal(models.Model):
     def action_generate_default_surveys(self):
         """Generates the 3 separate surveys (Self, Peer, Manager) if they don't already exist."""
         Survey = self.env['hr.appraisal.survey']
-        Template = self.env['hr.appraisal.template']
+        Job = self.env['hr.job']
         for rec in self:
-            existing_self = rec.survey_ids.filtered(lambda s: s.survey_type == 'self')
-            if not existing_self:
-                tpl = rec.template_id or Template.search([
-                    ('target_role', 'in', ['employee', 'both']),
-                    ('active', '=', True),
-                ], limit=1)
-                if tpl:
+            job = rec.job_id or (rec.employee_id.job_id if rec.employee_id else False)
+            if not job:
+                job = Job.search([], limit=1)
+                if not job:
+                    job = Job.create({'name': 'Employee'})
+            for s_type, resp in [
+                ('self', rec.employee_id),
+                ('manager', rec.manager_id),
+                ('peer', rec.employee_id),
+            ]:
+                if resp and not rec.survey_ids.filtered(lambda s: s.survey_type == s_type):
                     survey = Survey.create({
                         'appraisal_id': rec.id,
-                        'survey_type': 'self',
-                        'template_id': tpl.id,
-                        'respondent_id': rec.employee_id.id,
+                        'survey_type': s_type,
+                        'job_id': job.id if job else False,
+                        'employee_id': rec.employee_id.id if rec.employee_id else False,
+                        'respondent_id': resp.id,
                     })
                     survey.action_load_questions()
 
-            existing_mgr = rec.survey_ids.filtered(lambda s: s.survey_type == 'manager')
-            if not existing_mgr and rec.manager_id:
-                tpl = rec.template_id or Template.search([
-                    ('target_role', 'in', ['manager', 'both']),
-                    ('active', '=', True),
-                ], limit=1)
-                if tpl:
-                    survey = Survey.create({
-                        'appraisal_id': rec.id,
-                        'survey_type': 'manager',
-                        'template_id': tpl.id,
-                        'respondent_id': rec.manager_id.id,
-                    })
-                    survey.action_load_questions()
+    def action_launch_survey_popup(self, survey_type='self'):
+        """Opens a Google Forms-styled Survey popup dialog."""
+        self.ensure_one()
+        Survey = self.env['hr.appraisal.survey']
+        job = self.job_id or (self.employee_id.job_id if self.employee_id else False)
+        if not job:
+            job = self.env['hr.job'].search([], limit=1)
 
-            existing_peer = rec.survey_ids.filtered(lambda s: s.survey_type == 'peer')
-            if not existing_peer:
-                peer = self.env['hr.employee'].search([
-                    ('id', '!=', rec.employee_id.id),
-                    ('parent_id', '=', rec.manager_id.id if rec.manager_id else False),
-                ], limit=1) or rec.employee_id
-                tpl = rec.template_id or Template.search([
-                    ('target_role', 'in', ['both', 'employee']),
-                    ('active', '=', True),
-                ], limit=1)
-                if tpl:
-                    survey = Survey.create({
-                        'appraisal_id': rec.id,
-                        'survey_type': 'peer',
-                        'template_id': tpl.id,
-                        'respondent_id': peer.id,
-                    })
-                    survey.action_load_questions()
+        survey = self.survey_ids.filtered(lambda s: s.survey_type == survey_type and s.state == 'draft')
+        if not survey:
+            resp_id = self.employee_id.id
+            if survey_type == 'manager' and self.manager_id:
+                resp_id = self.manager_id.id
+            survey = Survey.create({
+                'appraisal_id': self.id,
+                'job_id': job.id if job else False,
+                'survey_type': survey_type,
+                'employee_id': self.employee_id.id if self.employee_id else False,
+                'respondent_id': resp_id,
+            })
+            survey.action_load_questions()
+        else:
+            survey = survey[0]
+            if not survey.answer_ids:
+                survey.action_load_questions()
+
+        return {
+            'name': _('Survey: %s', dict(survey._fields['survey_type'].selection).get(survey.survey_type)),
+            'type': 'ir.actions.act_window',
+            'res_model': 'hr.appraisal.survey',
+            'res_id': survey.id,
+            'view_mode': 'form',
+            'view_id': self.env.ref('hr_appraisal_pro.view_hr_appraisal_survey_form').id,
+            'target': 'new',
+            'context': {
+                'default_appraisal_id': self.id,
+                'default_job_id': job.id if job else False,
+                'default_survey_type': survey_type,
+                'default_employee_id': self.employee_id.id if self.employee_id else False,
+            },
+        }
 
     def action_open_self_survey(self):
-        """Opens or creates the Self Assessment Survey form."""
-        self.ensure_one()
-        survey = self.survey_ids.filtered(lambda s: s.survey_type == 'self')
-        if not survey:
-            self.action_generate_default_surveys()
-            survey = self.survey_ids.filtered(lambda s: s.survey_type == 'self')
-        if survey:
-            return survey[0].action_open_form()
-        return self.action_open_surveys()
+        """Opens the Self Assessment Survey in a popup window."""
+        return self.action_launch_survey_popup(survey_type='self')
 
     def action_open_manager_survey(self):
-        """Opens or creates the Manager Evaluation Survey form."""
-        self.ensure_one()
-        survey = self.survey_ids.filtered(lambda s: s.survey_type == 'manager')
-        if not survey:
-            self.action_generate_default_surveys()
-            survey = self.survey_ids.filtered(lambda s: s.survey_type == 'manager')
-        if survey:
-            return survey[0].action_open_form()
-        return self.action_open_surveys()
+        """Opens the Manager Evaluation Survey in a popup window."""
+        return self.action_launch_survey_popup(survey_type='manager')
 
     def action_open_peer_survey(self):
-        """Opens or creates the Peer Assessment Survey form."""
-        self.ensure_one()
-        survey = self.survey_ids.filtered(lambda s: s.survey_type == 'peer')
-        if not survey:
-            self.action_generate_default_surveys()
-            survey = self.survey_ids.filtered(lambda s: s.survey_type == 'peer')
-        if survey:
-            return survey[0].action_open_form()
-        return self.action_open_surveys()
+        """Opens the Peer Assessment Survey in a popup window."""
+        return self.action_launch_survey_popup(survey_type='peer')
 
     @api.model
     def cron_check_deadline_reminders(self):

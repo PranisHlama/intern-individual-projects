@@ -272,4 +272,126 @@
         <field name="sub_goals">2-Week Barista Training Matrix   Drink Recipe Speed Testing   Milk Steaming Mentorship</field>
         <field name="description">Train and mentor junior baristas on café beverage standards, espresso consistency, and station efficiency.</field>
     </record>
+
+    <!-- Top-Level Manager Generated Appraisal Survey Questions -->
+    <record id="survey_q_core_execution" model="hr.appraisal.survey.question">
+        <field name="name">Core Task Execution &amp; Standard Adherence</field>
+        <field name="description">How consistently and effectively are daily job responsibilities, quality standards, and operating procedures executed?</field>
+        <field name="survey_type">all</field>
+        <field name="sequence">10</field>
+        <field name="rating_scale_min">1</field>
+        <field name="rating_scale_max">5</field>
+        <field name="rating_label_min">Poor</field>
+        <field name="rating_label_max">Excellent</field>
+        <field name="is_required">True</field>
+    </record>
+
+    <record id="survey_q_problem_solving" model="hr.appraisal.survey.question">
+        <field name="name">Problem Solving &amp; Operational Agility</field>
+        <field name="description">Demonstrates initiative to resolve unexpected operational roadblocks and adapt swiftly to changing priorities.</field>
+        <field name="survey_type">all</field>
+        <field name="sequence">20</field>
+        <field name="rating_scale_min">1</field>
+        <field name="rating_scale_max">5</field>
+        <field name="rating_label_min">Poor</field>
+        <field name="rating_label_max">Excellent</field>
+        <field name="is_required">True</field>
+    </record>
+
+    <record id="survey_q_teamwork" model="hr.appraisal.survey.question">
+        <field name="name">Teamwork &amp; Cross-Functional Communication</field>
+        <field name="description">Maintains constructive, transparent, and supportive communication with colleagues and supervisors.</field>
+        <field name="survey_type">all</field>
+        <field name="sequence">30</field>
+        <field name="rating_scale_min">1</field>
+        <field name="rating_scale_max">5</field>
+        <field name="rating_label_min">Poor</field>
+        <field name="rating_label_max">Excellent</field>
+        <field name="is_required">True</field>
+    </record>
+
+    <record id="survey_q_self_initiative" model="hr.appraisal.survey.question">
+        <field name="name">Self-Initiative, Skill Growth &amp; Goal Pursuit</field>
+        <field name="description">Proactively seeks learning opportunities, accepts constructive critique, and advances personal professional milestones.</field>
+        <field name="survey_type">self</field>
+        <field name="sequence">40</field>
+        <field name="rating_scale_min">1</field>
+        <field name="rating_scale_max">5</field>
+        <field name="rating_label_min">Poor</field>
+        <field name="rating_label_max">Excellent</field>
+        <field name="is_required">True</field>
+    </record>
+
+    <record id="survey_q_self_pressure" model="hr.appraisal.survey.question">
+        <field name="name">Composure &amp; Focus During Peak Volume Hours</field>
+        <field name="description">Maintains high quality, positive customer demeanor, and methodical pace during high-stress operational peaks.</field>
+        <field name="survey_type">self</field>
+        <field name="sequence">50</field>
+        <field name="rating_scale_min">1</field>
+        <field name="rating_scale_max">5</field>
+        <field name="rating_label_min">Poor</field>
+        <field name="rating_label_max">Excellent</field>
+        <field name="is_required">True</field>
+    </record>
+
+    <record id="survey_q_peer_reliability" model="hr.appraisal.survey.question">
+        <field name="name">Peer Reliability &amp; Collaborative Work Ethic</field>
+        <field name="description">How dependable is this colleague in supporting teammates, sharing workload, and stepping up during bottlenecks?</field>
+        <field name="survey_type">peer</field>
+        <field name="sequence">40</field>
+        <field name="rating_scale_min">1</field>
+        <field name="rating_scale_max">5</field>
+        <field name="rating_label_min">Poor</field>
+        <field name="rating_label_max">Excellent</field>
+        <field name="is_required">True</field>
+    </record>
+
+    <record id="survey_q_peer_respect" model="hr.appraisal.survey.question">
+        <field name="name">Respectful Culture &amp; Positive Team Morale</field>
+        <field name="description">Contributes to an inclusive, respectful, and motivating workplace atmosphere.</field>
+        <field name="survey_type">peer</field>
+        <field name="sequence">50</field>
+        <field name="rating_scale_min">1</field>
+        <field name="rating_scale_max">5</field>
+        <field name="rating_label_min">Poor</field>
+        <field name="rating_label_max">Excellent</field>
+        <field name="is_required">True</field>
+    </record>
+
+    <record id="survey_q_mgr_output" model="hr.appraisal.survey.question">
+        <field name="name">Supervisory Assessment of Quality &amp; Deliverables</field>
+        <field name="description">Managerial rating of consistency, accuracy, error rate, and overall output excellence.</field>
+        <field name="survey_type">manager</field>
+        <field name="sequence">40</field>
+        <field name="rating_scale_min">1</field>
+        <field name="rating_scale_max">5</field>
+        <field name="rating_label_min">Poor</field>
+        <field name="rating_label_max">Excellent</field>
+        <field name="is_required">True</field>
+    </record>
+
+    <record id="survey_q_mgr_punctuality" model="hr.appraisal.survey.question">
+        <field name="name">Punctuality, Shift Compliance &amp; Policy Adherence</field>
+        <field name="description">Regularity of shift attendance, prompt station setup, and compliance with organizational codes.</field>
+        <field name="survey_type">manager</field>
+        <field name="sequence">50</field>
+        <field name="rating_scale_min">1</field>
+        <field name="rating_scale_max">5</field>
+        <field name="rating_label_min">Poor</field>
+        <field name="rating_label_max">Excellent</field>
+        <field name="is_required">True</field>
+    </record>
+
+    <record id="survey_q_mgr_leadership" model="hr.appraisal.survey.question">
+        <field name="name">Ownership, Accountability &amp; Continuous Improvement</field>
+        <field name="description">Demonstrates personal ownership of outcomes, takes responsibility for mistakes, and drives incremental improvements.</field>
+        <field name="survey_type">manager</field>
+        <field name="sequence">60</field>
+        <field name="rating_scale_min">1</field>
+        <field name="rating_scale_max">5</field>
+        <field name="rating_label_min">Poor</field>
+        <field name="rating_label_max">Excellent</field>
+        <field name="is_required">True</field>
+    </record>
+
 </odoo>

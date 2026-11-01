@@ -22,8 +22,19 @@
     <menuitem id="menu_hr_appraisal_surveys_main"
               name="Surveys"
               parent="menu_hr_appraisal_root"
-              action="action_hr_appraisal_survey"
               sequence="25"/>
+
+    <menuitem id="menu_hr_appraisal_survey_take"
+              name="Take Survey (Popup)"
+              parent="menu_hr_appraisal_surveys_main"
+              action="action_hr_appraisal_survey_popup"
+              sequence="10"/>
+
+    <menuitem id="menu_hr_appraisal_survey_all"
+              name="All Surveys"
+              parent="menu_hr_appraisal_surveys_main"
+              action="action_hr_appraisal_survey"
+              sequence="20"/>
 
     <menuitem id="menu_hr_appraisal_reporting"
               name="Reporting"
@@ -78,6 +89,12 @@
               parent="menu_hr_appraisal_configuration"
               action="action_hr_appraisal_template"
               sequence="30"/>
+
+    <menuitem id="menu_hr_appraisal_survey_questions"
+              name="Survey Questions (Manager Setup)"
+              parent="menu_hr_appraisal_configuration"
+              action="action_hr_appraisal_survey_question"
+              sequence="35"/>
 
     <menuitem id="menu_hr_appraisal_competencies"
               name="Competencies"

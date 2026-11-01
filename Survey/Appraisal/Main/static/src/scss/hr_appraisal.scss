@@ -173,3 +173,159 @@
         content: "task" !important;
     }
 }
+
+
+/* ========================================================= */
+/* Google Forms Look-and-Feel for Appraisal Survey Popup     */
+/* ========================================================= */
+.gform-root {
+    background-color: #f0ebf8 !important;
+}
+
+.modal-dialog:has(.gform-root) {
+    max-width: 820px !important;
+}
+
+.gform-banner-strip {
+    height: 10px;
+    background: #673ab7;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    margin-bottom: -10px;
+}
+
+.gform-container {
+    max-width: 770px;
+    margin: 0 auto;
+    padding: 16px 12px 24px 12px;
+}
+
+.gform-card {
+    background: #ffffff;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    padding: 22px 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(60, 64, 67, 0.12), 0 1px 2px rgba(60, 64, 67, 0.24);
+    position: relative;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.gform-card:hover {
+    border-color: #bdc1c6;
+}
+
+.gform-header-card {
+    border-top: 10px solid #673ab7 !important;
+    padding-top: 20px;
+}
+
+.gform-title {
+    font-size: 26px !important;
+    font-weight: 500 !important;
+    color: #202124 !important;
+    margin-bottom: 6px !important;
+    line-height: 1.3 !important;
+}
+
+.gform-subtitle {
+    font-size: 13.5px;
+    color: #5f6368;
+    line-height: 1.5;
+}
+
+.gform-section-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: #202124;
+    margin-bottom: 8px;
+}
+
+.gform-question-label {
+    font-size: 15px;
+    font-weight: 500;
+    color: #202124;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.gform-input input,
+.gform-input select {
+    border: 1px solid #dadce0 !important;
+    border-radius: 4px !important;
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gform-input input:focus,
+.gform-input select:focus {
+    border-color: #673ab7 !important;
+    box-shadow: 0 0 0 2px rgba(103, 58, 183, 0.2) !important;
+    outline: none !important;
+}
+
+.gform-radio-group .form-check {
+    display: inline-block;
+    margin-right: 20px;
+    padding-left: 24px;
+}
+
+.gform-radio-group .form-check-input:checked {
+    background-color: #673ab7;
+    border-color: #673ab7;
+}
+
+.gform-scale-cell .form-check {
+    display: inline-block;
+    margin-right: 14px;
+}
+
+.gform-scale-cell .form-check-input:checked {
+    background-color: #673ab7;
+    border-color: #673ab7;
+}
+
+.gform-btn-submit {
+    background-color: #673ab7 !important;
+    border-color: #673ab7 !important;
+    color: #ffffff !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    padding: 8px 24px !important;
+    border-radius: 4px !important;
+    letter-spacing: 0.25px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gform-btn-submit:hover {
+    background-color: #512da8 !important;
+    border-color: #512da8 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.gform-btn-clear {
+    color: #5f6368 !important;
+    text-decoration: none !important;
+    font-weight: 500 !important;
+    padding: 8px 16px !important;
+}
+
+.gform-btn-clear:hover {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+    border-radius: 4px;
+}
+
+.gform-textarea textarea {
+    border: 1px solid #dadce0 !important;
+    border-radius: 4px !important;
+    padding: 10px 12px !important;
+    font-size: 14px !important;
+    min-height: 80px;
+}
+
+.gform-textarea textarea:focus {
+    border-color: #673ab7 !important;
+    box-shadow: 0 0 0 2px rgba(103, 58, 183, 0.2) !important;
+}

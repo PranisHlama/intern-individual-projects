@@ -114,12 +114,12 @@
                             invisible="state != 'done'"/>
                     <button name="action_reopen" string="Reopen Cycle" type="object" class="btn-warning"
                             invisible="state not in ['done', 'cancel']" groups="hr_appraisal_pro.group_appraisal_manager_hr"/>
-                    <button name="action_open_self_survey" string="Self Assessment" type="object" class="btn-outline-primary"
-                            invisible="1"/>
-                    <button name="action_open_manager_survey" string="Manager Evaluation" type="object" class="btn-outline-primary"
-                            invisible="1"/>
-                    <button name="action_open_peer_survey" string="Peer Assessment" type="object" class="btn-outline-secondary"
-                            invisible="1"/>
+                    <button name="action_open_self_survey" string="Take Self Assessment (Popup)" type="object" class="btn-primary"
+                            invisible="state not in ['draft', 'waiting_self']"/>
+                    <button name="action_open_manager_survey" string="Manager Evaluation (Popup)" type="object" class="btn-primary"
+                            invisible="state not in ['waiting_manager']"/>
+                    <button name="action_open_peer_survey" string="Peer Assessment (Popup)" type="object" class="btn-outline-secondary"
+                            invisible="state in ['done', 'cancel']"/>
 
                     <field name="stage_id" widget="statusbar" options="{'clickable': '0'}"/>
                 </header>

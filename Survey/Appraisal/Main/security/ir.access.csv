@@ -100,3 +100,6 @@ access_hr_appraisal_survey_officer,hr.appraisal.survey.officer,hr.appraisal.surv
 access_hr_appraisal_survey_answer_user,hr.appraisal.survey.answer.user,hr.appraisal.survey.answer,hr_appraisal_pro.group_appraisal_user,cru,
 access_hr_appraisal_survey_answer_mgr,hr.appraisal.survey.answer.mgr,hr.appraisal.survey.answer,hr_appraisal_pro.group_appraisal_manager,crud,
 access_hr_appraisal_survey_answer_officer,hr.appraisal.survey.answer.officer,hr.appraisal.survey.answer,hr_appraisal_pro.group_appraisal_officer,crud,
+access_hr_appraisal_survey_question_user,hr.appraisal.survey.question.user,hr.appraisal.survey.question,hr_appraisal_pro.group_appraisal_user,r,
+access_hr_appraisal_survey_question_mgr,hr.appraisal.survey.question.mgr,hr.appraisal.survey.question,hr_appraisal_pro.group_appraisal_manager,crud,
+access_hr_appraisal_survey_question_officer,hr.appraisal.survey.question.officer,hr.appraisal.survey.question,hr_appraisal_pro.group_appraisal_officer,crud,

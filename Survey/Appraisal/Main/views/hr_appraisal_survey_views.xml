@@ -1,221 +1,279 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- ========================================================= -->
+    <!-- 1. POPUP SURVEY FORM (Google Forms Look-and-Feel)         -->
+    <!-- ========================================================= -->
     <record id="view_hr_appraisal_survey_form" model="ir.ui.view">
         <field name="name">hr.appraisal.survey.form</field>
         <field name="model">hr.appraisal.survey</field>
         <field name="arch" type="xml">
-            <form string="Appraisal Survey Assessment">
-                <header>
-                    <button name="action_start" string="Start Assessment" type="object" class="btn-primary"
-                            invisible="state != 'draft'"/>
-                    <button name="action_submit" string="Submit Survey" type="object" class="btn-success"
-                            invisible="state == 'submitted'"/>
-                    <button name="action_reset_draft" string="Reset to Draft" type="object" class="btn-secondary"
-                            invisible="state == 'draft'" groups="hr_appraisal_pro.group_appraisal_officer"/>
-                    <button name="action_load_questions" string="Load Template Questions" type="object" class="btn-outline-secondary"
-                            invisible="state == 'submitted'"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,submitted"/>
+            <form string="Appraisal Survey" class="gform-root">
+                <header invisible="1">
+                    <field name="state" widget="statusbar"/>
                 </header>
-                <sheet>
-                    <div class="oe_button_box" name="button_box">
-                        <button class="oe_stat_button" icon="badge" type="object" name="action_open_appraisal"
-                                invisible="not appraisal_id">
-                            <div class="o_stat_info">
-                                <span class="o_stat_text">Appraisal</span>
-                            </div>
-                        </button>
-                    </div>
-                    <widget name="web_ribbon" title="Submitted" bg_color="text-bg-success" invisible="state != 'submitted'"/>
-
-                    <div class="oe_title">
-                        <div class="mb-2">
-                            <field name="survey_type" widget="badge"
-                                   decoration-info="survey_type == 'self'"
-                                   decoration-warning="survey_type == 'peer'"
-                                   decoration-primary="survey_type == 'manager'"/>
+                <sheet class="gform-sheet p-0">
+                    <!-- Google Forms Purple Banner Stripe -->
+                    <div class="gform-banner-strip"/>
+                    
+                    <div class="gform-container">
+                        <!-- Card 1: Google Forms Header Card -->
+                        <div class="gform-card gform-header-card">
+                            <div class="gform-accent-bar"/>
+                            <h1 class="gform-title"><field name="name" readonly="1"/></h1>
+                            <p class="gform-subtitle text-muted mb-2">
+                                Performance Appraisal Assessment Form. Please review each criterion carefully and submit your evaluation. All ratings are scored on a scale from 1 (Poor) to 5 (Excellent).
+                            </p>
+                            <div class="text-danger small fw-semibold">* Indicates required question</div>
                         </div>
-                        <h1 class="my-0"><field name="name"/></h1>
-                    </div>
 
-                    <group>
-                        <group string="Evaluation Subject &amp; Reviewer">
-                            <field name="employee_id"/>
-                            <field name="respondent_id"/>
-                            <field name="user_id" invisible="1"/>
-                            <field name="appraisal_id"/>
-                            <field name="company_id" groups="base.group_multi_company"/>
-                        </group>
-                        <group string="Template &amp; Scoring">
-                            <field name="template_id"/>
-                            <field name="date_deadline"/>
-                            <field name="date_completed" invisible="not date_completed"/>
-                            <field name="score" widget="badge"/>
-                        </group>
-                    </group>
+                        <!-- Card 2: Respondent Information (Only require Job position & Survey type) -->
+                        <div class="gform-card">
+                            <h3 class="gform-section-title">Your Information</h3>
+                            <p class="text-muted small mb-3">Please specify the job position and which survey type among the 3 defined review workflows you are completing.</p>
+                            
+                            <div class="mb-3">
+                                <label for="job_id" string="Job Position" class="gform-question-label"/>
+                                <field name="job_id" placeholder="Select your Job Position..." required="1" class="gform-input"/>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <label for="survey_type" string="Survey Type" class="gform-question-label"/>
+                                <field name="survey_type" widget="radio" options="{'horizontal': true}" required="1" class="gform-radio-group"/>
+                            </div>
 
-                    <notebook>
-                        <page string="Survey Questions &amp; Responses" name="questions">
-                            <field name="answer_ids">
-                                <list editable="bottom" create="0">
+                            <!-- Hidden Submission Date: Recorded automatically upon submission but hidden from respondent -->
+                            <field name="date_submission" invisible="1"/>
+                            <field name="appraisal_id" invisible="1"/>
+                            <field name="employee_id" invisible="1"/>
+                            <field name="respondent_id" invisible="1"/>
+                            <field name="state" invisible="1"/>
+                        </div>
+
+                        <!-- Card 3: Questions Generated by Top Level Managers (Rating Scale Included) -->
+                        <div class="gform-card">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h3 class="gform-section-title mb-0">Appraisal Questions &amp; Rating Scale</h3>
+                                <button name="action_load_questions" string="Refresh Questions" type="object" class="btn btn-sm btn-outline-secondary" invisible="state == 'submitted'"/>
+                            </div>
+                            <p class="text-muted small mb-3">Questions generated by top-level management. Rate performance from 1 (Poor) to 5 (Excellent).</p>
+
+                            <field name="answer_ids" class="gform-answers-field">
+                                <list editable="bottom" create="0" delete="0" class="gform-answers-table">
                                     <field name="sequence" widget="handle"/>
-                                    <field name="section_id"/>
-                                    <field name="question_id" readonly="1"/>
-                                    <field name="question_type" column_invisible="1"/>
-                                    <field name="is_required" column_invisible="1"/>
-                                    <field name="rating_answer" string="Rating (1-5)"
-                                           invisible="question_type != 'rating'"/>
-                                    <field name="choice_id" string="Selected Choice"
-                                           invisible="question_type not in ['selection', 'multiple_choice']"/>
-                                    <field name="boolean_answer" string="Yes / No"
-                                           invisible="question_type != 'boolean'"/>
-                                    <field name="paragraph_answer" string="Written Response"
-                                           invisible="question_type not in ['text', 'paragraph', 'matrix']"
-                                           placeholder="Enter response..."/>
-                                    <field name="score_value" widget="badge" optional="show"/>
-                                    <field name="comments" placeholder="Optional comments..." optional="hide"/>
+                                    <field name="question_name" string="Question" readonly="1" class="fw-bold"/>
+                                    <field name="rating" widget="radio" options="{'horizontal': true}" string="Rating Scale (1 to 5)" class="gform-scale-cell"/>
+                                    <field name="comments" placeholder="Optional comments..." string="Remarks"/>
+                                    <field name="rating_value" column_invisible="1"/>
                                 </list>
-                                <form string="Question Detail Response">
-                                    <group>
+                                <form string="Question Response">
+                                    <sheet>
+                                        <h4 class="fw-bold mb-1"><field name="question_name" readonly="1"/></h4>
+                                        <field name="description" readonly="1" invisible="not description" class="text-muted small mb-3"/>
                                         <group>
-                                            <field name="section_id"/>
-                                            <field name="question_id" readonly="1"/>
-                                            <field name="help_text" readonly="1"/>
+                                            <field name="rating" widget="radio" options="{'horizontal': true}"/>
+                                            <field name="comments" placeholder="Enter remarks or evidence..."/>
                                         </group>
-                                        <group>
-                                            <field name="question_type" readonly="1"/>
-                                            <field name="rating_answer" invisible="question_type != 'rating'"/>
-                                            <field name="choice_id" invisible="question_type not in ['selection', 'multiple_choice']"/>
-                                            <field name="boolean_answer" invisible="question_type != 'boolean'"/>
-                                            <field name="score_value"/>
-                                        </group>
-                                    </group>
-                                    <field name="paragraph_answer" placeholder="Detailed response..."/>
-                                    <field name="comments" placeholder="Additional reviewer comments..."/>
+                                    </sheet>
                                 </form>
                             </field>
-                        </page>
-                        <page string="Overall Qualitative Review &amp; Recommendations" name="summary_tab">
-                            <field name="summary" placeholder="Provide general feedback, overall achievements, strengths, development areas, or notes for this appraisal cycle..."/>
-                        </page>
-                    </notebook>
+                        </div>
+
+                        <!-- Card 4: General Reflection / Closing Remarks -->
+                        <div class="gform-card">
+                            <h3 class="gform-section-title">Overall Reflections &amp; Recommendations</h3>
+                            <p class="text-muted small mb-2">Share any general reflections, milestones achieved, key challenges, or suggested growth areas.</p>
+                            <field name="general_feedback" placeholder="Your answer..." class="form-control gform-textarea"/>
+                        </div>
+                    </div>
                 </sheet>
-                <chatter/>
+                <!-- Google Forms Modal Footer -->
+                <footer class="gform-footer d-flex justify-content-between align-items-center p-3 border-top bg-light">
+                    <div>
+                        <button name="action_submit" string="Submit" type="object" class="btn btn-primary gform-btn-submit me-2" invisible="state == 'submitted'"/>
+                        <button string="Close" class="btn btn-outline-secondary gform-btn-clear" special="cancel"/>
+                    </div>
+                    <div class="badge bg-success-subtle text-success p-2" invisible="state != 'submitted'">
+                        ✓ Response Recorded
+                    </div>
+                </footer>
             </form>
         </field>
     </record>
 
+    <!-- ========================================================= -->
+    <!-- 2. SURVEY LIST VIEW                                       -->
+    <!-- ========================================================= -->
     <record id="view_hr_appraisal_survey_tree" model="ir.ui.view">
         <field name="name">hr.appraisal.survey.list</field>
         <field name="model">hr.appraisal.survey</field>
         <field name="arch" type="xml">
-            <list string="Appraisal Surveys &amp; Assessments">
+            <list string="Appraisal Surveys">
                 <field name="name"/>
+                <field name="job_id"/>
                 <field name="survey_type" widget="badge"
                        decoration-info="survey_type == 'self'"
                        decoration-warning="survey_type == 'peer'"
                        decoration-primary="survey_type == 'manager'"/>
-                <field name="employee_id"/>
-                <field name="respondent_id"/>
-                <field name="template_id"/>
-                <field name="date_deadline"/>
-                <field name="score" widget="badge"/>
+                <field name="score" widget="badge" string="Score (/5.0)"/>
+                <field name="date_submission" string="Date Submitted"/>
                 <field name="state" widget="badge"
                        decoration-success="state == 'submitted'"
-                       decoration-info="state == 'in_progress'"
                        decoration-muted="state == 'draft'"/>
+                <button name="action_open_popup" string="Open Survey" type="object" icon="fa-external-link" class="btn-sm btn-link"/>
             </list>
         </field>
     </record>
 
-    <record id="view_hr_appraisal_survey_kanban" model="ir.ui.view">
-        <field name="name">hr.appraisal.survey.kanban</field>
-        <field name="model">hr.appraisal.survey</field>
-        <field name="arch" type="xml">
-            <kanban class="o_kanban_mobile" sample="1">
-                <field name="survey_type"/>
-                <field name="employee_id"/>
-                <field name="respondent_id"/>
-                <field name="state"/>
-                <field name="score"/>
-                <templates>
-                    <t t-name="card">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="badge bg-light text-dark border">
-                                <i class="oi oi-fw me-1" data-icon="edit_square" title="Survey Type" role="img" aria-label="Survey Type"/>
-                                <field name="survey_type"/>
-                            </span>
-                            <field name="state" widget="badge"
-                                   decoration-success="state == 'submitted'"
-                                   decoration-info="state == 'in_progress'"
-                                   decoration-muted="state == 'draft'"/>
-                        </div>
-                        <strong class="d-block text-truncate mb-1"><field name="name"/></strong>
-                        <div class="text-muted small mb-1">
-                            <i class="oi oi-fw me-1" data-icon="account_circle" title="Appraised Employee" role="img" aria-label="Appraised Employee"/>
-                            <span>Appraised: </span><field name="employee_id"/>
-                        </div>
-                        <div class="text-muted small mb-2">
-                            <i class="oi oi-fw me-1" data-icon="person" title="Reviewer" role="img" aria-label="Reviewer"/>
-                            <span>Reviewer: </span><field name="respondent_id"/>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-muted small">
-                                <i class="oi oi-fw me-1" data-icon="calendar_today" title="Deadline" role="img" aria-label="Deadline"/>
-                                <field name="date_deadline"/>
-                            </span>
-                            <span class="badge bg-success-subtle text-success fw-bold">
-                                <i class="oi oi-fw me-1" data-icon="star" title="Score" role="img" aria-label="Score"/>
-                                Score: <field name="score"/> / 5.0
-                            </span>
-                        </div>
-                    </t>
-                </templates>
-            </kanban>
-        </field>
-    </record>
-
+    <!-- ========================================================= -->
+    <!-- 3. SURVEY SEARCH VIEW                                     -->
+    <!-- ========================================================= -->
     <record id="view_hr_appraisal_survey_search" model="ir.ui.view">
         <field name="name">hr.appraisal.survey.search</field>
         <field name="model">hr.appraisal.survey</field>
         <field name="arch" type="xml">
             <search string="Search Surveys">
                 <field name="name"/>
+                <field name="job_id"/>
+                <field name="survey_type"/>
                 <field name="employee_id"/>
-                <field name="respondent_id"/>
                 <field name="appraisal_id"/>
-                <field name="template_id"/>
                 <separator/>
                 <filter string="Self Assessments" name="filter_self" domain="[('survey_type', '=', 'self')]"/>
                 <filter string="Peer Assessments" name="filter_peer" domain="[('survey_type', '=', 'peer')]"/>
                 <filter string="Manager Evaluations" name="filter_manager" domain="[('survey_type', '=', 'manager')]"/>
                 <separator/>
-                <filter string="Draft / Pending" name="filter_draft" domain="[('state', '=', 'draft')]"/>
-                <filter string="In Progress" name="filter_in_progress" domain="[('state', '=', 'in_progress')]"/>
+                <filter string="In Progress" name="filter_draft" domain="[('state', '=', 'draft')]"/>
                 <filter string="Submitted" name="filter_submitted" domain="[('state', '=', 'submitted')]"/>
                 <group>
                     <filter string="Survey Type" name="group_survey_type" context="{'group_by': 'survey_type'}"/>
+                    <filter string="Job Position" name="group_job" context="{'group_by': 'job_id'}"/>
                     <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
-                    <filter string="Employee Appraised" name="group_employee" context="{'group_by': 'employee_id'}"/>
-                    <filter string="Reviewer / Respondent" name="group_respondent" context="{'group_by': 'respondent_id'}"/>
-                    <filter string="Appraisal Cycle" name="group_appraisal" context="{'group_by': 'appraisal_id'}"/>
                 </group>
             </search>
         </field>
     </record>
 
+    <!-- ========================================================= -->
+    <!-- 4. ACTIONS FOR SURVEYS                                    -->
+    <!-- ========================================================= -->
     <record id="action_hr_appraisal_survey" model="ir.actions.act_window">
-        <field name="name">Appraisal Surveys &amp; Assessments</field>
+        <field name="name">Surveys &amp; Assessments</field>
         <field name="res_model">hr.appraisal.survey</field>
-        <field name="view_mode">list,kanban,form</field>
+        <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="view_hr_appraisal_survey_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                No surveys found!
+                No surveys recorded yet!
             </p>
             <p>
-                Surveys capture Self Assessments, Peer Reviews, and Manager Evaluations using defined questionnaire templates.
+                Click "Launch Survey Popup" or start an evaluation to complete a Google Forms-style appraisal survey.
             </p>
         </field>
     </record>
+
+    <record id="action_hr_appraisal_survey_popup" model="ir.actions.act_window">
+        <field name="name">Appraisal Survey (Popup)</field>
+        <field name="res_model">hr.appraisal.survey</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_hr_appraisal_survey_form"/>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ========================================================= -->
+    <!-- 5. TOP LEVEL MANAGERS: QUESTION MANAGEMENT VIEWS          -->
+    <!-- ========================================================= -->
+    <record id="view_hr_appraisal_survey_question_list" model="ir.ui.view">
+        <field name="name">hr.appraisal.survey.question.list</field>
+        <field name="model">hr.appraisal.survey.question</field>
+        <field name="arch" type="xml">
+            <list string="Appraisal Questions (Manager Setup)" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name" string="Question Text"/>
+                <field name="survey_type" widget="badge"/>
+                <field name="job_id" string="Job Position" optional="show"/>
+                <field name="rating_scale_min" string="Min Scale" optional="hide"/>
+                <field name="rating_scale_max" string="Max Scale" optional="hide"/>
+                <field name="rating_label_min" string="Min Label" optional="show"/>
+                <field name="rating_label_max" string="Max Label" optional="show"/>
+                <field name="is_required" string="Required"/>
+                <field name="active" widget="boolean_toggle"/>
+                <field name="manager_id" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_hr_appraisal_survey_question_form" model="ir.ui.view">
+        <field name="name">hr.appraisal.survey.question.form</field>
+        <field name="model">hr.appraisal.survey.question</field>
+        <field name="arch" type="xml">
+            <form string="Appraisal Question (Manager Setup)">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name" string="Question Text"/>
+                        <h1><field name="name" placeholder="e.g. Demonstrates proactive problem solving and operational speed..."/></h1>
+                    </div>
+                    <group>
+                        <group string="Target Audience &amp; Role">
+                            <field name="survey_type"/>
+                            <field name="job_id" placeholder="All Job Positions (Global)"/>
+                            <field name="is_required"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Rating Scale Configuration">
+                            <field name="rating_scale_min"/>
+                            <field name="rating_scale_max"/>
+                            <field name="rating_label_min"/>
+                            <field name="rating_label_max"/>
+                            <field name="manager_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Guidelines &amp; Guidance for Respondent" name="guidelines">
+                            <field name="description" placeholder="Provide guidelines or criteria that the respondent should consider when rating this question..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_hr_appraisal_survey_question_search" model="ir.ui.view">
+        <field name="name">hr.appraisal.survey.question.search</field>
+        <field name="model">hr.appraisal.survey.question</field>
+        <field name="arch" type="xml">
+            <search string="Search Questions">
+                <field name="name"/>
+                <field name="survey_type"/>
+                <field name="job_id"/>
+                <separator/>
+                <filter string="Self Assessment Questions" name="filter_self" domain="[('survey_type', 'in', ['self', 'all'])]"/>
+                <filter string="Manager Evaluation Questions" name="filter_manager" domain="[('survey_type', 'in', ['manager', 'all'])]"/>
+                <filter string="Peer Assessment Questions" name="filter_peer" domain="[('survey_type', 'in', ['peer', 'all'])]"/>
+                <separator/>
+                <filter string="Archived" name="filter_archived" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter string="Survey Type" name="group_survey_type" context="{'group_by': 'survey_type'}"/>
+                    <filter string="Job Position" name="group_job" context="{'group_by': 'job_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_hr_appraisal_survey_question" model="ir.actions.act_window">
+        <field name="name">Survey Questions (Manager Setup)</field>
+        <field name="res_model">hr.appraisal.survey.question</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_hr_appraisal_survey_question_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create appraisal questions as a top-level manager!
+            </p>
+            <p>
+                Define standard criteria and rating scales (1 to 5) for Self, Peer, and Manager reviews across various job positions.
+            </p>
+        </field>
+    </record>
+
 </odoo>
