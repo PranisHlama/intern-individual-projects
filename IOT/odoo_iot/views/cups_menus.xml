@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Main Application Menu -->
+
+    <menuitem
+        id="menu_cups_root"
+        name="CUPS Printing"
+        sequence="65"
+        groups="base.group_user"
+    />
+
+    <!-- Configuration Menu -->
+
+    <menuitem
+        id="menu_cups_configuration"
+        name="Configuration"
+        parent="menu_cups_root"
+        sequence="10"
+        groups="base.group_user"
+    />
+
+    <!-- Printer Configuration Menu -->
+
+    <menuitem
+        id="menu_cups_printers"
+        name="CUPS Printers"
+        parent="menu_cups_configuration"
+        action="cups_config_action"
+        sequence="10"
+        groups="base.group_user"
+    />
+
+</odoo>
