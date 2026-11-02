@@ -9,6 +9,7 @@
     "depends": [
         "web",
         "mrp",
+        "stock",
     ],
 
     "data": [],
