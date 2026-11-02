@@ -3,11 +3,24 @@ import { InMemoryConversationStore } from "@infrastructure/adapters/secondary/st
 import { Conversation } from "@domain/entities/Conversation.js";
 import { Message } from "@domain/entities/Message.js";
 
+const testModelsConfig = JSON.stringify({
+  providers: [
+    { id: "test", baseUrl: "http://test", apiKey: "test" }
+  ],
+  models: [
+    { providerId: "test", modelId: "test-model", displayName: "Test Model", capabilities: { streaming: true, tools: true, contextWindow: 4096 }, maxTokens: 1000, temperature: 0.7, timeoutMs: 5000, isDefault: true }
+  ]
+});
+
 describe("InMemoryConversationStore", () => {
   let store: InMemoryConversationStore;
 
   beforeEach(() => {
     vi.useFakeTimers();
+    process.env.MODELS_CONFIG = testModelsConfig;
+    process.env.CONVERSATION_TTL_HOURS = "24";
+    process.env.CONVERSATION_MAX_MESSAGES = "100";
+    process.env.MAX_CONTEXT_TOKENS = "1000000";
     store = new InMemoryConversationStore();
   });
 

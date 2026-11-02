@@ -9,13 +9,13 @@ import { buildTokenWindow } from "@shared/utils/token-counter.js";
 
 const SESSION_KEY_PREFIX = "chat:session:";
 const MESSAGES_KEY_SUFFIX = ":messages";
+const DEFAULT_TOKEN_MODEL = "gpt-4o";
 
 export class RedisConversationStore implements ConversationStore {
   private readonly redis: Redis;
   private readonly ttlSeconds: number;
   private readonly maxMessages: number;
   private readonly maxContextTokens: number;
-  private readonly model: string;
 
   private modelRegistry: ModelRegistry | undefined;
 
@@ -24,7 +24,6 @@ export class RedisConversationStore implements ConversationStore {
     this.ttlSeconds = config.CONVERSATION_TTL_HOURS * 60 * 60;
     this.maxMessages = config.CONVERSATION_MAX_MESSAGES;
     this.maxContextTokens = config.MAX_CONTEXT_TOKENS;
-    this.model = config.LLM_MODEL;
     this.modelRegistry = modelRegistry;
 
     this.redis = new Redis({
@@ -185,7 +184,7 @@ export class RedisConversationStore implements ConversationStore {
   }
 
   private resolveModelName(modelId?: string): string {
-    return modelId ?? this.model;
+    return modelId ?? DEFAULT_TOKEN_MODEL;
   }
 
   isHealthy(): boolean {

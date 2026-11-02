@@ -10,17 +10,16 @@ export const ProviderConfigSchema = z.object({
   id: z.string().min(1),
   baseUrl: z.string().url(),
   apiKey: z.string().min(1),
-  defaultCapabilities: ModelCapabilitiesSchema,
-  defaultMaxTokens: z.number().positive().optional(),
-  defaultTemperature: z.number().optional(),
-  defaultTimeoutMs: z.number().positive().optional(),
 });
 
 export const ModelConfigSchema = z.object({
   providerId: z.string().min(1),
   modelId: z.string().min(1),
   displayName: z.string().min(1),
-  capabilities: ModelCapabilitiesSchema.optional(),
+  capabilities: ModelCapabilitiesSchema,
+  maxTokens: z.number().positive(),
+  temperature: z.number().min(0).max(2),
+  timeoutMs: z.number().positive(),
   isDefault: z.boolean().default(false),
 });
 

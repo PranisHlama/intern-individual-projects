@@ -5,9 +5,6 @@ import type { Logger } from "@domain/ports/Logger.js";
 export class NvidiaLlmClient implements LLMClient {
   private readonly apiKey: string;
   private readonly baseUrl: string;
-  private readonly maxTokens: number;
-  private readonly temperature: number;
-  private readonly timeout: number;
   private readonly logger: Logger;
 
   constructor(logger: Logger) {
@@ -18,10 +15,16 @@ export class NvidiaLlmClient implements LLMClient {
     }
     this.apiKey = nvidiaProvider.apiKey;
     this.baseUrl = nvidiaProvider.baseUrl.replace(/\/$/, "");
-    this.maxTokens = nvidiaProvider.defaultMaxTokens ?? config.LLM_MAX_TOKENS;
-    this.temperature = nvidiaProvider.defaultTemperature ?? config.LLM_TEMPERATURE;
-    this.timeout = nvidiaProvider.defaultTimeoutMs ?? config.LLM_TIMEOUT_MS;
     this.logger = logger;
+  }
+
+  private getModelConfig(modelId: string) {
+    const config = getConfig();
+    const modelConfig = config.modelsConfig.models.find(m => m.modelId === modelId);
+    if (!modelConfig) {
+      throw new Error(`Model ${modelId} not found in configuration`);
+    }
+    return modelConfig;
   }
 
   async complete(messages: LLMMessage[], tools: LLMTool[], modelId: string): Promise<LLMCompletion> {
@@ -67,20 +70,25 @@ export class NvidiaLlmClient implements LLMClient {
   }
 
   private buildRequestBody(messages: LLMMessage[], tools: LLMTool[], modelId: string, stream: boolean): Record<string, unknown> {
+    const modelConfig = this.getModelConfig(modelId);
     return {
       model: modelId,
       messages,
       tools: tools.length > 0 ? tools : undefined,
       tool_choice: tools.length > 0 ? "auto" : undefined,
-      temperature: this.temperature,
-      max_tokens: this.maxTokens,
+      temperature: modelConfig.temperature,
+      max_tokens: modelConfig.maxTokens,
       stream,
     };
   }
 
   private async post(body: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const modelId = body.model as string;
+    const modelConfig = this.getModelConfig(modelId);
+    const timeout = modelConfig.timeoutMs;
+
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => { controller.abort(); }, this.timeout);
+    const timeoutId = setTimeout(() => { controller.abort(); }, timeout);
 
     try {
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
@@ -104,15 +112,19 @@ export class NvidiaLlmClient implements LLMClient {
     } catch (error) {
       clearTimeout(timeoutId);
       if (error instanceof Error && error.name === "AbortError") {
-        throw new Error(`LLM request timeout after ${String(this.timeout)}ms`);
+        throw new Error(`LLM request timeout after ${String(timeout)}ms`);
       }
       throw error;
     }
   }
 
   private async postStream(body: Record<string, unknown>): Promise<Response> {
+    const modelId = body.model as string;
+    const modelConfig = this.getModelConfig(modelId);
+    const timeout = modelConfig.timeoutMs;
+
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => { controller.abort(); }, this.timeout);
+    const timeoutId = setTimeout(() => { controller.abort(); }, timeout);
 
     try {
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
@@ -137,7 +149,7 @@ export class NvidiaLlmClient implements LLMClient {
     } catch (error) {
       clearTimeout(timeoutId);
       if (error instanceof Error && error.name === "AbortError") {
-        throw new Error(`LLM request timeout after ${String(this.timeout)}ms`);
+        throw new Error(`LLM request timeout after ${String(timeout)}ms`);
       }
       throw error;
     }

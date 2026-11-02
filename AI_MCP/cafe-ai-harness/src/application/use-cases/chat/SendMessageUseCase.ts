@@ -842,6 +842,12 @@ export class SendMessageUseCase {
     }
 
     switch (toolName) {
+      case "get_boms":
+        return this.formatBomsHuman(parsed);
+      case "get_stock_levels":
+        return this.formatStockLevelsHuman(parsed);
+      case "get_product_stock":
+        return this.formatProductStockHuman(parsed);
       case "get_manufacturing_orders":
         return this.formatManufacturingOrdersHuman(parsed);
       case "get_manufacturing_order":
@@ -979,6 +985,121 @@ export class SendMessageUseCase {
       const relevance = score !== undefined ? `${(score * 100).toFixed(0)}%` : "N/A";
       lines.push(`| ${title} | ${relevance} | ${preview}${content.length > 150 ? "..." : ""} |`);
     }
+    return lines.join("\n");
+  }
+
+  private formatBomsHuman(data: Record<string, unknown>): string {
+    const boms = data.boms as Array<Record<string, unknown>> | undefined;
+    const totalCount = data.total_count as number | undefined;
+    const limit = data.limit as number | undefined;
+    const offset = data.offset as number | undefined;
+
+    if (!boms || boms.length === 0) {
+      return "I couldn't find any Bills of Materials matching your criteria.";
+    }
+
+    const effectiveTotal = totalCount ?? boms.length;
+    const lines = [];
+    lines.push(`Found **${effectiveTotal}** Bill of Material${effectiveTotal !== 1 ? "s" : ""}:`);
+    lines.push("");
+    lines.push("| BOM | Product | Type | Version | Active | Operations |");
+    lines.push("|-----|---------|------|---------|--------|------------|");
+    for (const bom of boms) {
+      const name = bom.name as string | undefined ?? "Unknown";
+      const id = bom.id as number | undefined ?? 0;
+      const productName = bom.product_name as string | undefined ?? "-";
+      const type = bom.type as string | undefined ?? "-";
+      const version = bom.version as string | undefined ?? "-";
+      const active = bom.active as boolean | undefined ?? false;
+      const opCount = bom.operation_count as number | undefined ?? 0;
+      const status = active ? "Yes" : "No";
+      lines.push(`| \`#${id}\` ${name} | ${productName} | ${type} | ${version} | ${status} | ${opCount} |`);
+    }
+
+    const effectiveOffset = offset ?? 0;
+    if ((limit ?? 0) > 0 && effectiveOffset + boms.length < effectiveTotal) {
+      lines.push("");
+      lines.push(`*Showing ${effectiveOffset + 1}–${effectiveOffset + boms.length} of ${effectiveTotal}. Use pagination to see more.*`);
+    }
+
+    lines.push("");
+    lines.push("> **Tip:** For full details of a specific BOM (component lines, operations, by-products), ask me about a BOM by its ID (e.g., \"explain BOM #1 in detail\").");
+
+    return lines.join("\n");
+  }
+
+  private formatStockLevelsHuman(data: Record<string, unknown>): string {
+    const quants = data.quant as Array<Record<string, unknown>> | undefined;
+    const totalCount = data.total_count as number | undefined;
+    const limit = data.limit as number | undefined;
+    const offset = data.offset as number | undefined;
+
+    if (!quants || quants.length === 0) {
+      return "I couldn't find any stock levels matching your criteria.";
+    }
+
+    const effectiveTotal = totalCount ?? quants.length;
+    const lines = [];
+    lines.push(`Found **${effectiveTotal}** stock level record${effectiveTotal !== 1 ? "s" : ""}:`);
+    lines.push("");
+    lines.push("| Product | Location | Warehouse | On Hand | Reserved | Available | UoM |");
+    lines.push("|---------|----------|-----------|---------|----------|-----------|-----|");
+    for (const q of quants) {
+      const pname = q.product_name as string | undefined ?? "Unknown";
+      const pid = q.product_id as number | undefined ?? 0;
+      const lname = q.location_name as string | undefined ?? "-";
+      const wname = q.warehouse_name as string | undefined ?? "-";
+      const qty = q.quantity as number | undefined ?? 0;
+      const reserved = q.reserved_quantity as number | undefined ?? 0;
+      const available = q.available_quantity as number | undefined ?? 0;
+      const uom = q.uom_name as string | undefined ?? "Units";
+      lines.push(`| \`#${pid}\` ${pname} | ${lname} | ${wname} | ${qty} | ${reserved} | ${available} | ${uom} |`);
+    }
+
+    const effectiveOffset = offset ?? 0;
+    if ((limit ?? 0) > 0 && effectiveOffset + quants.length < effectiveTotal) {
+      lines.push("");
+      lines.push(`*Showing ${effectiveOffset + 1}–${effectiveOffset + quants.length} of ${effectiveTotal}. Use pagination to see more.*`);
+    }
+
+    return lines.join("\n");
+  }
+
+  private formatProductStockHuman(data: Record<string, unknown>): string {
+    const products = data.products as Array<Record<string, unknown>> | undefined;
+    const totalCount = data.total_count as number | undefined;
+    const limit = data.limit as number | undefined;
+    const offset = data.offset as number | undefined;
+
+    if (!products || products.length === 0) {
+      return "I couldn't find any products matching your criteria.";
+    }
+
+    const effectiveTotal = totalCount ?? products.length;
+    const lines = [];
+    lines.push(`Found **${effectiveTotal}** product${effectiveTotal !== 1 ? "s" : ""} with stock data:`);
+    lines.push("");
+    lines.push("| Product | Code | On Hand | Forecasted | Incoming | Outgoing | Free | UoM |");
+    lines.push("|---------|------|---------|------------|----------|----------|------|-----|");
+    for (const p of products) {
+      const name = p.name as string | undefined ?? "Unknown";
+      const pid = p.id as number | undefined ?? 0;
+      const code = (p.product_code as string | undefined) ?? "-";
+      const qtyOnHand = p.qty_available as number | undefined ?? 0;
+      const forecasted = p.virtual_available as number | undefined ?? 0;
+      const incoming = p.incoming_qty as number | undefined ?? 0;
+      const outgoing = p.outgoing_qty as number | undefined ?? 0;
+      const free = p.free_qty as number | undefined ?? 0;
+      const uom = p.uom_name as string | undefined ?? "Units";
+      lines.push(`| \`#${pid}\` ${name} | ${code} | ${qtyOnHand} | ${forecasted} | ${incoming} | ${outgoing} | ${free} | ${uom} |`);
+    }
+
+    const effectiveOffset = offset ?? 0;
+    if ((limit ?? 0) > 0 && effectiveOffset + products.length < effectiveTotal) {
+      lines.push("");
+      lines.push(`*Showing ${effectiveOffset + 1}–${effectiveOffset + products.length} of ${effectiveTotal}. Use pagination to see more.*`);
+    }
+
     return lines.join("\n");
   }
 

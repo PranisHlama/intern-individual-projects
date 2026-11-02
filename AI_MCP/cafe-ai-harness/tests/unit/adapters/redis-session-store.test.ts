@@ -23,11 +23,19 @@ vi.mock("ioredis", () => {
   };
 });
 
-vi.mock("../../src/adapters/config/env-config.js", () => ({
+const testModelsConfig = JSON.stringify({
+  providers: [
+    { id: "test", baseUrl: "http://test", apiKey: "test" }
+  ],
+  models: [
+    { providerId: "test", modelId: "test-model", displayName: "Test Model", capabilities: { streaming: true, tools: true, contextWindow: 4096 }, maxTokens: 1000, temperature: 0.7, timeoutMs: 5000, isDefault: true }
+  ]
+});
+
+vi.mock("@infrastructure/config/EnvConfig.js", () => ({
   getConfig: () => ({
     CONVERSATION_TTL_HOURS: 48,
     CONVERSATION_MAX_MESSAGES: 100,
-    CONTEXT_WINDOW_SIZE: 10,
     REDIS_HOST: "localhost",
     REDIS_PORT: 6379,
     REDIS_USERNAME: "",
@@ -37,7 +45,7 @@ vi.mock("../../src/adapters/config/env-config.js", () => ({
     REDIS_CONNECTION_TIMEOUT_MS: 5000,
     REDIS_MAX_RETRIES: 3,
     MAX_CONTEXT_TOKENS: 1000000,
-    LLM_MODEL: "gpt-4o-mini",
+    MODELS_CONFIG: testModelsConfig,
   }),
 }));
 

@@ -5,9 +5,6 @@ import type { Logger } from "@domain/ports/Logger.js";
 export class GeminiLlmClient implements LLMClient {
   private readonly apiKey: string;
   private readonly baseUrl: string;
-  private readonly maxTokens: number;
-  private readonly temperature: number;
-  private readonly timeout: number;
   private readonly logger: Logger;
 
   constructor(logger: Logger) {
@@ -18,10 +15,16 @@ export class GeminiLlmClient implements LLMClient {
     }
     this.apiKey = geminiProvider.apiKey;
     this.baseUrl = geminiProvider.baseUrl.replace(/\/$/, "");
-    this.maxTokens = geminiProvider.defaultMaxTokens ?? config.LLM_MAX_TOKENS;
-    this.temperature = geminiProvider.defaultTemperature ?? config.LLM_TEMPERATURE;
-    this.timeout = geminiProvider.defaultTimeoutMs ?? config.LLM_TIMEOUT_MS;
     this.logger = logger;
+  }
+
+  private getModelConfig(modelId: string) {
+    const config = getConfig();
+    const modelConfig = config.modelsConfig.models.find(m => m.modelId === modelId);
+    if (!modelConfig) {
+      throw new Error(`Model ${modelId} not found in configuration`);
+    }
+    return modelConfig;
   }
 
   private getModelUrl(modelId: string, streaming: boolean): string {
@@ -31,14 +34,14 @@ export class GeminiLlmClient implements LLMClient {
 
   async complete(messages: LLMMessage[], tools: LLMTool[], modelId: string): Promise<LLMCompletion> {
     this.logger.info("LLM request", { provider: "gemini", model: modelId, streaming: false });
-    const requestBody = this.buildRequestBody(messages, tools);
+    const requestBody = this.buildRequestBody(messages, tools, modelId);
     const response = await this.post(requestBody, modelId);
     return this.parseCompletion(response);
   }
 
   async *stream(messages: LLMMessage[], tools: LLMTool[], modelId: string): AsyncIterable<LLMStreamChunk> {
     this.logger.info("LLM request", { provider: "gemini", model: modelId, streaming: true });
-    const requestBody = this.buildRequestBody(messages, tools);
+    const requestBody = this.buildRequestBody(messages, tools, modelId);
     const response = await this.postStream(requestBody, modelId);
 
     const reader = response.body?.getReader();
@@ -88,7 +91,8 @@ export class GeminiLlmClient implements LLMClient {
     return cleaned;
   }
 
-  private buildRequestBody(messages: LLMMessage[], tools: LLMTool[]): Record<string, unknown> {
+  private buildRequestBody(messages: LLMMessage[], tools: LLMTool[], modelId: string): Record<string, unknown> {
+    const modelConfig = this.getModelConfig(modelId);
     const systemMessage = messages.find(m => m.role === "system");
     const nonSystemMessages = messages.filter(m => m.role !== "system");
 
@@ -109,15 +113,18 @@ export class GeminiLlmClient implements LLMClient {
       tools: geminiTools,
       toolConfig: tools.length > 0 ? { functionCallingConfig: { mode: "AUTO" } } : undefined,
       generationConfig: {
-        temperature: this.temperature,
-        maxOutputTokens: this.maxTokens,
+        temperature: modelConfig.temperature,
+        maxOutputTokens: modelConfig.maxTokens,
       },
     };
   }
 
   private async post(body: Record<string, unknown>, modelId: string): Promise<Record<string, unknown>> {
+    const modelConfig = this.getModelConfig(modelId);
+    const timeout = modelConfig.timeoutMs;
+
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => { controller.abort(); }, this.timeout);
+    const timeoutId = setTimeout(() => { controller.abort(); }, timeout);
 
     try {
       const response = await fetch(this.getModelUrl(modelId, false), {
@@ -138,15 +145,18 @@ export class GeminiLlmClient implements LLMClient {
     } catch (error) {
       clearTimeout(timeoutId);
       if (error instanceof Error && error.name === "AbortError") {
-        throw new Error(`LLM request timeout after ${String(this.timeout)}ms`);
+        throw new Error(`LLM request timeout after ${String(timeout)}ms`);
       }
       throw error;
     }
   }
 
   private async postStream(body: Record<string, unknown>, modelId: string): Promise<Response> {
+    const modelConfig = this.getModelConfig(modelId);
+    const timeout = modelConfig.timeoutMs;
+
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => { controller.abort(); }, this.timeout);
+    const timeoutId = setTimeout(() => { controller.abort(); }, timeout);
 
     try {
       const response = await fetch(this.getModelUrl(modelId, true), {
@@ -170,7 +180,7 @@ export class GeminiLlmClient implements LLMClient {
     } catch (error) {
       clearTimeout(timeoutId);
       if (error instanceof Error && error.name === "AbortError") {
-        throw new Error(`LLM request timeout after ${String(this.timeout)}ms`);
+        throw new Error(`LLM request timeout after ${String(timeout)}ms`);
       }
       throw error;
     }

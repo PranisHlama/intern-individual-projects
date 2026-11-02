@@ -4,12 +4,13 @@ import type { Message } from "@domain/entities/Message.js";
 import { getConfig } from "@infrastructure/config/EnvConfig.js";
 import { buildTokenWindow } from "@shared/utils/token-counter.js";
 
+const DEFAULT_TOKEN_MODEL = "gpt-4o";
+
 export class InMemoryConversationStore implements ConversationStore {
   private readonly store = new Map<string, Conversation>();
   private readonly ttlMs: number;
   private readonly maxMessages: number;
   private readonly maxContextTokens: number;
-  private readonly model: string;
   private cleanupInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
@@ -17,7 +18,6 @@ export class InMemoryConversationStore implements ConversationStore {
     this.ttlMs = config.CONVERSATION_TTL_HOURS * 60 * 60 * 1000;
     this.maxMessages = config.CONVERSATION_MAX_MESSAGES;
     this.maxContextTokens = config.MAX_CONTEXT_TOKENS;
-    this.model = config.LLM_MODEL;
     this.startCleanupInterval();
   }
 
@@ -87,7 +87,7 @@ export class InMemoryConversationStore implements ConversationStore {
   }
 
   private resolveModelName(modelId?: string): string {
-    return modelId ?? this.model;
+    return modelId ?? DEFAULT_TOKEN_MODEL;
   }
 
   private isExpired(conversation: Conversation): boolean {

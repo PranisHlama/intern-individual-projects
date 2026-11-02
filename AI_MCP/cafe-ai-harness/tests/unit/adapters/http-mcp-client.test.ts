@@ -2,6 +2,15 @@ import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { HttpMcpClient } from "@infrastructure/adapters/secondary/mcp/HttpMcpClient.js";
 import type { Logger } from "@domain/ports/Logger.js";
 
+const testModelsConfig = JSON.stringify({
+  providers: [
+    { id: "test", baseUrl: "http://test", apiKey: "test" }
+  ],
+  models: [
+    { providerId: "test", modelId: "test-model", displayName: "Test Model", capabilities: { streaming: true, tools: true, contextWindow: 4096 }, maxTokens: 1000, temperature: 0.7, timeoutMs: 5000, isDefault: true }
+  ]
+});
+
 vi.mock("@infrastructure/config/EnvConfig.js", () => ({
   getConfig: () => ({
     MCP_URL: "http://test-mcp:8069/ai_chat/mcp",
@@ -12,6 +21,7 @@ vi.mock("@infrastructure/config/EnvConfig.js", () => ({
     LOG_LEVEL: "debug",
     LOG_PRETTY: "false",
     NODE_ENV: "test",
+    MODELS_CONFIG: testModelsConfig,
   }),
 }));
 

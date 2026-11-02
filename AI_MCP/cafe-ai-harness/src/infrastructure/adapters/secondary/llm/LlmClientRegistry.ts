@@ -36,19 +36,17 @@ export class LlmClientRegistry implements ModelRegistry {
       }
 
       const providerConfig = config.modelsConfig.providers.find(p => p.id === modelConfig.providerId);
-      const capabilities = modelConfig.capabilities ?? providerConfig?.defaultCapabilities ?? {
-        streaming: true,
-        tools: true,
-        contextWindow: 4096,
-      };
+      if (!providerConfig) {
+        throw new Error(`Provider ${modelConfig.providerId} not found for model ${modelConfig.modelId}`);
+      }
 
       const model = Model.create({
         provider: modelConfig.providerId,
         modelId: modelConfig.modelId,
         displayName: modelConfig.displayName,
-        capabilities,
-        baseUrl: providerConfig?.baseUrl ?? "",
-        apiKey: providerConfig?.apiKey ?? "",
+        capabilities: modelConfig.capabilities,
+        baseUrl: providerConfig.baseUrl,
+        apiKey: providerConfig.apiKey,
         isDefault: modelConfig.isDefault,
       });
 
