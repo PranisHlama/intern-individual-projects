@@ -1,0 +1,89 @@
+/* Shared by the SuperDoc and BetterOffice pages.
+   Header styles live in onlyoffice_editor.css. */
+
+.browser-editor-status {
+    margin-left: auto;
+
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.browser-editor-status-error {
+    color: #ffd2d2;
+}
+
+.browser-editor-save {
+    border: 0;
+    padding: 6px 16px;
+
+    background: #ffffff;
+    color: #714B67;
+
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+
+    border-radius: 4px;
+}
+
+.browser-editor-save:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.browser-editor-app {
+    position: fixed;
+
+    top: 40px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    background: #f3f3f3;
+}
+
+.browser-editor-toolbar {
+    flex: 0 0 auto;
+
+    background: #ffffff;
+    border-bottom: 1px solid #dddddd;
+}
+
+/* SuperDoc: scrolling page view. */
+.browser-editor-pages {
+    flex: 1 1 auto;
+
+    overflow: auto;
+
+    display: flex;
+    justify-content: center;
+
+    padding: 16px 0;
+}
+
+/* BetterOffice: the editor needs a container with a real height. */
+.browser-editor-fill {
+    flex: 1 1 auto;
+    min-height: 0;
+
+    background: #ffffff;
+}
+
+/* PDF.js: its viewer page runs in a same-origin iframe. */
+.browser-editor-frame {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    border: 0;
+}
+
+.browser-editor-error {
+    padding: 30px;
+    font-family: sans-serif;
+}

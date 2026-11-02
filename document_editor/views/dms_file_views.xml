@@ -19,6 +19,14 @@
                     invisible="not permission_write or extension not in ['docx', 'xlsx', 'pptx', 'csv', 'pdf', 'md']"
                 />
 
+                <button
+                    name="action_open_browser_editor"
+                    type="object"
+                    string="Edit in Browser (Beta)"
+                    icon="fa-pencil"
+                    invisible="not permission_write or extension not in ['docx', 'xlsx', 'pptx', 'pdf'] or (is_locked and not is_lock_editor)"
+                />
+
             </xpath>
 
         </field>

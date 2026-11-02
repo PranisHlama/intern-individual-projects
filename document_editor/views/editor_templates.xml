@@ -52,4 +52,131 @@
         </html>
     </template>
 
+    <!-- Shared page for the browser editors (SuperDoc, BetterOffice). -->
+    <template id="browser_editor_layout">
+        <html>
+            <head>
+                <meta charset="utf-8"/>
+                <title>
+                    <t t-out="file.name"/>
+                </title>
+
+                <link
+                    rel="stylesheet"
+                    href="/document_editor/static/src/css/onlyoffice_editor.css"
+                />
+                <link
+                    rel="stylesheet"
+                    href="/document_editor/static/src/css/browser_editor.css"
+                />
+            </head>
+
+            <body>
+
+                <header class="document-editor-header">
+                    <button
+                        type="button"
+                        id="back-to-odoo"
+                        class="back-to-odoo"
+                    >
+                        ← Back to Odoo
+                    </button>
+
+                    <span class="document-editor-title">
+                        <t t-out="file.name"/>
+                    </span>
+
+                    <span id="editor-status" class="browser-editor-status">
+                        Loading…
+                    </span>
+
+                    <button
+                        type="button"
+                        id="editor-save"
+                        class="browser-editor-save"
+                        disabled="disabled"
+                    >
+                        Save
+                    </button>
+                </header>
+
+                <main
+                    id="editor-app"
+                    class="browser-editor-app"
+                    t-att-data-format="format"
+                    t-att-data-content-url="content_url"
+                    t-att-data-save-url="save_url"
+                    t-att-data-checksum="checksum"
+                    t-att-data-csrf-token="csrf_token"
+                    t-att-data-file-name="file.name"
+                    t-att-data-user-name="user_name"
+                    t-att-data-user-email="user_email"
+                    t-att-data-return-url="return_url"
+                    t-att-data-font-families="font_families"
+                >
+                    <t t-out="0"/>
+                </main>
+
+            </body>
+        </html>
+    </template>
+
+    <template id="superdoc_editor_page">
+        <t t-call="document_editor.browser_editor_layout">
+            <link
+                rel="stylesheet"
+                href="/document_editor/static/lib/superdoc/style.css"
+            />
+
+            <div id="superdoc-toolbar" class="browser-editor-toolbar"/>
+            <div id="editor-container" class="browser-editor-pages"/>
+
+            <script
+                type="text/javascript"
+                src="/document_editor/static/lib/superdoc/superdoc.min.js"
+            />
+            <script
+                type="module"
+                src="/document_editor/static/src/js/superdoc_editor.js"
+            />
+        </t>
+    </template>
+
+    <template id="betteroffice_editor_page">
+        <t t-call="document_editor.browser_editor_layout">
+            <div id="editor-container" class="browser-editor-fill"/>
+
+            <!-- The BetterOffice editors import their engine by package
+                 name; map those names to the copies shipped in this module. -->
+            <script type="importmap">
+                {
+                    "imports": {
+                        "@betteroffice/xlsx": "/document_editor/static/lib/betteroffice/xlsx/index.js",
+                        "@betteroffice/xlsx/worker": "/document_editor/static/lib/betteroffice/xlsx/worker.js",
+                        "@betteroffice/xlsx/collaboration": "/document_editor/static/lib/betteroffice/xlsx/collaboration.js",
+                        "@betteroffice/pptx": "/document_editor/static/lib/betteroffice/pptx/index.js",
+                        "@betteroffice/pptx/worker": "/document_editor/static/lib/betteroffice/pptx/worker.js",
+                        "@betteroffice/pptx/collaboration": "/document_editor/static/lib/betteroffice/pptx/collaboration.js",
+                        "@betteroffice/fonts": "/document_editor/static/lib/betteroffice/fonts/dist/index.js"
+                    }
+                }
+            </script>
+            <script
+                type="module"
+                src="/document_editor/static/src/js/betteroffice_editor.js"
+            />
+        </t>
+    </template>
+
+    <template id="pdfjs_editor_page">
+        <t t-call="document_editor.browser_editor_layout">
+            <div id="editor-container" class="browser-editor-fill"/>
+
+            <script
+                type="module"
+                src="/document_editor/static/src/js/pdfjs_editor.js"
+            />
+        </t>
+    </template>
+
 </odoo>

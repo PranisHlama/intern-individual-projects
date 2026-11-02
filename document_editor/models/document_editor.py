@@ -42,3 +42,13 @@ class DmsFile(models.Model):
             "url": f"/document_editor/dms/open/{self.id}",
             "target": "self",
         }
+
+    def action_open_browser_editor(self):
+        # Type, permission and lock checks happen in the open route.
+        self.ensure_one()
+
+        return {
+            "type": "ir.actions.act_url",
+            "url": f"/document_editor/browser/open/{self.id}",
+            "target": "self",
+        }
