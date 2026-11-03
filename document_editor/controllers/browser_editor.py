@@ -3,6 +3,7 @@ import html
 import io
 import json
 import logging
+import os
 import re
 import zipfile
 from urllib.parse import quote
@@ -10,6 +11,8 @@ from urllib.parse import quote
 from odoo import _, http
 from odoo.exceptions import AccessError
 from odoo.http import request
+
+from .common import get_file_binary, json_response
 
 _logger = logging.getLogger(__name__)
 
@@ -54,6 +57,19 @@ BROWSER_EDITORS = {
 # Refuse uploads larger than this to avoid filling memory.
 MAX_FILE_SIZE = 100 * 1024 * 1024
 
+STATIC_SRC = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "src")
+
+
+def _asset_version():
+    """Changes whenever an editor JS/CSS file changes. Odoo lets browsers
+    cache static files for a week, so the editor URLs carry this as ?v= to
+    stop a browser from mixing a new page with old cached scripts."""
+    return str(max(
+        int(entry.stat().st_mtime)
+        for folder in ("js", "css")
+        for entry in os.scandir(os.path.join(STATIC_SRC, folder))
+    ))
+
 
 class BrowserEditorController(http.Controller):
     """
@@ -69,13 +85,6 @@ class BrowserEditorController(http.Controller):
     # ---------------------------------------------------------
     # HELPERS
     # ---------------------------------------------------------
-
-    def _json(self, data, status=200):
-        return request.make_response(
-            json.dumps(data),
-            headers=[("Content-Type", "application/json")],
-            status=status,
-        )
 
     def _get_editable_file(self, file_id):
         """Return (file, editor, error, status) for the current user."""
@@ -102,18 +111,14 @@ class BrowserEditorController(http.Controller):
                 "This document is locked by %s.", dms_file.locked_by.name
             ), 423
 
+        # ONLYOFFICE's final save would overwrite changes made here.
+        if dms_file._onlyoffice_session_active():
+            return dms_file, editor, _(
+                "This document is open in ONLYOFFICE. "
+                "Close it there before using this editor."
+            ), 423
+
         return dms_file, editor, None, 200
-
-    def _get_file_binary(self, dms_file):
-        content = dms_file.content
-
-        if not content:
-            return b""
-
-        if isinstance(content, str):
-            return base64.b64decode(content)
-
-        return bytes(content)
 
     def _get_pptx_font_families(self, binary):
         """Font families a presentation names, so the editor can load them."""
@@ -161,7 +166,7 @@ class BrowserEditorController(http.Controller):
 
         if dms_file.extension.lower() == "pptx":
             font_families = json.dumps(
-                self._get_pptx_font_families(self._get_file_binary(dms_file))
+                self._get_pptx_font_families(get_file_binary(dms_file))
             )
 
         return request.render(
@@ -177,6 +182,7 @@ class BrowserEditorController(http.Controller):
                 "user_email": request.env.user.email or "",
                 "return_url": f"/odoo/action-{dms_action.id}/{dms_file.id}",
                 "font_families": font_families,
+                "asset_version": _asset_version(),
             },
         )
 
@@ -196,7 +202,7 @@ class BrowserEditorController(http.Controller):
         if error:
             return request.make_response(error, status=status)
 
-        binary = self._get_file_binary(dms_file)
+        binary = get_file_binary(dms_file)
 
         if not binary:
             return request.make_response(_("File has no content."), status=404)
@@ -227,20 +233,20 @@ class BrowserEditorController(http.Controller):
         dms_file, editor, error, status = self._get_editable_file(file_id)
 
         if error:
-            return self._json({"error": error}, status=status)
+            return json_response({"error": error}, status=status)
 
         upload = request.httprequest.files.get("file")
 
         if not upload:
-            return self._json({"error": _("No document was uploaded.")}, status=400)
+            return json_response({"error": _("No document was uploaded.")}, status=400)
 
         binary = upload.read(MAX_FILE_SIZE + 1)
 
         if len(binary) > MAX_FILE_SIZE:
-            return self._json({"error": _("The document is too large.")}, status=413)
+            return json_response({"error": _("The document is too large.")}, status=413)
 
         if not binary.startswith(editor["signature"]):
-            return self._json(
+            return json_response(
                 {"error": _("The editor returned invalid file data.")},
                 status=400,
             )
@@ -250,7 +256,7 @@ class BrowserEditorController(http.Controller):
         # Someone else saved this file after the editor was opened.
         # Refuse instead of silently overwriting their changes.
         if (checksum or "") != (old_checksum or ""):
-            return self._json(
+            return json_response(
                 {
                     "error": _(
                         "This document was changed by someone else after "
@@ -263,7 +269,7 @@ class BrowserEditorController(http.Controller):
             )
 
         if dms_file._get_checksum(binary) == old_checksum:
-            return self._json({"saved": False, "checksum": old_checksum})
+            return json_response({"saved": False, "checksum": old_checksum})
 
         try:
             # Written as the current user, so DMS access rules apply.
@@ -271,7 +277,7 @@ class BrowserEditorController(http.Controller):
                 {"content": base64.b64encode(binary).decode("ascii")}
             )
         except AccessError as error:
-            return self._json({"error": str(error)}, status=403)
+            return json_response({"error": str(error)}, status=403)
 
         dms_file.message_post(
             body=_("Document content was modified using %s.", editor["name"]),
@@ -290,4 +296,4 @@ class BrowserEditorController(http.Controller):
             dms_file.checksum,
         )
 
-        return self._json({"saved": True, "checksum": dms_file.checksum})
+        return json_response({"saved": True, "checksum": dms_file.checksum})

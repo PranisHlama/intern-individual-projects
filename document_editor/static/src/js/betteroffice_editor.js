@@ -1,4 +1,7 @@
-import { startEditorPage } from "./editor_page.js";
+// Load with this file's ?v= so a cached old editor_page.js is never reused.
+const { startEditorPage } = await import(
+    `./editor_page.js${new URL(import.meta.url).search}`
+);
 
 const { format, fontFamilies } = document.getElementById("editor-app").dataset;
 

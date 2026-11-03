@@ -67,7 +67,7 @@
                 />
                 <link
                     rel="stylesheet"
-                    href="/document_editor/static/src/css/browser_editor.css"
+                    t-attf-href="/document_editor/static/src/css/browser_editor.css?v={{asset_version}}"
                 />
             </head>
 
@@ -137,7 +137,7 @@
             />
             <script
                 type="module"
-                src="/document_editor/static/src/js/superdoc_editor.js"
+                t-attf-src="/document_editor/static/src/js/superdoc_editor.js?v={{asset_version}}"
             />
         </t>
     </template>
@@ -163,7 +163,7 @@
             </script>
             <script
                 type="module"
-                src="/document_editor/static/src/js/betteroffice_editor.js"
+                t-attf-src="/document_editor/static/src/js/betteroffice_editor.js?v={{asset_version}}"
             />
         </t>
     </template>
@@ -174,7 +174,7 @@
 
             <script
                 type="module"
-                src="/document_editor/static/src/js/pdfjs_editor.js"
+                t-attf-src="/document_editor/static/src/js/pdfjs_editor.js?v={{asset_version}}"
             />
         </t>
     </template>

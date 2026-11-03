@@ -1,4 +1,7 @@
-import { startEditorPage } from "./editor_page.js";
+// Load with this file's ?v= so a cached old editor_page.js is never reused.
+const { startEditorPage } = await import(
+    `./editor_page.js${new URL(import.meta.url).search}`
+);
 
 // Empty `file` so the viewer starts blank; the document is opened below.
 const VIEWER_URL = "/document_editor/static/lib/pdfjs/web/viewer.html?file=";

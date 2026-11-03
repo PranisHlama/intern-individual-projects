@@ -18,7 +18,16 @@
                             <field name="onlyoffice_url"/>
                         </setting>
 
-                        <setting string="Odoo Base URL">
+                        <setting
+                            string="ONLYOFFICE Internal URL"
+                            help="How the Odoo server reaches ONLYOFFICE (e.g. http://onlyoffice in Docker). Empty: use the public URL."
+                        >
+                            <field name="onlyoffice_internal_url"/>
+                        </setting>
+                        <setting
+                            string="Odoo Base URL"
+                            help="How ONLYOFFICE reaches Odoo (e.g. http://odoo20-web:8069 in Docker)."
+                        >
                             <field name="odoo_base_url"/>
                         </setting>
 

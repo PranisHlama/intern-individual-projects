@@ -92,11 +92,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Detect when the current user modifies the document.
         config.events.onDocumentStateChange = (event) => {
             hasUnsavedChanges = event.data === true;
-
-            console.log(
-                "ONLYOFFICE document changed:",
-                hasUnsavedChanges
-            );
         };
 
         // Called after ONLYOFFICE confirms that the editor
