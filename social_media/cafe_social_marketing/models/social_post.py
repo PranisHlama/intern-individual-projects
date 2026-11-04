@@ -357,92 +357,94 @@ class CafeSocialPost(models.Model):
 
     @api.depends(
         "message",
-        "branch_id",
-        "campaign_id",
         "social_account_ids",
+        "social_account_ids.name",
+        "social_account_ids.platform",
+        "social_account_ids.handle",
+        "attachment_ids",
+        "attachment_ids.type",
+        "attachment_ids.mimetype",
+        "attachment_ids.checksum",
     )
     def _compute_preview_html(self):
+        card = Markup(
+            '<div style="width:100%;max-width:520px;margin-bottom:12px;overflow:hidden;'
+            'border:1px solid #dadde1;border-radius:10px;background:#fff;color:#1c1e21;">'
+            '{}</div>'
+        )
+        account_header = Markup(
+            '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;">'
+            '<span style="display:inline-grid;place-items:center;width:38px;height:38px;'
+            'flex:none;border-radius:50%;background:{};color:#fff;font-weight:700;">{}</span>'
+            '<div style="min-width:0;overflow-wrap:anywhere;"><strong>{}</strong>'
+            '<div style="font-size:12px;color:#65676b;">{}</div></div>'
+            '<span aria-hidden="true" style="margin-left:auto;">&#8943;</span></div>'
+        )
+        facebook_actions = Markup(
+            '<div style="display:flex;justify-content:space-around;gap:8px;flex-wrap:wrap;'
+            'margin:0 12px;padding:10px 0;border-top:1px solid #dadde1;'
+            'color:#65676b;font-size:13px;font-weight:600;">'
+            '<span><i class="fa fa-thumbs-o-up" aria-hidden="true"></i> Like</span>'
+            '<span><i class="fa fa-comment-o" aria-hidden="true"></i> Comment</span>'
+            '<span><i class="fa fa-share" aria-hidden="true"></i> Share</span></div>'
+        )
+        instagram_actions = Markup(
+            '<div style="display:flex;gap:14px;padding:12px 14px 4px;font-size:20px;" '
+            'aria-hidden="true">'
+            '<i class="fa fa-heart-o"></i><i class="fa fa-comment-o"></i>'
+            '<i class="fa fa-paper-plane-o"></i>'
+            '<i class="fa fa-bookmark-o" style="margin-left:auto;"></i></div>'
+        )
+        caption_box = Markup(
+            '<div style="padding:8px 16px 12px;line-height:1.5;white-space:pre-wrap;'
+            'overflow-wrap:anywhere;">{}</div>'
+        )
         for post in self:
-            branch = escape(
-                post.branch_id.name or "No branch selected"
-            )
+            caption = escape(post.message or "")
+            photo = Markup("")
+            if len(post.attachment_ids) == 1:
+                attachment = post.attachment_ids
+                attachment_id = attachment._origin.id
+                if (
+                    type(attachment_id) is int
+                    and attachment_id > 0
+                    and attachment.type == "binary"
+                    and attachment.mimetype in ("image/jpeg", "image/png")
+                ):
+                    photo = Markup(
+                        '<img src="/web/image/{}?unique={}" alt="Attached post image" '
+                        'style="display:block;width:100%;max-height:520px;'
+                        'object-fit:contain;background:#f3f4f6;" />'
+                    ).format(attachment_id, attachment.checksum or "")
 
-            campaign = escape(
-                post.campaign_id.name or "No campaign selected"
-            )
-
-            accounts = ", ".join(
-                post.social_account_ids.mapped("name")
-            )
-
-            accounts = escape(
-                accounts or "No social account selected"
-            )
-
-            message = escape(
-                post.message or "Your post preview will appear here."
-            )
-
-            message = message.replace(
-                "\n",
-                Markup("<br/>"),
-            )
-
-            post.preview_html = Markup("""
-                <div style="
-                    width: 100%;
-                    max-width: 900px;
-                    min-height: 260px;
-                    box-sizing: border-box;
-                    border: 1px solid #ddd;
-                    border-radius: 14px;
-                    padding: 28px;
-                    background: white;
-                    margin-top: 10px;
-                ">
-
-                    <div style="
-                        font-size: 22px;
-                        font-weight: 700;
-                        margin-bottom: 12px;
-                    ">
-                        Cafe Social Marketing
-                    </div>
-
-                    <div style="
-                        color: #666;
-                        font-size: 15px;
-                        line-height: 1.6;
-                        margin-bottom: 20px;
-                    ">
-                        <div>
-                            <strong>Branch:</strong> {}
-                        </div>
-
-                        <div>
-                            <strong>Campaign:</strong> {}
-                        </div>
-
-                        <div>
-                            <strong>Posting on:</strong> {}
-                        </div>
-                    </div>
-
-                    <div style="
-                        font-size: 18px;
-                        line-height: 1.7;
-                        white-space: normal;
-                    ">
-                        {}
-                    </div>
-
-                </div>
-            """).format(
-                branch,
-                campaign,
-                accounts,
-                message,
-            )
+            previews = []
+            for account in post.social_account_ids:
+                name = account.name or "Social account"
+                initial = name[:1].upper()
+                if account.platform == "facebook":
+                    header = account_header.format("#1877f2", initial, name, "Facebook preview")
+                    previews.append(card.format(
+                        header + (caption_box.format(caption) if caption else Markup(""))
+                        + photo + facebook_actions
+                    ))
+                elif account.platform == "instagram":
+                    handle = "@" + account.handle.lstrip("@") if account.handle else name
+                    header = account_header.format(
+                        "linear-gradient(135deg,#833ab4,#c13584,#f56040)",
+                        initial, handle, "Instagram preview",
+                    )
+                    media = photo or Markup(
+                        '<div style="padding:36px 16px;text-align:center;background:#f3f4f6;'
+                        'color:#555;">Attach a JPEG or PNG to preview it here.</div>'
+                    )
+                    line = Markup("<strong>{}</strong> {}").format(handle, caption) if caption else Markup("")
+                    previews.append(card.format(
+                        header + media + instagram_actions + caption_box.format(line)
+                    ))
+            if not previews:
+                hint = "Choose a Facebook or Instagram account to see its feed preview."
+                previews.append(card.format(caption_box.format(hint) + caption_box.format(caption) + photo))
+            post.preview_html = Markup("").join(previews)
 
     # ---------------------------------------------------------
     # DYNAMIC TEMPLATES
