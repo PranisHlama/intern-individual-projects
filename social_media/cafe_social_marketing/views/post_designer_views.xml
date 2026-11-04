@@ -1,0 +1,14 @@
+<odoo>
+    <record id="cafe_social_post_designer_view" model="ir.ui.view">
+        <field name="name">cafe.social.post.form.designer</field>
+        <field name="model">cafe.social.post</field>
+        <field name="inherit_id" ref="cafe_social_post_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form/header" position="inside">
+                <button name="action_open_post_designer" type="object"
+                        string="Design Image" icon="fa-paint-brush"
+                        invisible="state != 'draft'"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

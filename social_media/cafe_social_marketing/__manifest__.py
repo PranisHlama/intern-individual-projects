@@ -1,6 +1,6 @@
 {
     "name": "Cafe Social Marketing",
-    "version": "20.0.6.0.0",
+    "version": "20.0.6.1.0",
     "summary": "Social marketing management for a multi-branch cafe chain",
     "description": """
         Social media content management for a multi-branch cafe chain.
@@ -20,6 +20,7 @@
 
         - Instagram attached JPEG publishing with automatic Cloudinary hosting
         - Visual Facebook, Instagram and TikTok account setup picker
+        - Browser-based social post designer with JPEG export
 
         TikTok Direct Post and OAuth connection remain future integration steps.
     """,
@@ -49,8 +50,14 @@
         "views/post_template_views.xml",
         "views/review_calendar_views.xml",
         "views/campaign_calendar_views.xml",
+        "views/post_designer_views.xml",
         "views/menus.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "cafe_social_marketing/static/src/post_designer/*",
+        ],
+    },
     "application": True,
     "installable": True,
 }

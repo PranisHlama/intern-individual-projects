@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+  <t t-name="cafe_social_marketing.PostDesigner">
+    <div class="o_cafe_designer">
+      <header class="o_cafe_designer_bar">
+        <div>
+          <div class="o_cafe_designer_kicker">CAFE SOCIAL MARKETING</div>
+          <h1>Post Designer</h1>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+          <button class="btn btn-secondary" t-on-click="this.goBack" t-att-disabled="this.state.saving">Back to post</button>
+          <button class="btn btn-primary" t-on-click="this.save" t-att-disabled="this.busy or (this.state.hasOtherMedia and !this.state.replace)">
+            <t t-if="this.state.saving">Saving…</t><t t-else="">Save JPEG to post</t>
+          </button>
+        </div>
+      </header>
+      <div t-if="this.state.error" class="alert alert-danger" role="alert" t-esc="this.state.error"/>
+      <div t-if="this.state.loading" class="alert alert-info" role="status">Loading your design…</div>
+      <div t-if="this.state.importing" class="alert alert-info" role="status">Preparing your image…</div>
+      <div t-if="this.state.hasOtherMedia" class="alert alert-warning">
+        <label><input type="checkbox" t-model="this.state.replace" t-att-disabled="this.busy"/> Replace the post’s current attachments or legacy image URL with this design.</label>
+      </div>
+      <div class="o_cafe_designer_workspace">
+        <section class="o_cafe_designer_preview" aria-label="Design preview">
+          <div class="o_cafe_designer_preview_bar">
+            <strong>Post preview</strong><span>1080 × 1080</span>
+          </div>
+          <canvas width="1080" height="1080" t-att-id="this.canvasId" aria-label="Square social post preview"
+            t-on-pointerdown="this.pointerDown" t-on-pointermove="this.pointerMove"
+            t-on-pointerup="this.pointerEnd" t-on-pointercancel="this.pointerEnd" t-on-lostpointercapture="this.pointerEnd"
+            t-on-dragover="this.allowBlockDrop" t-on-drop="this.dropBlock"/>
+          <div class="o_cafe_designer_hint">Click a layer to edit it. Drag to move it, or set its position in Customize.</div>
+        </section>
+        <fieldset class="o_cafe_designer_controls" t-att-disabled="this.busy">
+          <div class="o_cafe_designer_tabs" aria-label="Designer panels">
+            <t t-foreach="[['blocks', 'Blocks'], ['customize', 'Customize'], ['design', 'Design']]" t-as="tab" t-key="tab[0]">
+              <button type="button" t-att-class="{active: this.state.tab === tab[0]}"
+                t-att-aria-pressed="this.state.tab === tab[0]" t-on-click="() => this.setTab(tab[0])" t-esc="tab[1]"/>
+            </t>
+          </div>
+          <section t-if="this.state.tab === 'blocks'">
+            <h2>Start with a template</h2>
+            <p class="o_cafe_designer_hint">Choose a layout, then change the sample text and add your own photo.</p>
+            <div class="o_cafe_designer_templates">
+              <t t-foreach="this.templates" t-as="preset" t-key="preset.id">
+                <button type="button" class="o_cafe_designer_template" t-on-click="() => this.chooseTemplate(preset.id)">
+                  <img t-if="this.state.previews[preset.id]" t-att-src="this.state.previews[preset.id]" alt=""/>
+                  <span t-esc="preset.label"/>
+                </button>
+              </t>
+            </div>
+            <h2>Add a block <small><t t-esc="this.state.design.layers.length"/> / 8</small></h2>
+            <p class="o_cafe_designer_hint">Click to add, or drag a text block onto the preview.</p>
+            <div class="o_cafe_designer_blocks">
+              <button class="btn btn-outline-secondary" type="button" draggable="true"
+                t-att-disabled="this.state.design.layers.length >= 8"
+                t-on-dragstart="(ev) => this.dragBlock(ev, 'headline')"
+                t-on-click="() => this.addText('headline')">Headline</button>
+              <button class="btn btn-outline-secondary" type="button" draggable="true"
+                t-att-disabled="this.state.design.layers.length >= 8"
+                t-on-dragstart="(ev) => this.dragBlock(ev, 'offer')"
+                t-on-click="() => this.addText('offer')">Offer text</button>
+            </div>
+            <label class="o_cafe_designer_field">Photo block
+              <input class="form-control" type="file" accept="image/jpeg,image/png"
+                t-att-disabled="this.state.design.layers.length >= 8" t-on-change="(ev) => this.importImage(ev, 'photo')"/>
+            </label>
+            <label class="o_cafe_designer_field">Logo block
+              <input class="form-control" type="file" accept="image/jpeg,image/png"
+                t-att-disabled="this.state.design.layers.length >= 8" t-on-change="(ev) => this.importImage(ev, 'logo')"/>
+            </label>
+          </section>
+          <section t-elif="this.state.tab === 'customize'">
+            <h2>Layers</h2>
+            <div class="o_cafe_designer_layers">
+              <t t-foreach="this.state.design.layers" t-as="layer" t-key="layer_index">
+                <button class="btn btn-outline-secondary btn-sm text-truncate" type="button"
+                  t-att-class="{active: this.state.selected === layer_index}"
+                  t-on-click="() => this.select(layer_index)" t-att-aria-pressed="this.state.selected === layer_index">
+                  <t t-esc="layer.kind === 'text' ? (layer.text.slice(0, 28) || 'Empty text') : 'Image ' + (layer_index + 1)"/>
+                </button>
+              </t>
+            </div>
+            <p t-if="!this.active" class="o_cafe_designer_hint">Select a layer on the preview or add one under Blocks.</p>
+            <t t-else="">
+              <h2>Selected block</h2>
+              <t t-if="this.active.kind === 'text'">
+                <label class="o_cafe_designer_field">Text
+                  <textarea rows="3" maxlength="180" class="form-control" t-att-value="this.active.text"
+                    t-on-input="(ev) => this.updateLayer(ev, 'text')"/>
+                </label>
+                <label class="o_cafe_designer_field">Text colour
+                  <input type="color" t-att-value="this.active.color" t-on-input="(ev) => this.updateLayer(ev, 'color')"/>
+                </label>
+              </t>
+              <label class="o_cafe_designer_field">Size: <t t-esc="this.active.size"/> px
+                <input class="form-range" type="range" t-att-min="this.active.kind === 'text' ? 18 : 32"
+                  t-att-max="this.active.kind === 'text' ? 160 : 1080" t-att-value="this.active.size"
+                  t-on-input="(ev) => this.updateLayer(ev, 'size')"/>
+              </label>
+              <div class="o_cafe_designer_position">
+                <label class="o_cafe_designer_field">Left (px)
+                  <input class="form-control" type="number" min="-1080" max="1080"
+                    t-att-value="this.active.x" t-on-change="(ev) => this.updateLayer(ev, 'x')"/>
+                </label>
+                <label class="o_cafe_designer_field">Top (px)
+                  <input class="form-control" type="number" min="-1080" max="1080"
+                    t-att-value="this.active.y" t-on-change="(ev) => this.updateLayer(ev, 'y')"/>
+                </label>
+              </div>
+              <div class="d-flex gap-2 flex-wrap mb-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm" t-att-disabled="this.state.selected === 0"
+                  t-on-click="() => this.moveLayer(-1)">Send backward</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                  t-att-disabled="this.state.selected === this.state.design.layers.length - 1"
+                  t-on-click="() => this.moveLayer(1)">Bring forward</button>
+              </div>
+              <button type="button" class="btn btn-outline-danger btn-sm" t-on-click="this.removeLayer">Remove block</button>
+            </t>
+          </section>
+          <section t-else="">
+            <h2>Background</h2>
+            <div class="o_cafe_designer_swatches">
+              <t t-foreach="[['#233b32', 'Forest'], ['#f7dfbd', 'Cream'], ['#572d43', 'Plum'], ['#ffffff', 'White']]" t-as="swatch" t-key="swatch[0]">
+                <button type="button" t-att-style="'background-color: ' + swatch[0]" t-att-title="swatch[1]"
+                  t-att-aria-label="swatch[1]" t-att-aria-pressed="this.state.design.color === swatch[0]"
+                  t-on-click="() => this.setDesignColor(swatch[0])"/>
+              </t>
+            </div>
+            <label class="o_cafe_designer_field">Custom colour <input type="color" t-att-value="this.state.design.color" t-on-input="this.setColor"/></label>
+            <label class="o_cafe_designer_field">Full-canvas photo
+              <input class="form-control" type="file" accept="image/jpeg,image/png" t-on-change="(ev) => this.importImage(ev, 'background')"/>
+            </label>
+            <button t-if="this.state.design.background" class="btn btn-outline-secondary btn-sm" type="button"
+              t-on-click="this.removeBackground">Remove background photo</button>
+          </section>
+          <p class="o_cafe_designer_hint mt-3 mb-0">Saving attaches a JPEG and resets approval. You can reopen and edit the design later.</p>
+        </fieldset>
+      </div>
+    </div>
+  </t>
+</templates>
