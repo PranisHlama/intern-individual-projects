@@ -1,0 +1,179 @@
+<odoo>
+    <record id="cafe_social_post_workspace_form" model="ir.ui.view">
+        <field name="name">cafe.social.post.workspace.form</field>
+        <field name="model">cafe.social.post</field>
+        <field name="inherit_id" ref="cafe_social_post_view_form"/>
+        <field name="priority">95</field>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="attributes">
+                <attribute name="class" add="cafe-post-workspace" separator=" "/>
+            </xpath>
+            <xpath expr="//header" position="inside">
+                <button name="action_open_facebook" string="View on Facebook" type="object" icon="fa-external-link" invisible="state != 'published' or facebook_publish_status != 'published' or not facebook_post_id"/>
+            </xpath>
+            <xpath expr="//sheet" position="inside">
+                <div class="cafe-compose-layout">
+                    <div class="cafe-compose-pane">
+                        <h2 class="cafe-pane-title">Post details</h2>
+                    </div>
+                    <div class="cafe-preview-pane">
+                        <div class="cafe-preview-sticky">
+                            <h2 class="cafe-pane-title">Feed preview</h2>
+                            <p class="text-muted small">Updates as you edit. Final appearance may vary on the platform.</p>
+                        </div>
+                    </div>
+                </div>
+                <notebook class="cafe-post-details">
+                    <page string="Review" name="cafe_review">
+                        </page>
+                    <page string="AI review" name="cafe_ai_review">
+                        </page>
+                    <page string="Publishing details" name="cafe_delivery">
+                        </page>
+                </notebook>
+            </xpath>
+            <xpath expr="//div[@class='cafe-compose-pane']" position="inside">
+                <xpath expr="//sheet/group[1]" position="move"/>
+                <xpath expr="//field[@name='message']/ancestor::group[1]" position="move"/>
+                <xpath expr="//field[@name='attachment_ids']/ancestor::group[1]" position="move"/>
+            </xpath>
+            <xpath expr="//div[@class='cafe-preview-sticky']" position="inside">
+                <xpath expr="//field[@name='preview_html']/ancestor::group[1]" position="move"/>
+            </xpath>
+            <xpath expr="//page[@name='cafe_review']" position="inside">
+                <xpath expr="//field[@name='validation_status']/ancestor::group[2]" position="move"/>
+                <xpath expr="//field[@name='approval_state']/ancestor::group[2]" position="move"/>
+                <xpath expr="//field[@name='reviewer_comment']/ancestor::group[1]" position="move"/>
+            </xpath>
+            <xpath expr="//page[@name='cafe_ai_review']" position="inside">
+                <xpath expr="//field[@name='ai_review_status']/ancestor::group[2]" position="move"/>
+            </xpath>
+            <xpath expr="//page[@name='cafe_delivery']" position="inside">
+                <xpath expr="//field[@name='facebook_publish_status']/ancestor::group[1]" position="move"/>
+                <xpath expr="//field[@name='instagram_publish_status']/ancestor::group[1]" position="move"/>
+                <xpath expr="//field[@name='tiktok_publish_id']/ancestor::group[2]" position="move"/>
+            </xpath>
+            <xpath expr="//field[@name='attachment_ids']" position="after">
+                <div name="cafe_designer_row" colspan="2" class="mt-2 mb-3"
+                     invisible="state != 'draft'"/>
+            </xpath>
+            <xpath expr="//div[@name='cafe_designer_row']" position="inside">
+                <xpath expr="//header/button[@name='action_open_post_designer']" position="move"/>
+            </xpath>
+            <xpath expr="//field[@name='video_file']" position="attributes">
+                <attribute name="invisible">not has_tiktok_account</attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_open_post_designer']" position="attributes">
+                <attribute name="string">Open Designer</attribute>
+                <attribute name="class">btn-secondary</attribute>
+                <attribute name="icon"/>
+            </xpath>
+            <xpath expr="//field[@name='preview_html']/ancestor::group[1]" position="attributes">
+                <attribute name="string"/>
+            </xpath>
+            <xpath expr="//div[@class='cafe-compose-pane']/group[1]" position="attributes">
+                <attribute name="col">1</attribute>
+            </xpath>
+            <xpath expr="//div[@class='cafe-compose-layout']" position="before">
+                <div class="d-flex align-items-center flex-wrap gap-3 mb-4">
+                    <div>
+                        <span class="text-muted small me-2">Post</span>
+                        <field name="state" widget="badge" readonly="1"/>
+                    </div>
+                    <div>
+                        <span class="text-muted small me-2">Review</span>
+                        <field name="approval_state" widget="badge" readonly="1"/>
+                    </div>
+                    <div>
+                        <span class="text-muted small me-2">Validation</span>
+                        <field name="validation_status" widget="badge" readonly="1"/>
+                    </div>
+                </div>
+            </xpath>
+            <xpath expr="//field[@name='message']" position="attributes">
+                <attribute name="string">Caption</attribute>
+                <attribute name="placeholder">What would you like to share?</attribute>
+            </xpath>
+            <xpath expr="//field[@name='validation_status']" position="attributes">
+                <attribute name="widget">badge</attribute>
+            </xpath>
+            <xpath expr="//field[@name='approval_state']" position="attributes">
+                <attribute name="widget">badge</attribute>
+            </xpath>
+        </field>
+    </record>
+    <record id="cafe_social_post_workspace_search" model="ir.ui.view">
+        <field name="name">cafe.social.post.workspace.search</field>
+        <field name="model">cafe.social.post</field>
+        <field name="inherit_id" ref="cafe_social_post_view_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="message" string="Caption"/>
+                <field name="social_account_ids" string="Account"/>
+                <field name="branch_id"/>
+                <field name="campaign_id"/>
+                <separator/>
+                <filter name="cafe_fb" string="Facebook" domain="[('social_account_ids.platform', '=', 'facebook')]"/>
+                <filter name="cafe_ig" string="Instagram" domain="[('social_account_ids.platform', '=', 'instagram')]"/>
+                <separator/>
+                <filter name="cafe_published_date" string="Published date" date="published_at"/>
+                <filter name="cafe_scheduled_date" string="Scheduled date" date="scheduled_at"/>
+                <separator/>
+                <filter name="cafe_pending" string="Awaiting review" domain="[('approval_state', '=', 'pending')]"/>
+                <filter name="cafe_changes" string="Changes requested" domain="[('approval_state', '=', 'changes_requested')]"/>
+                <filter name="cafe_scheduled" string="Scheduled" domain="[('state', '=', 'scheduled')]"/>
+                <separator/>
+                <filter name="cafe_group_branch" string="Branch" context="{'group_by': 'branch_id'}"/>
+                <filter name="cafe_group_campaign" string="Campaign" context="{'group_by': 'campaign_id'}"/>
+                <filter name="cafe_group_platform" string="Platform" context="{'group_by': 'feed_platform'}"/>
+            </xpath>
+        </field>
+    </record>
+    <record id="cafe_social_post_workspace_feed" model="ir.ui.view">
+        <field name="name">cafe.social.post.workspace.feed</field>
+        <field name="model">cafe.social.post</field>
+        <field name="inherit_id" ref="cafe_social_post_feed_view"/>
+        <field name="priority">95</field>
+        <field name="arch" type="xml">
+            <xpath expr="//kanban" position="attributes">
+                <attribute name="class" add="cafe-social-feed" separator=" "/>
+            </xpath>
+            <xpath expr="//templates" position="before">
+                <field name="facebook_post_id"/>
+                <field name="facebook_publish_status"/>
+                <field name="state"/>
+            </xpath>
+            <xpath expr="//templates" position="replace">
+                <templates>
+                    <t t-name="card">
+                        <div class="cafe-feed-heading">
+                            <span class="cafe-network-mark" t-att-class="record.feed_platform.raw_value === 'facebook' ? 'cafe-network-facebook' : 'cafe-network-instagram'">
+                                <i t-if="record.feed_platform.raw_value === 'facebook'" class="fa fa-facebook" role="img" aria-label="Facebook" title="Facebook"/>
+                                <i t-else="" class="fa fa-instagram" role="img" aria-label="Instagram" title="Instagram"/>
+                            </span>
+                            <div class="cafe-feed-account">
+                                <field name="social_account_ids" widget="many2many_tags"/>
+                                <div class="cafe-feed-date">
+                                    <field name="published_at"/>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="cafe-feed-title">
+                            <field name="name"/>
+                        </h3>
+                        <div class="cafe-feed-caption">
+                            <field name="message"/>
+                        </div>
+                        <img t-if="record.feed_image_url.raw_value" t-att-src="record.feed_image_url.raw_value" alt="Published post image" loading="lazy" class="cafe-feed-image"/>
+                        <div class="cafe-feed-footer">
+                            <span class="cafe-feed-branch">
+                                <field name="branch_id"/>
+                            </span>
+                            <button name="action_open_facebook" type="object" string="View on Facebook" class="btn btn-link btn-sm" icon="fa-external-link" invisible="state != 'published' or facebook_publish_status != 'published' or not facebook_post_id"/>
+                        </div>
+                    </t>
+                </templates>
+            </xpath>
+        </field>
+    </record>
+</odoo>

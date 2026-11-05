@@ -52,6 +52,7 @@
         "views/campaign_calendar_views.xml",
         "views/post_designer_views.xml",
         "views/menus.xml",
+        "views/post_workspace_views.xml",
     ],
     "assets": {
         "web.assets_backend": [

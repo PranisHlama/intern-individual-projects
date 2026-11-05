@@ -11,3 +11,4 @@ from . import review_workflow
 from . import account_picker
 
 from . import post_designer
+from . import post_workspace
