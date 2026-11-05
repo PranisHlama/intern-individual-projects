@@ -33,34 +33,125 @@ write access and the file is not locked by another user.
 
 ---
 
-## Installation
+## Installation (step by step)
 
-1. **Python packages.** `controllers/main.py` (the ONLYOFFICE integration)
-   imports these at load time, so they are required even if you only use the
-   browser editors:
+This guide is written so anyone can follow it. You will add two add-ons
+(Odoo calls them "modules") to Odoo 20. Install **DMS first**, then
+**Document Editor**, because the editor needs DMS to work.
+
+| Folder name | Name shown in Odoo Apps | What it does |
+|---|---|---|
+| `dms` | Document Management System | Adds a **Documents** menu to store, organise and share files in folders. |
+| `document_editor` | DMS Editor | Adds an **Edit in Browser** button to edit Word, Excel, PowerPoint and PDF files inside Odoo. |
+
+> **What is a command?** A line of text you type into a black window called the
+> **terminal** (on Windows: Command Prompt or PowerShell), then press **Enter**.
+> Copy each command exactly as written.
+
+### Before you start
+
+- [ ] Your Odoo is **version 20** (Community). Other versions will not work.
+- [ ] You can log in to Odoo as an **administrator**.
+- [ ] You can open files on the computer or server where Odoo runs.
+- [ ] You are allowed to **restart Odoo**. Users are logged out for about a minute, so pick a quiet time.
+
+### Step 1: Download the two folders
+
+Pick **one** way.
+
+**Way A, no commands (easiest):**
+
+1. Open <https://github.com/PranisHlama/intern-individual-projects> in your browser.
+2. Switch the branch button (top left, it may say `main`) to **DMS**.
+3. Click the green **Code** button, then **Download ZIP**.
+4. Open the ZIP file. Inside you will find the `dms` and `document_editor` folders.
+
+**Way B, with a command:**
+
+```bash
+git clone -b DMS https://github.com/PranisHlama/intern-individual-projects.git
+```
+
+This creates a folder `intern-individual-projects` with `dms` and `document_editor` inside it.
+
+### Step 2: Put the folders where Odoo can find them
+
+1. Find your **addons folder**. Open Odoo's settings file (usually `odoo.conf`)
+   in a text editor such as Notepad and look for the line starting with
+   `addons_path =`. It lists one or more folders separated by commas. Pick one
+   you can write to, for example `custom_addons`.
+2. Copy the **whole** `dms` folder and the **whole** `document_editor` folder
+   into that addons folder (the folders themselves, not just the files inside).
+3. Check: in the addons folder you should see `dms` and `document_editor` side
+   by side, and inside each one a file called `__manifest__.py`.
+4. Install two small helper programs that Document Editor needs:
 
    ```bash
    pip install PyJWT requests
    ```
 
-2. **Add the module** to your addons path (with `dms` available), then update
-   the apps list and install **DMS ONLYOFFICE Document Editor**, or from the
-   command line:
+   "Successfully installed" or "Requirement already satisfied" means it worked.
+   If Odoo uses its own Python (common with the Windows installer), run this
+   with that Python instead; ask your server admin if unsure.
 
-   ```bash
-   odoo-bin -d <database> -i document_editor
-   ```
+### Step 3: Restart Odoo
 
-3. **Upgrading** after pulling changes:
+Odoo only notices new folders after a restart.
 
-   ```bash
-   odoo-bin -d <database> -u document_editor --stop-after-init
-   ```
+| How Odoo runs | What to do |
+|---|---|
+| Windows installer | Press the Windows key, type **Services**, open it, find **odoo-server**, right-click it and choose **Restart**. |
+| Linux server | `sudo systemctl restart odoo` |
+| Docker | `docker restart <your Odoo container name>` |
+| Started by hand in a terminal | Click that terminal, press **Ctrl + C** to stop it, then run the same start command again. |
 
-   Then restart Odoo; new Python routes only load after a restart.
+Wait about a minute, then open Odoo and log in as administrator.
+
+### Step 4: Install both add-ons from the Apps screen
+
+1. Turn on **Developer Mode**: go to **Settings**, scroll to the bottom and
+   click **Activate the developer mode**.
+2. Open the **Apps** menu.
+3. Click **Update Apps List** in the top bar, then **Update** in the pop-up.
+4. In the search box, remove the **Apps** filter (click the small x on it),
+   then type `Document Management System`.
+5. Click **Activate** on **Document Management System**. Wait for the page to reload.
+6. Search for `DMS Editor` and click **Activate** on it.
+
+**Prefer commands?** Step 4 can be replaced by this one command (`mydb` = your
+database name), followed by a restart as in Step 3:
+
+```bash
+odoo-bin -d mydb -i dms,document_editor --stop-after-init
+```
+
+### Step 5: Check that it works
+
+1. Refresh the page. A **Documents** menu appears on the Odoo home screen.
+2. Open **Documents → Files** and open a `.docx`, `.xlsx`, `.pptx` or `.pdf`
+   file (upload one first if there are none).
+3. Click **Edit in Browser (Beta)**, change something and click **Save**
+   (or press **Ctrl + S**). You should see **Saved**.
 
 Nothing else is needed for **Edit in Browser**. Node.js is *not* needed on the
 server; the editor files are already built and committed in `static/lib/`.
+
+### If something goes wrong during install
+
+| What you see | What to do |
+|---|---|
+| The add-on doesn't show up in Apps | Click **Update Apps List** again and remove the **Apps** filter. Check the folders sit directly inside the addons folder (Step 2.3), not inside an extra folder. Restart Odoo. |
+| Error mentioning `jwt` or `requests` | Repeat the `pip install` command in Step 2.4, then restart Odoo. |
+| DMS Editor won't install and mentions `dms` | Install **Document Management System** first, then DMS Editor. |
+| Odoo won't start after copying | You may not be on Odoo 20. Remove the two folders, restart, and check your version. |
+
+### Upgrading after pulling new code
+
+```bash
+odoo-bin -d <database> -u dms,document_editor --stop-after-init
+```
+
+Then restart Odoo; new Python routes only load after a restart.
 
 ### Optional: ONLYOFFICE
 
