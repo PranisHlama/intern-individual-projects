@@ -37,11 +37,14 @@
                     </span>
                 </header>
 
-                <main
-                    id="onlyoffice-editor"
-                    class="onlyoffice-editor-container"
-                    t-att-data-config-url="config_url"
-                />
+                <!-- ONLYOFFICE replaces the inner placeholder with its
+                     iframe; the outer box keeps it below the header. -->
+                <main class="onlyoffice-editor-container">
+                    <div
+                        id="onlyoffice-editor"
+                        t-att-data-config-url="config_url"
+                    />
+                </main>
 
                 <script
                     type="text/javascript"

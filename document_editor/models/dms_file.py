@@ -1,3 +1,6 @@
+import jwt
+import requests
+
 from odoo import fields, models
 from odoo.exceptions import AccessError, UserError
 
@@ -31,9 +34,45 @@ class DmsFile(models.Model):
             )
         return self.onlyoffice_key
 
+    def _onlyoffice_session_open(self):
+        """Whether an ONLYOFFICE session is really still open, asking
+        ONLYOFFICE itself: it does not always send the closing callback,
+        which would otherwise leave the file blocked forever."""
+        self.ensure_one()
+        if not self._onlyoffice_session_active():
+            return False
+
+        params = self.env["ir.config_parameter"].sudo()
+        server = (
+            params.get_str("document_editor.onlyoffice_internal_url")
+            or params.get_str("document_editor.onlyoffice_url")
+        ).rstrip("/")
+        body = {"c": "info", "key": self.onlyoffice_key}
+        token = jwt.encode(
+            body,
+            params.get_str("document_editor.onlyoffice_jwt_secret"),
+            algorithm="HS256",
+        )
+        try:
+            result = requests.post(
+                f"{server}/coauthoring/CommandService.ashx",
+                json={**body, "token": token},
+                headers={"Authorization": f"Bearer {token}"},
+                timeout=10,
+            ).json()
+        except (requests.RequestException, ValueError):
+            # Unreachable: keep blocking, its pending save could overwrite edits.
+            return True
+
+        # Error 1: ONLYOFFICE has no document with this key, the session ended.
+        if result.get("error") == 1:
+            self.sudo().write({"onlyoffice_key": False, "onlyoffice_checksum": False})
+            return False
+        return True
+
     def lock(self):
         # ONLYOFFICE saves for all co-editors; a lock would block those saves.
-        if any(record._onlyoffice_session_active() for record in self):
+        if any(record._onlyoffice_session_open() for record in self):
             raise UserError(
                 self.env._(
                     "This document is open in ONLYOFFICE. "

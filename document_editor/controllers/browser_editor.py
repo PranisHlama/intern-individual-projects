@@ -112,7 +112,7 @@ class BrowserEditorController(http.Controller):
             ), 423
 
         # ONLYOFFICE's final save would overwrite changes made here.
-        if dms_file._onlyoffice_session_active():
+        if dms_file._onlyoffice_session_open():
             return dms_file, editor, _(
                 "This document is open in ONLYOFFICE. "
                 "Close it there before using this editor."
