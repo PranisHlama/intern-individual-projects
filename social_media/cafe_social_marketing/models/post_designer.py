@@ -40,7 +40,7 @@ def _validate_document(document):
         design = json.loads(document)
         if not isinstance(design, dict) or set(design) != {"version", "color", "background", "layers"}:
             raise ValueError()
-        if type(design["version"]) is not int or design["version"] not in (1, 2):
+        if type(design["version"]) is not int or design["version"] not in (1, 2, 3, 4):
             raise ValueError()
 
         def color(value):
@@ -61,17 +61,29 @@ def _validate_document(document):
             if not isinstance(layer, dict):
                 raise ValueError()
             common = {"kind", "x", "y", "size"}
+            if design["version"] >= 3:
+                common |= {"name", "hidden", "locked"}
+                if (not isinstance(layer.get("name"), str) or len(layer["name"]) > 60
+                        or type(layer.get("hidden")) is not bool
+                        or type(layer.get("locked")) is not bool):
+                    raise ValueError()
             if not number(layer.get("x"), -1080, 1080) or not number(layer.get("y"), -1080, 1080):
                 raise ValueError()
             if layer.get("kind") == "text":
                 text_fields = common | {"text", "color"}
-                if design["version"] == 2:
+                if design["version"] == 4:
+                    text_fields |= {"width"}
+                    if layer.get("width") != 0 and not number(layer.get("width"), 80, 1080):
+                        raise ValueError()
+                    if type(layer.get("width")) is not int:
+                        raise ValueError()
+                if design["version"] >= 2:
                     text_fields |= {"font", "bold", "italic", "align", "lineHeight"}
                 if (set(layer) != text_fields or not isinstance(layer["text"], str)
                         or len(layer["text"]) > 180 or not color(layer["color"])
                         or not number(layer["size"], 18, 160)):
                     raise ValueError()
-                if design["version"] == 2 and (
+                if design["version"] >= 2 and (
                     layer["font"] not in ("sans", "serif", "mono")
                     or type(layer["bold"]) is not bool or type(layer["italic"]) is not bool
                     or layer["align"] not in ("left", "center", "right")

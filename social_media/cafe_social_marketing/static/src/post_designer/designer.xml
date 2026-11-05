@@ -34,11 +34,11 @@
             t-on-pointerdown="this.pointerDown" t-on-pointermove="this.pointerMove"
             t-on-pointerup="this.pointerEnd" t-on-pointercancel="this.pointerEnd" t-on-lostpointercapture="this.pointerEnd"
             t-on-dragover="this.allowBlockDrop" t-on-drop="this.dropBlock"/>
-          <div class="o_cafe_designer_hint">Select a layer to edit. Drag inside to move; drag a corner to resize. Arrow keys move 1 px, Shift + arrows move 10 px.</div>
+          <div class="o_cafe_designer_hint">Select a layer to edit. Drag inside to move; drag a corner to resize. Text side handles change wrapping width. Drag near edges or centres to align. Hold Option/Alt to bypass snapping. Arrow keys move 1 px, Shift + arrows move 10 px.</div>
         </section>
         <fieldset class="o_cafe_designer_controls" t-att-disabled="this.busy or this.state.interacting">
           <div class="o_cafe_designer_tabs" aria-label="Designer panels">
-            <t t-foreach="[['blocks', 'Blocks'], ['customize', 'Customize'], ['design', 'Design']]" t-as="tab" t-key="tab[0]">
+            <t t-foreach="[['blocks', 'Blocks'], ['layers', 'Layers'], ['customize', 'Customize'], ['design', 'Design']]" t-as="tab" t-key="tab[0]">
               <button type="button" t-att-class="{active: this.state.tab === tab[0]}"
                 t-att-aria-pressed="this.state.tab === tab[0]" t-on-click="() => this.setTab(tab[0])" t-esc="tab[1]"/>
             </t>
@@ -75,25 +75,46 @@
                 t-att-disabled="this.state.design.layers.length >= 8" t-on-change="(ev) => this.importImage(ev, 'logo')"/>
             </label>
           </section>
-          <section t-elif="this.state.tab === 'customize'">
-            <h2>Layers</h2>
-            <div class="o_cafe_designer_layers">
-              <t t-foreach="this.state.design.layers" t-as="layer" t-key="layer_index">
-                <button class="btn btn-outline-secondary btn-sm text-truncate" type="button"
-                  t-att-class="{active: this.state.selected === layer_index}"
-                  t-on-click="() => this.select(layer_index)" t-att-aria-pressed="this.state.selected === layer_index">
-                  <t t-esc="layer.kind === 'text' ? (layer.text.slice(0, 28) || 'Empty text') : 'Image ' + (layer_index + 1)"/>
-                </button>
+          <section t-elif="this.state.tab === 'layers'">
+            <div class="o_cafe_designer_section_heading"><h2>Layers</h2><span><t t-esc="this.state.design.layers.length"/> / 8</span></div>
+            <p class="o_cafe_designer_hint">Top rows appear in front. Select a row, or choose Edit to change its content.</p>
+            <p t-if="!this.layerRows.length" class="o_cafe_designer_hint">Your canvas is empty. Add text or an image under Blocks.</p>
+            <div class="o_cafe_designer_layer_list">
+              <t t-foreach="this.layerRows" t-as="row" t-key="row.index">
+                <div class="o_cafe_designer_layer_row" t-att-class="{selected: this.state.selected === row.index, muted: row.layer.hidden}">
+                  <div class="o_cafe_designer_layer_top">
+                    <button type="button" class="o_cafe_designer_layer_select" t-att-aria-pressed="this.state.selected === row.index" t-on-click="() => this.select(row.index, false)">
+                      <span t-esc="this.layerLabel(row.layer, row.index)"/>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" t-att-title="row.layer.hidden ? 'Show layer' : 'Hide layer'" t-att-aria-label="(row.layer.hidden ? 'Show ' : 'Hide ') + this.layerLabel(row.layer, row.index)" t-att-aria-pressed="row.layer.hidden" t-on-click="() => this.toggleLayer(row.index, 'hidden')"><t t-if="row.layer.hidden">Show</t><t t-else="">Hide</t></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" t-att-title="row.layer.locked ? 'Unlock layer' : 'Lock layer'" t-att-aria-label="(row.layer.locked ? 'Unlock ' : 'Lock ') + this.layerLabel(row.layer, row.index)" t-att-aria-pressed="row.layer.locked" t-on-click="() => this.toggleLayer(row.index, 'locked')"><t t-if="row.layer.locked">Unlock</t><t t-else="">Lock</t></button>
+                  </div>
+                  <div t-if="this.state.selected === row.index" class="o_cafe_designer_layer_details">
+                    <label class="o_cafe_designer_field">Layer name
+                      <input class="form-control form-control-sm" maxlength="60" t-att-value="row.layer.name" t-att-placeholder="this.layerLabel(row.layer, row.index)" t-att-disabled="row.layer.locked" t-on-change="(ev) => this.renameLayer(ev, row.index)"/>
+                    </label>
+                    <div class="d-flex flex-wrap gap-2">
+                      <button type="button" class="btn btn-sm btn-outline-secondary" t-att-disabled="row.layer.locked or row.index === 0" t-on-click="() => this.moveLayer(-1)">Backward</button>
+                      <button type="button" class="btn btn-sm btn-outline-secondary" t-att-disabled="row.layer.locked or row.index === this.state.design.layers.length - 1" t-on-click="() => this.moveLayer(1)">Forward</button>
+                      <button type="button" class="btn btn-sm btn-secondary" t-att-disabled="row.layer.hidden or row.layer.locked" t-on-click="() => this.select(row.index)">Edit</button>
+                    </div>
+                  </div>
+                </div>
               </t>
             </div>
+            <p class="o_cafe_designer_hint">Hidden layers are omitted from the saved JPEG. Locked layers stay visible but cannot be edited or moved. Both settings are saved with the design.</p>
+          </section>
+          <section t-elif="this.state.tab === 'customize'">
             <p t-if="!this.active" class="o_cafe_designer_hint">Select a layer on the preview or add one under Blocks.</p>
             <t t-else="">
-              <h2>Selected block</h2>
+              <div class="o_cafe_designer_selected_heading"><strong t-esc="this.layerLabel(this.active, this.state.selected)"/><button type="button" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.setTab('layers')">Layers</button></div>
+              <p t-if="this.active.locked or this.active.hidden" class="alert alert-info py-2">Unlock or show this layer in Layers to edit it.</p>
+              <fieldset class="o_cafe_designer_block_fields" t-att-disabled="this.active.locked or this.active.hidden">
               <t t-if="this.active.kind === 'text'">
                 <label class="o_cafe_designer_field">Text
                   <textarea rows="3" maxlength="180" class="form-control" t-att-value="this.active.text"
                     t-on-input="(ev) => this.updateLayer(ev, 'text')" t-on-change="this.finishEdit" t-on-blur="this.finishEdit"/>
-                  <span class="o_cafe_designer_hint">Press Enter for a new line. Text does not wrap automatically.</span>
+                  <span class="o_cafe_designer_hint">Drag a side handle to wrap text. Enter keeps a manual line break.</span>
                 </label>
                 <label class="o_cafe_designer_field">Font family
                   <select class="form-select" t-att-value="this.active.font" t-on-change="(ev) => this.updateLayer(ev, 'font')">
@@ -111,10 +132,6 @@
                     <option value="left" t-att-selected="this.active.align === 'left'">Left</option><option value="center" t-att-selected="this.active.align === 'center'">Centre</option><option value="right" t-att-selected="this.active.align === 'right'">Right</option>
                   </select>
                 </label>
-                <label class="o_cafe_designer_field">Line spacing: <t t-esc="this.active.lineHeight"/>%
-                  <input class="form-range" type="range" min="100" max="180" t-att-value="this.active.lineHeight"
-                    t-on-input="(ev) => this.updateLayer(ev, 'lineHeight')" t-on-change="this.finishEdit"/>
-                </label>
                 <label class="o_cafe_designer_field">Text colour
                   <input type="color" t-att-value="this.active.color" t-on-input="(ev) => this.updateLayer(ev, 'color')" t-on-change="this.finishEdit"/>
                 </label>
@@ -124,6 +141,14 @@
                   t-att-max="this.active.kind === 'text' ? 160 : 1080" t-att-value="this.active.size"
                   t-on-input="(ev) => this.updateLayer(ev, 'size')" t-on-change="this.finishEdit"/>
               </label>
+              <details class="o_cafe_designer_advanced"><summary>Position and alignment</summary>
+              <div t-if="this.active.kind === 'text'" class="o_cafe_designer_position">
+                <label class="o_cafe_designer_field">Text box width (px)
+                  <input type="number" class="form-control" min="80" max="1080" t-att-value="this.textBoxWidth" t-on-change="(ev) => this.updateLayer(ev, 'width')"/>
+                </label>
+                <div class="align-self-end mb-2"><button type="button" class="btn btn-sm btn-outline-secondary" t-att-disabled="!this.active.width" t-on-click="() => this.updateLayer({target: {value: '0'}}, 'width')">Auto width</button></div>
+              </div>
+              <p t-if="this.active.kind === 'text'" class="o_cafe_designer_hint"><t t-if="!this.active.width">Automatic width: only manual line breaks apply.</t><t t-else="">Text wraps at the box width. Very wide glyphs set its minimum visible width.</t></p>
               <h2>Align to canvas</h2>
               <div class="o_cafe_designer_align" role="group" aria-label="Align selected block to canvas">
                 <t t-foreach="[['left', 'Left'], ['center', 'Centre'], ['right', 'Right'], ['top', 'Top'], ['middle', 'Middle'], ['bottom', 'Bottom']]" t-as="position" t-key="position[0]">
@@ -140,17 +165,18 @@
                     t-att-value="this.active.y" t-on-change="(ev) => this.updateLayer(ev, 'y')"/>
                 </label>
               </div>
-              <div class="d-flex gap-2 flex-wrap mb-2">
-                <button type="button" class="btn btn-outline-secondary btn-sm" t-att-disabled="this.state.selected === 0"
-                  t-on-click="() => this.moveLayer(-1)">Send backward</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm"
-                  t-att-disabled="this.state.selected === this.state.design.layers.length - 1"
-                  t-on-click="() => this.moveLayer(1)">Bring forward</button>
-              </div>
+              </details>
+              <details t-if="this.active.kind === 'text'" class="o_cafe_designer_advanced"><summary>Text spacing</summary>
+                <label class="o_cafe_designer_field">Line spacing: <t t-esc="this.active.lineHeight"/>%
+                  <input class="form-range" type="range" min="100" max="180" t-att-value="this.active.lineHeight"
+                    t-on-input="(ev) => this.updateLayer(ev, 'lineHeight')" t-on-change="this.finishEdit"/>
+                </label>
+              </details>
               <div class="d-flex gap-2 flex-wrap">
                 <button type="button" class="btn btn-outline-secondary btn-sm" t-att-disabled="this.state.design.layers.length >= 8" t-on-click="this.duplicateLayer">Duplicate</button>
                 <button type="button" class="btn btn-outline-danger btn-sm" t-on-click="this.removeLayer">Remove block</button>
               </div>
+              </fieldset>
             </t>
           </section>
           <section t-else="">

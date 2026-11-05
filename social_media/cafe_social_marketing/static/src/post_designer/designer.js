@@ -9,7 +9,7 @@ const SIDE = 1080;
 let nextCanvasId = 0;
 const BLOCK_TYPE = "application/x-cafe-designer-block";
 const textLayer = (text, x, y, size, color) => ({
-    kind: "text", text, x, y, size, color,
+    kind: "text", text, x, y, size, color, width: 0, name: "", hidden: false, locked: false,
     font: "sans", bold: true, italic: false, align: "left", lineHeight: 122,
 });
 const FONT_FAMILIES = { sans: "Arial, sans-serif", serif: "Georgia, serif", mono: "monospace" };
@@ -20,10 +20,11 @@ const sameDesign = (a, b) => a.color === b.color && a.background === b.backgroun
         return Object.keys(layer).length === Object.keys(other).length
             && Object.keys(layer).every(key => layer[key] === other[key]);
     });
-const normalizeDesign = (design) => ({ ...design, version: 2,
+const normalizeDesign = (design) => ({ ...design, version: 4,
     layers: design.layers.map(layer => layer.kind === "text" ? {
+        name: "", hidden: false, locked: false, width: 0,
         font: "sans", bold: true, italic: false, align: "left", lineHeight: 122, ...layer,
-    } : { ...layer }),
+    } : { name: "", hidden: false, locked: false, ...layer }),
 });
 const TEMPLATES = [
     { id: "weekend", label: "Weekend Offer", color: "#233b32", layers: [
@@ -46,7 +47,7 @@ const TEMPLATES = [
     ] },
 ];
 const MODEL = "cafe.social.post";
-const initialDesign = () => ({ version: 2, color: "#f4e8d4", background: "", layers: [] });
+const initialDesign = () => ({ version: 4, color: "#f4e8d4", background: "", layers: [] });
 const clamp = (n, min, max) => Math.max(min, Math.min(max, Math.round(n)));
 const srcFor = (data) => `data:image/${data.startsWith("/9j/") ? "jpeg" : "png"};base64,${data}`;
 
@@ -68,6 +69,7 @@ export class PostDesigner extends Component {
             hasOtherMedia: false, error: "", undoCount: 0, redoCount: 0, interacting: false,
         });
         this.images = new Map();
+        this.snapGuides = [];
         this.history = [];
         this.historyIndex = -1;
         this.historyGroup = null;
@@ -87,7 +89,7 @@ export class PostDesigner extends Component {
     }
 
     setTab(tab) {
-        if (["blocks", "customize", "design"].includes(tab)) this.state.tab = tab;
+        if (["blocks", "layers", "customize", "design"].includes(tab)) this.state.tab = tab;
     }
 
     chooseTemplate(id) {
@@ -98,7 +100,7 @@ export class PostDesigner extends Component {
         if ((this.state.dirty || existing.background || existing.layers.length)
             && !window.confirm("Replace the current canvas with this template? The post changes only when you save.")) return;
         this.state.design = {
-            version: 2, color: preset.color, background: "",
+            version: 4, color: preset.color, background: "",
             layers: preset.layers.map(layer => ({ ...layer })),
         };
         this.state.selected = 1;
@@ -111,10 +113,10 @@ export class PostDesigner extends Component {
         const i = this.state.selected;
         const j = i + delta;
         const layers = this.state.design.layers;
-        if (this.busy || i < 0 || j < 0 || j >= layers.length) return;
+        if (this.busy || this.state.interacting || this.active?.locked || i < 0 || j < 0 || j >= layers.length) return;
         const [layer] = layers.splice(i, 1);
         layers.splice(j, 0, layer);
-        this.select(j);
+        this.select(j, this.state.tab !== "layers");
         this.changed();
     }
 
@@ -143,6 +145,31 @@ export class PostDesigner extends Component {
 
     get active() {
         return this.state.design.layers[this.state.selected];
+    }
+
+    get layerRows() {
+        return this.state.design.layers.map((layer, index) => ({ layer, index })).reverse();
+    }
+
+    layerLabel(layer, index) {
+        return layer.name || (layer.kind === "text" ? layer.text.replace(/\n/g, " ").slice(0, 40) || "Empty text" : "Image " + (index + 1));
+    }
+
+    renameLayer(event, index) {
+        if (this.busy || this.state.interacting) return;
+        const layer = this.state.design.layers[index];
+        if (!layer || layer.locked) return;
+        layer.name = event.target.value.trim().slice(0, 60);
+        this.changed();
+    }
+
+    toggleLayer(index, field) {
+        if (this.busy || this.state.interacting || !["hidden", "locked"].includes(field)) return;
+        const layer = this.state.design.layers[index];
+        if (!layer) return;
+        this.finishEdit();
+        layer[field] = !layer[field];
+        this.changed();
     }
 
     get busy() {
@@ -286,7 +313,7 @@ export class PostDesigner extends Component {
                 const photo = mode === "photo";
                 const size = photo ? clamp(Math.min(880, 480 * image.naturalWidth / image.naturalHeight), 32, 880) : 185;
                 this.state.design.layers.push({
-                    kind: "image", data, x: photo ? Math.round((SIDE - size) / 2) : 810,
+                    kind: "image", data, name: mode === "logo" ? "Logo" : "Photo", hidden: false, locked: false, x: photo ? Math.round((SIDE - size) / 2) : 810,
                     y: photo ? 455 : 78, size,
                 });
                 this.select(this.state.design.layers.length - 1);
@@ -328,15 +355,15 @@ export class PostDesigner extends Component {
         this.changed();
     }
 
-    select(index) {
+    select(index, customize = true) {
         this.finishEdit();
         this.state.selected = index;
-        if (index >= 0) this.state.tab = "customize";
+        if (index >= 0 && customize) this.state.tab = "customize";
         this.draw();
     }
 
     removeLayer() {
-        if (!this.active || this.busy) return;
+        if (!this.active || this.busy || this.active.locked || this.active.hidden) return;
         this.state.design.layers.splice(this.state.selected, 1);
         this.state.selected = -1;
         this.pruneImages();
@@ -351,7 +378,7 @@ export class PostDesigner extends Component {
     }
 
     updateLayer(event, field) {
-        if (!this.active || this.busy) return;
+        if (!this.active || this.busy || this.active.locked || this.active.hidden) return;
         let value = event.target.value;
         if (field === "size") {
             value = this.active.kind === "text" ? clamp(Number(value), 18, 160) : clamp(Number(value), 32, 1080);
@@ -361,9 +388,13 @@ export class PostDesigner extends Component {
         if (field === "font" && !Object.hasOwn(FONT_FAMILIES, value)) return;
         if (field === "align" && !["left", "center", "right"].includes(value)) return;
         if (field === "lineHeight") value = clamp(Number(value), 100, 180);
+        if (field === "width") {
+            if (this.active.kind !== "text") return;
+            value = Number(value) === 0 ? 0 : clamp(Number(value), 80, SIDE);
+        }
         if (typeof value === "number" && !Number.isFinite(value)) return;
         this.active[field] = value;
-        this.changed(["text", "color", "size", "lineHeight"].includes(field)
+        this.changed(["text", "color", "size", "lineHeight", "width"].includes(field)
             ? "layer:" + this.state.selected + ":" + field : null);
     }
 
@@ -382,9 +413,52 @@ export class PostDesigner extends Component {
             const img = this.images.get(layer.data);
             return [layer.size, img ? layer.size * img.height / img.width : layer.size];
         }
+        const layout = this.textLayout(ctx, layer);
+        return [layout.width, layout.lines.length * layer.size * (layer.lineHeight || 122) / 100];
+    }
+
+    textLayout(ctx, layer) {
         ctx.font = `${layer.italic ? "italic " : ""}${layer.bold === false ? "normal" : "bold"} ${layer.size}px ${FONT_FAMILIES[layer.font] || FONT_FAMILIES.sans}`;
-        const lines = layer.text.split("\n");
-        return [Math.max(24, ...lines.map(line => ctx.measureText(line).width)), lines.length * layer.size * (layer.lineHeight || 122) / 100];
+        const paragraphs = layer.text.split("\n");
+        if (!layer.width) {
+            return { lines: paragraphs,
+                width: Math.max(24, ...paragraphs.map(line => ctx.measureText(line).width)) };
+        }
+        const lines = [];
+        const segments = typeof Intl !== "undefined" && Intl.Segmenter
+            ? new Intl.Segmenter(undefined, { granularity: "grapheme" }) : null;
+        const characters = text => segments
+            ? Array.from(segments.segment(text), part => part.segment) : Array.from(text);
+        // A box cannot be narrower than a complete glyph at the chosen font.
+        // This also prevents emoji or wide letters from being clipped.
+        const glyphWidth = Math.max(0, ...characters(layer.text.replace(/\n/g, "")).map(c => ctx.measureText(c).width));
+        const width = Math.max(layer.width, glyphWidth);
+        for (const paragraph of paragraphs) {
+            const words = paragraph.match(/\S+/g) || [];
+            if (!words.length) { lines.push(""); continue; }
+            let line = "";
+            for (const word of words) {
+                const candidate = line ? line + " " + word : word;
+                if (ctx.measureText(candidate).width <= width) {
+                    line = candidate;
+                    continue;
+                }
+                if (line) { lines.push(line); line = ""; }
+                for (const character of characters(word)) {
+                    if (line && ctx.measureText(line + character).width > width) {
+                        lines.push(line); line = "";
+                    }
+                    line += character;
+                }
+            }
+            lines.push(line);
+        }
+        return { lines, width };
+    }
+
+    get textBoxWidth() {
+        if (this.active?.kind !== "text") return 0;
+        return this.active.width || clamp(this.bounds(this.canvasElement.getContext("2d"), this.active)[0], 80, SIDE);
     }
 
     draw(out = this.canvasElement, selection = true, design = this.state.design) {
@@ -400,6 +474,7 @@ export class PostDesigner extends Component {
             ctx.drawImage(background, (SIDE - w) / 2, (SIDE - h) / 2, w, h);
         }
         for (const layer of design.layers) {
+            if (layer.hidden) continue;
             const [w, h] = this.bounds(ctx, layer);
             if (layer.kind === "image") {
                 const img = this.images.get(layer.data);
@@ -409,12 +484,13 @@ export class PostDesigner extends Component {
                 ctx.textBaseline = "top";
                 ctx.textAlign = layer.align || "left";
                 const x = layer.x + (layer.align === "center" ? w / 2 : layer.align === "right" ? w : 0);
-                layer.text.split("\n").forEach((line, i) => ctx.fillText(line, x,
+                this.textLayout(ctx, layer).lines.forEach((line, i) => ctx.fillText(line, x,
                     layer.y + i * layer.size * (layer.lineHeight || 122) / 100));
                 ctx.textAlign = "left";
             }
         }
-        if (selection && this.active) {
+        if (selection) this.drawSnapGuides(ctx);
+        if (selection && this.active && !this.active.hidden && !this.active.locked) {
             const [w, h] = this.bounds(ctx, this.active);
             ctx.strokeStyle = "#168c85";
             ctx.lineWidth = 4;
@@ -431,13 +507,13 @@ export class PostDesigner extends Component {
     }
 
     toggleStyle(field) {
-        if (this.busy || this.active?.kind !== "text" || !["bold", "italic"].includes(field)) return;
+        if (this.busy || this.active?.locked || this.active?.hidden || this.active?.kind !== "text" || !["bold", "italic"].includes(field)) return;
         this.active[field] = !this.active[field];
         this.changed();
     }
 
     duplicateLayer() {
-        if (!this.active || this.busy || this.state.design.layers.length >= 8) return;
+        if (!this.active || this.busy || this.active.locked || this.active.hidden || this.state.design.layers.length >= 8) return;
         const layer = { ...this.active, x: clamp(this.active.x + 24, -SIDE, SIDE),
             y: clamp(this.active.y + 24, -SIDE, SIDE) };
         this.state.design.layers.splice(this.state.selected + 1, 0, layer);
@@ -446,7 +522,7 @@ export class PostDesigner extends Component {
     }
 
     alignLayer(direction) {
-        if (!this.active || this.busy) return;
+        if (!this.active || this.busy || this.active.locked || this.active.hidden) return;
         const [w, h] = this.bounds(this.canvasElement.getContext("2d"), this.active);
         const positions = { left: ["x", 0], center: ["x", (SIDE - w) / 2], right: ["x", SIDE - w],
             top: ["y", 0], middle: ["y", (SIDE - h) / 2], bottom: ["y", SIDE - h] };
@@ -465,7 +541,7 @@ export class PostDesigner extends Component {
             event.shiftKey ? this.redo() : this.undo();
         } else if (modifier && key === "y") {
             event.preventDefault(); this.redo();
-        } else if (this.active && !modifier && !event.altKey) {
+        } else if (this.active && !this.active.locked && !this.active.hidden && !modifier && !event.altKey) {
             const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
             if (Object.hasOwn(arrows, event.key)) {
                 event.preventDefault();
@@ -485,6 +561,10 @@ export class PostDesigner extends Component {
             { x: layer.x + w, y: layer.y, sx: 1, sy: -1, ax: layer.x, ay: layer.y + h },
             { x: layer.x, y: layer.y + h, sx: -1, sy: 1, ax: layer.x + w, ay: layer.y },
             { x: layer.x + w, y: layer.y + h, sx: 1, sy: 1, ax: layer.x, ay: layer.y },
+            ...(layer.kind === "text" ? [
+                { x: layer.x, y: layer.y + h / 2, widthOnly: true, sx: -1, ax: layer.x + w },
+                { x: layer.x + w, y: layer.y + h / 2, widthOnly: true, sx: 1, ax: layer.x },
+            ] : []),
         ];
     }
 
@@ -497,19 +577,67 @@ export class PostDesigner extends Component {
         return [(event.clientX - r.left) * SIDE / r.width, (event.clientY - r.top) * SIDE / r.height];
     }
 
+    snapPosition(layer, x, y, bypass = false) {
+        this.snapGuides = [];
+        if (bypass) return [x, y];
+        const ctx = this.canvasElement.getContext("2d");
+        const [width, height] = this.bounds(ctx, layer);
+        // Six CSS pixels at any displayed canvas size. Always use raw pointer
+        // coordinates so a previous snap never accumulates into the next move.
+        const tolerance = 6 * SIDE / (this.canvasElement.getBoundingClientRect().width || SIDE);
+        const targets = [[0, SIDE / 2, SIDE], [0, SIDE / 2, SIDE]];
+        for (const other of this.state.design.layers) {
+            if (other === layer || other.hidden) continue;
+            const [w, h] = this.bounds(ctx, other);
+            targets[0].push(other.x, other.x + w / 2, other.x + w);
+            targets[1].push(other.y, other.y + h / 2, other.y + h);
+        }
+        return [x, y].map((position, axis) => {
+            const extent = axis === 0 ? width : height;
+            let best = null;
+            for (const target of targets[axis]) {
+                if (target < 0 || target > SIDE) continue;
+                for (const offset of [0, extent / 2, extent]) {
+                    const candidate = clamp(target - offset, -SIDE, SIDE);
+                    const distance = Math.abs(candidate - position);
+                    if (Math.abs(candidate + offset - target) > 0.51) continue;
+                    if (distance <= tolerance && (!best || distance < best.distance)) {
+                        best = { position: candidate, target, distance };
+                    }
+                }
+            }
+            if (!best) return position;
+            this.snapGuides.push({ axis, position: best.target });
+            return best.position;
+        });
+    }
+
+    drawSnapGuides(ctx) {
+        if (!this.drag || this.drag.resize) return;
+        const thickness = 1.5 * SIDE / (this.canvasElement.getBoundingClientRect().width || SIDE);
+        ctx.fillStyle = "#a341bb";
+        for (const guide of this.snapGuides) {
+            if (guide.axis === 0) ctx.fillRect(guide.position - thickness / 2, 0, thickness, SIDE);
+            else ctx.fillRect(0, guide.position - thickness / 2, SIDE, thickness);
+        }
+    }
+
     pointerDown(event) {
         if (this.busy || event.button !== 0 || this.drag) return;
         this.finishEdit();
+        this.snapGuides = [];
         this.canvasElement.focus({ preventScroll: true });
         const [x, y] = this.point(event);
         const ctx = this.canvasElement.getContext("2d");
-        if (this.active) {
+        if (this.active && !this.active.hidden && !this.active.locked) {
             const [w, h] = this.bounds(ctx, this.active);
-            const handle = this.handles(this.active, w, h).find(point =>
-                Math.abs(x - point.x) <= this.handleRadius() && Math.abs(y - point.y) <= this.handleRadius());
+            const handle = this.handles(this.active, w, h).filter(point =>
+                Math.abs(x - point.x) <= this.handleRadius() && Math.abs(y - point.y) <= this.handleRadius())
+                .sort((a, b) => ((x - a.x) ** 2 + (y - a.y) ** 2) - ((x - b.x) ** 2 + (y - b.y) ** 2))[0];
             if (handle) {
                 this.drag = { id: event.pointerId, index: this.state.selected, resize: true,
-                    handle, w, h, original: { x: this.active.x, y: this.active.y, size: this.active.size } };
+                    handle, w, h, original: { x: this.active.x, y: this.active.y, size: this.active.size,
+                        ...(this.active.kind === "text" ? { width: this.active.width } : {}) } };
                 this.state.interacting = true;
                 event.currentTarget.setPointerCapture(event.pointerId);
                 event.preventDefault();
@@ -519,11 +647,12 @@ export class PostDesigner extends Component {
         const layers = this.state.design.layers;
         for (let i = layers.length - 1; i >= 0; i--) {
             const l = layers[i];
+            if (l.hidden || l.locked) continue;
             const [w, h] = this.bounds(ctx, l);
             if (x >= l.x && x <= l.x + w && y >= l.y && y <= l.y + h) {
                 this.select(i);
                 this.drag = { id: event.pointerId, index: i, dx: x - l.x, dy: y - l.y,
-                    original: { x: l.x, y: l.y, size: l.size } };
+                    original: { x: l.x, y: l.y, size: l.size, ...(l.kind === "text" ? { width: l.width } : {}) } };
                 this.state.interacting = true;
                 event.currentTarget.setPointerCapture(event.pointerId);
                 event.preventDefault();
@@ -538,18 +667,29 @@ export class PostDesigner extends Component {
         const [x, y] = this.point(event);
         const layer = this.state.design.layers[this.drag.index];
         if (!layer) return;
-        if (this.drag.resize) {
+        this.snapGuides = [];
+        if (this.drag.resize && this.drag.handle.widthOnly) {
+            const { handle, original } = this.drag;
+            layer.width = clamp((x - handle.ax) * handle.sx, 80, SIDE);
+            const [newW] = this.bounds(this.canvasElement.getContext("2d"), layer);
+            layer.x = clamp(handle.sx < 0 ? handle.ax - newW : original.x, -SIDE, SIDE);
+            layer.y = original.y;
+        } else if (this.drag.resize) {
             const { handle, w, h, original } = this.drag;
             const dx = (x - handle.ax) * handle.sx, dy = (y - handle.ay) * handle.sy;
             const scale = Math.max(0, (dx * w + dy * h) / (w * w + h * h));
             layer.size = clamp(original.size * scale, layer.kind === "text" ? 18 : 32,
                 layer.kind === "text" ? 160 : 1080);
+            if (layer.kind === "text" && original.width) {
+                layer.width = clamp(original.width * layer.size / original.size, 80, SIDE);
+            }
             const [newW, newH] = this.bounds(this.canvasElement.getContext("2d"), layer);
             layer.x = clamp(handle.sx < 0 ? handle.ax - newW : handle.ax, -SIDE, SIDE);
             layer.y = clamp(handle.sy < 0 ? handle.ay - newH : handle.ay, -SIDE, SIDE);
         } else {
-            layer.x = clamp(x - this.drag.dx, -SIDE, SIDE);
-            layer.y = clamp(y - this.drag.dy, -SIDE, SIDE);
+            const rawX = clamp(x - this.drag.dx, -SIDE, SIDE);
+            const rawY = clamp(y - this.drag.dy, -SIDE, SIDE);
+            [layer.x, layer.y] = this.snapPosition(layer, rawX, rawY, event.altKey);
         }
         this.changed(null, false);
     }
@@ -560,6 +700,7 @@ export class PostDesigner extends Component {
             Object.assign(this.state.design.layers[this.drag.index], this.drag.original);
         }
         this.drag = null;
+        this.snapGuides = [];
         this.state.interacting = false;
         this.changed();
     }
