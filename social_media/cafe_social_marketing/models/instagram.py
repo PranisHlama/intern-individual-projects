@@ -239,9 +239,15 @@ class InstagramPost(models.Model):
         self.ensure_one()
         if not self._is_instagram():
             return super().action_publish()
+        if (self.state == 'published' and self.instagram_publish_status == 'published'
+                and self.instagram_media_id):
+            return {'type': 'ir.actions.client', 'tag': 'reload'}
         self._instagram_preflight()
         self.env.cr.execute('SELECT id FROM cafe_social_post WHERE id = %s FOR UPDATE', (self.id,))
         self.invalidate_recordset()
+        if (self.state == 'published' and self.instagram_publish_status == 'published'
+                and self.instagram_media_id):
+            return {'type': 'ir.actions.client', 'tag': 'reload'}
         user_id, token = self._instagram_preflight()
         phase = 'create'
         try:
@@ -279,7 +285,10 @@ class InstagramPost(models.Model):
             return self._instagram_notice(str(exc), True)
         self._write_publish_result({'instagram_media_id': media_id, 'instagram_publish_status': 'published',
             'instagram_publish_error': False, 'state': 'published', 'published_at': fields.Datetime.now()})
-        return self._instagram_notice('Published to Instagram. Media ID: ' + media_id)
+        result = self._instagram_notice('Published to Instagram. Media ID: ' + media_id)
+        result['params']['type'] = 'success'
+        result['params']['next'] = {'type': 'ir.actions.client', 'tag': 'reload'}
+        return result
 
     def write(self, vals):
         if RESULT_FIELDS.intersection(vals):
