@@ -1,0 +1,57 @@
+<odoo>
+    <record id="cafe_social_account_profile_form" model="ir.ui.view">
+        <field name="name">cafe.social.account.profile.form</field>
+        <field name="model">cafe.social.account</field>
+        <field name="inherit_id" ref="cafe_social_account_view_form"/>
+        <field name="priority">110</field>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_sync_social_profile" type="object" string="Sync Profile"
+                        groups="cafe_social_marketing.group_cafe_social_manager"
+                        invisible="not active or platform not in ['facebook', 'instagram']"/>
+            </xpath>
+            <xpath expr="//sheet" position="inside">
+                <group string="Cached Social Profile" invisible="platform not in ['facebook', 'instagram']">
+                    <field name="profile_image" widget="image" options="{'size': [80, 80]}" readonly="1"/>
+                    <field name="profile_name" readonly="1"/>
+                    <field name="profile_username" readonly="1" invisible="platform != 'instagram'"/>
+                    <field name="profile_synced_at" readonly="1"/>
+                    <div colspan="2" class="text-muted">Sync Profile reads the current name and photo using this account’s existing token. Your local account label and handle stay unchanged.</div>
+                </group>
+            </xpath>
+        </field>
+    </record>
+    <record id="cafe_social_post_profile_feed" model="ir.ui.view">
+        <field name="name">cafe.social.post.profile.feed</field>
+        <field name="model">cafe.social.post</field>
+        <field name="inherit_id" ref="cafe_social_post_workspace_feed"/>
+        <field name="priority">110</field>
+        <field name="arch" type="xml">
+            <xpath expr="//templates" position="before">
+                <field name="feed_profile_name"/>
+                <field name="feed_profile_avatar"/>
+                <field name="feed_profile_username"/>
+            </xpath>
+            <xpath expr="//div[@class='cafe-feed-heading']/span" position="replace">
+                <div style="position:relative;width:36px;height:36px;flex-shrink:0;">
+                    <img t-if="record.feed_profile_avatar.raw_value" t-att-src="record.feed_profile_avatar.raw_value"
+                         alt="Account profile photo" loading="lazy" style="width:36px;height:36px;object-fit:cover;border-radius:50%;"/>
+                    <img t-else="" t-att-src="record.feed_platform.raw_value === 'facebook' ? '/cafe_social_marketing/static/src/img/facebook.svg' : '/cafe_social_marketing/static/src/img/instagram.svg'"
+                         alt="Social platform" style="width:36px;height:36px;object-fit:contain;"/>
+                    <img t-if="record.feed_profile_avatar.raw_value"
+                         t-att-src="record.feed_platform.raw_value === 'facebook' ? '/cafe_social_marketing/static/src/img/facebook.svg' : '/cafe_social_marketing/static/src/img/instagram.svg'"
+                         alt="Social platform" style="position:absolute;right:-3px;bottom:-3px;width:15px;height:15px;background:white;border:2px solid white;border-radius:4px;"/>
+                </div>
+            </xpath>
+            <xpath expr="//div[@class='cafe-feed-account']/field[@name='social_account_ids']" position="replace">
+                <div t-if="record.feed_profile_name.raw_value" style="font-weight:600;overflow-wrap:anywhere;">
+                    <field name="feed_profile_name"/>
+                </div>
+                <div t-else=""><field name="social_account_ids" widget="many2many_tags"/></div>
+                <div t-if="record.feed_profile_username.raw_value" class="text-muted small">
+                    @<field name="feed_profile_username"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

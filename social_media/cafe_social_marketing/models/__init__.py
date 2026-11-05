@@ -13,3 +13,4 @@ from . import account_picker
 from . import post_designer
 from . import post_workspace
 from . import calendar_reschedule
+from . import social_profile
