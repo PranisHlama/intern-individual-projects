@@ -54,6 +54,30 @@ class CafeSocialPost(models.Model):
         string="Media",
     )
 
+    feed_platform = fields.Selection(
+        [("facebook", "Facebook"), ("instagram", "Instagram")],
+        compute="_compute_feed_platform",
+        store=True,
+    )
+    feed_image_url = fields.Char(compute="_compute_feed_image_url")
+
+    @api.depends("social_account_ids", "social_account_ids.platform")
+    def _compute_feed_platform(self):
+        for post in self:
+            accounts = post.social_account_ids
+            platform = accounts.platform if len(accounts) == 1 else False
+            post.feed_platform = platform if platform in ("facebook", "instagram") else False
+
+    @api.depends("attachment_ids", "attachment_ids.type", "attachment_ids.mimetype", "attachment_ids.checksum")
+    def _compute_feed_image_url(self):
+        for post in self:
+            photo = post.attachment_ids
+            post.feed_image_url = False
+            if len(photo) == 1 and photo.type == "binary" and photo.mimetype in ("image/jpeg", "image/png"):
+                photo_id = photo._origin.id
+                if type(photo_id) is int and photo_id > 0:
+                    post.feed_image_url = f"/web/image/{photo_id}?unique={photo.checksum or ''}"
+
     video_file = fields.Binary(
         string="Video Attachment",
         attachment=True,

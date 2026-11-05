@@ -343,6 +343,54 @@
     </record>
 
 
+    <record id="cafe_social_post_feed_view" model="ir.ui.view">
+        <field name="name">cafe.social.post.feed.kanban</field>
+        <field name="model">cafe.social.post</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="feed_platform" default_order="published_at desc, id desc"
+                    create="false" quick_create="false" records_draggable="false"
+                    groups_draggable="false" group_create="false" group_edit="false"
+                    group_delete="false" delete="false">
+                <field name="feed_platform"/>
+                <field name="feed_image_url"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i t-if="record.feed_platform.raw_value === 'facebook'"
+                               class="fa fa-facebook-square text-primary" title="Facebook" role="img"
+                               aria-label="Facebook"/>
+                            <i t-else="" class="fa fa-instagram" title="Instagram" role="img"
+                               aria-label="Instagram"/>
+                            <field name="social_account_ids" widget="many2many_tags"/>
+                        </div>
+                        <div class="small text-muted mb-2">
+                            <field name="published_at"/>
+                        </div>
+                        <strong class="mb-2 text-break"><field name="name"/></strong>
+                        <div class="text-break mb-2"
+                             style="white-space:pre-wrap;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;"><field name="message"/></div>
+                        <img t-if="record.feed_image_url.raw_value" t-att-src="record.feed_image_url.raw_value"
+                             alt="Post image" loading="lazy" class="w-100 rounded mb-2"
+                             style="max-height:240px;object-fit:contain;background:#f3f4f6;"/>
+                        <div class="small text-muted border-top pt-2"><field name="branch_id"/></div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="cafe_social_post_feed_action" model="ir.actions.act_window">
+        <field name="name">Social Feed</field>
+        <field name="res_model">cafe.social.post</field>
+        <field name="view_mode">kanban,form</field>
+        <field name="view_id" ref="cafe_social_post_feed_view"/>
+        <field name="search_view_id" ref="cafe_social_post_view_search"/>
+        <field name="domain">[('state', '=', 'published'), ('feed_platform', 'in', ['facebook', 'instagram'])]</field>
+        <field name="help" type="html">
+            <p>Facebook and Instagram posts published from Odoo appear here.</p>
+        </field>
+    </record>
+
     <!-- ACTION -->
     <record id="cafe_social_post_action" model="ir.actions.act_window">
         <field name="name">Posts</field>

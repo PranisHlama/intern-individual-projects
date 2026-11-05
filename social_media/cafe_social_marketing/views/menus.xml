@@ -11,17 +11,20 @@
     <!-- Main working area -->
     <menuitem
         id="cafe_social_content_menu"
-        name="Social Marketing"
+        name="Planning"
         parent="cafe_social_root_menu"
-        sequence="10"
+        sequence="40"
     />
+
+    <menuitem id="cafe_social_feed_menu" name="Social Feed"
+              parent="cafe_social_root_menu" action="cafe_social_post_feed_action" sequence="10"/>
 
     <menuitem
         id="cafe_social_post_menu"
         name="Posts"
-        parent="cafe_social_content_menu"
+        parent="cafe_social_root_menu"
         action="cafe_social_post_action"
-        sequence="10"
+        sequence="20"
     />
 
     <menuitem
@@ -42,7 +45,7 @@
 
 
     <menuitem id="cafe_social_calendar_menu" name="Content Calendar"
-              parent="cafe_social_content_menu" action="cafe_social_calendar_action" sequence="15"/>
+              parent="cafe_social_root_menu" action="cafe_social_calendar_action" sequence="30"/>
 
     <menuitem id="cafe_campaign_calendar_menu" name="Campaign Calendar"
               parent="cafe_social_content_menu" action="cafe_campaign_calendar_action" sequence="25"/>
