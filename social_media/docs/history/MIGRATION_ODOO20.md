@@ -1,3 +1,5 @@
+> Historical migration-stage note. The version and planned-platform statement below refer to the initial migration, not the current addon. See [current functionality](../reference/CURRENT_FUNCTIONALITY.md) for the reviewed implementation.
+
 # Odoo 20 Migration Notes
 
 This module targets Odoo 20.0.
