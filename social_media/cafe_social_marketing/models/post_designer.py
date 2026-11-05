@@ -40,7 +40,7 @@ def _validate_document(document):
         design = json.loads(document)
         if not isinstance(design, dict) or set(design) != {"version", "color", "background", "layers"}:
             raise ValueError()
-        if type(design["version"]) is not int or design["version"] != 1:
+        if type(design["version"]) is not int or design["version"] not in (1, 2):
             raise ValueError()
 
         def color(value):
@@ -64,9 +64,19 @@ def _validate_document(document):
             if not number(layer.get("x"), -1080, 1080) or not number(layer.get("y"), -1080, 1080):
                 raise ValueError()
             if layer.get("kind") == "text":
-                if (set(layer) != common | {"text", "color"} or not isinstance(layer["text"], str)
+                text_fields = common | {"text", "color"}
+                if design["version"] == 2:
+                    text_fields |= {"font", "bold", "italic", "align", "lineHeight"}
+                if (set(layer) != text_fields or not isinstance(layer["text"], str)
                         or len(layer["text"]) > 180 or not color(layer["color"])
                         or not number(layer["size"], 18, 160)):
+                    raise ValueError()
+                if design["version"] == 2 and (
+                    layer["font"] not in ("sans", "serif", "mono")
+                    or type(layer["bold"]) is not bool or type(layer["italic"]) is not bool
+                    or layer["align"] not in ("left", "center", "right")
+                    or not number(layer["lineHeight"], 100, 180)
+                ):
                     raise ValueError()
             elif layer.get("kind") == "image":
                 if set(layer) != common | {"data"} or not number(layer["size"], 32, 1080):

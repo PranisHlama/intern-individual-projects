@@ -30,6 +30,11 @@
         cursor: move;
         box-shadow: 0 5px 24px rgba(24, 41, 35, .14);
     }
+    .o_cafe_designer_actions { align-items: center; }
+    .o_cafe_designer_save_state { font-size: .8rem; color: #52645c; margin-right: .5rem; }
+    .o_cafe_designer_format { display: flex; gap: .4rem; margin: .6rem 0; }
+    .o_cafe_designer_align { display: grid; grid-template-columns: repeat(3, 1fr); gap: .35rem; }
+    canvas:focus-visible { outline: 3px solid #467266; outline-offset: 4px; }
     .o_cafe_designer_controls { min-width: 0; background: white; padding: 1.1rem; border: 1px solid #dedfd8; border-radius: .65rem; }
     h2 { font-size: 1rem; font-weight: 700; margin: 1rem 0 .55rem; }
     h2:first-child { margin-top: 0; }
