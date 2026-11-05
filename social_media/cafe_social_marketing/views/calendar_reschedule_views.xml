@@ -1,0 +1,18 @@
+<odoo>
+    <record id="cafe_social_post_calendar_reschedule" model="ir.ui.view">
+        <field name="name">cafe.social.post.calendar.reschedule</field>
+        <field name="model">cafe.social.post</field>
+        <field name="inherit_id" ref="cafe_social_post_calendar"/>
+        <field name="arch" type="xml">
+            <xpath expr="//calendar" position="attributes">
+                <attribute name="edit">true</attribute>
+                <attribute name="create">false</attribute>
+                <attribute name="delete">false</attribute>
+                <attribute name="quick_create">false</attribute>
+            </xpath>
+        </field>
+    </record>
+    <record id="cafe_social_calendar_action" model="ir.actions.act_window">
+        <field name="context">{'cafe_calendar_reschedule': True}</field>
+    </record>
+</odoo>

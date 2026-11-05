@@ -53,6 +53,7 @@
         "views/post_designer_views.xml",
         "views/menus.xml",
         "views/post_workspace_views.xml",
+        "views/calendar_reschedule_views.xml",
     ],
     "assets": {
         "web.assets_backend": [
