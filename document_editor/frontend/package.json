@@ -1,0 +1,21 @@
+{
+  "name": "document-editor-frontend",
+  "private": true,
+  "description": "Builds the BetterOffice editor bundles in ../static/lib/betteroffice. Only needed when upgrading BetterOffice.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "@betteroffice/fonts": "0.4.2",
+    "@betteroffice/pptx": "0.5.1",
+    "@betteroffice/pptx-react": "0.5.1",
+    "@betteroffice/xlsx": "0.5.1",
+    "@betteroffice/xlsx-react": "0.5.1",
+    "react": "19.2.9",
+    "react-dom": "19.2.9"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}
