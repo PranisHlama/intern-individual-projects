@@ -9,7 +9,8 @@ Staff prepare captions and images, check campaign rules, request manager approva
 - **Branch and campaign management** — organise accounts, dates, products, discounts and allowed publishing destinations.
 - **Caption templates** — reuse text with branch, campaign, product, discount and date placeholders.
 - **Compliance and review** — deterministic validation, one manager approval level, rejection and Request Changes with required feedback.
-- **Post Designer** — build a square image from templates, photos, logos and text; format, resize, align, duplicate and undo/redo; save a JPEG directly to the draft.
+- **Post Designer** — edit square or portrait images with a compact toolbar, content sidebar and Properties panel; manage layers, snap/align, wrap text, crop photos and undo/redo; save a JPEG to the draft.
+- **Saved design layouts** — managers save/archive shared visual templates; marketing users apply independent copies to drafts. Caption templates remain a separate feature.
 - **Facebook publishing** — publish text or a single JPEG/PNG, schedule approved posts, store remote IDs and open confirmed posts on Facebook.
 - **Instagram publishing** — publish one JPEG and caption, with automatic Cloudinary hosting; retain the legacy public-URL alternative.
 - **Social Feed** — view local Published Facebook/Instagram records in platform columns with captions, images, dates and branch labels.
@@ -22,7 +23,7 @@ Staff prepare captions and images, check campaign rules, request manager approva
 | Platform | Implemented path | Current boundary |
 | --- | --- | --- |
 | Facebook | Page text or one JPEG/PNG; immediate/scheduled publication; profile sync | No video or multi-image publishing |
-| Instagram | Professional account; one JPEG and caption; Cloudinary hosting; scheduling code; profile sync | No Reels, Stories or carousels; scheduling still needs a recorded live test |
+| Instagram | Professional account; one JPEG and caption; Cloudinary hosting; scheduling; profile sync | No Reels, Stories or carousels; scheduled flow reported working, with current-release regression pending |
 | TikTok | Earlier manual-token video inbox-upload prototype remains in source | Incomplete and postponed; Direct Post and OAuth are not available |
 | X / other | Account platform selections | Publishing is not implemented; there is no LinkedIn adapter |
 
@@ -109,9 +110,9 @@ Those service and database names are examples from the owner's environment. Conf
 
 ## Verification and limitations
 
-The owner reported Facebook immediate/scheduled publishing, Instagram immediate photo publishing, calendar dragging, Facebook links and Facebook/Instagram profile sync working. Designer opening and general use were reported working; its detailed acceptance matrix remains to be recorded.
+The owner reported Facebook immediate/scheduled publishing, Instagram immediate and scheduled photo publishing, calendar date/time preservation with chatter, Facebook links and profile sync working. Designer reports confirm snapping, expected side/corner text resizing, crop persistence/JPEG appearance, portrait persistence/dimensions and the corrected editor opening. Shared-template save/apply independence, archive and live role checks still need explicit local results. These reports were collected across development stages, not replayed against every later commit.
 
-The uploaded commit contains **no committed automated test suite**. Earlier release-package checks are not equivalent to tests run from this checkout. [Verification](docs/reference/VERIFICATION.md) provides a manual checklist and separates those results from unverified behavior.
+The supplied repository snapshot and the code commits shown here do not include a committed automated test suite. The corrected editor delivery package passed 42 mocked frontend checks and 19 Python validator/permission tests; those are package checks, not Odoo runtime or live-platform results from this checkout. [Verification](docs/reference/VERIFICATION.md) provides a manual checklist and separates those results from unverified behavior.
 
 Known boundaries include one approval level, no dedicated publishing-attempt ledger, no automatic retry/reconciliation screen, no imported remote feed, no social inbox/engagement analytics, and no Meta OAuth/token renewal. Remote API calls and Odoo database transactions are not atomic; interrupted publication can leave an uncertain outcome. Check the platform before resending.
 
@@ -119,6 +120,6 @@ Known boundaries include one approval level, no dedicated publishing-attempt led
 
 Start with the [documentation index](docs/README.md). The [roadmap](docs/ROADMAP.md) prioritises verification, publishing history and Designer improvements before more integrations.
 
-The addon manifest in the reviewed snapshot declares `20.0.6.1.0`; this documentation describes source through commit `76f9e2b`. The older manifest description does not list every later feature. This documentation reorganisation does not change runtime code or the module version.
+Recorded code release: `5a98517` (2026-11-07), addon `20.0.7.0.0`. The editor update added a saved-design model and requires a module upgrade on existing installations. See [designer release notes](docs/history/DESIGNER_RELEASES.md) and the [Designer guide](docs/setup/POST_DESIGNER_SETUP.md). This documentation update changes no runtime files.
 
 License: [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.html), as declared in the addon manifest.

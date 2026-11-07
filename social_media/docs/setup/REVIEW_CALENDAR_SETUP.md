@@ -39,4 +39,4 @@ Campaign Calendar shows start/end ranges, branch filters and inclusive duration 
 
 ## Verification
 
-The owner reported calendar dragging working after a timezone compatibility fix. Preservation of local clock time, chatter, negative permissions, campaign edges, daylight-saving handling and actual publication after moving require explicit recorded checks. Use the [verification checklist](../reference/VERIFICATION.md), not this guide as evidence those cases passed.
+The owner reported calendar dragging working after a timezone compatibility fix, then explicitly confirmed the changed date, preserved local clock time and visible chatter entry. Negative permissions, campaign edges, daylight-saving handling and actual publication after the moved date still require recorded checks. Use the [verification checklist](../reference/VERIFICATION.md), not this guide as evidence those cases passed.

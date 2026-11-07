@@ -43,7 +43,7 @@ These are source-defined adapter limits, not a promise that every image accepted
 
 ## Scheduling, caching and retention
 
-Scheduling exists in source but still needs a recorded live scheduled-publication test. Hosting occurs when the scheduled attempt executes. The same matching hosted image can be reused for processing checks. Keep Odoo, network and valid credentials available.
+The owner later reported the scheduled-publication flow working. It has not been independently replayed against the latest designer release; record fresh platform evidence when running that regression. Hosting occurs when the scheduled attempt executes. The same matching hosted image can be reused for processing checks. Keep Odoo, network and valid credentials available.
 
 Cloudinary assets are public to anyone with the delivery URL. They are not automatically deleted. Do not remove an image needed by a pending container; deleting a post in Odoo does not establish that its Cloudinary asset was deleted.
 

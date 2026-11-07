@@ -1,6 +1,6 @@
 # Workflow reference
 
-Updated: 2026-11-05. Source: `76f9e2b`. Manifest version: `20.0.6.1.0`.
+Updated: 2026-11-07. Recorded code release: `5a98517`. Addon version: `20.0.7.0.0`.
 
 This describes the implemented paths. It is not a test report; see [Verification](VERIFICATION.md).
 
@@ -18,7 +18,11 @@ Real Meta and Cloudinary credentials must reach the Odoo process through local d
 
 Create a Draft post, select the branch/campaign and exactly one supported platform account, then enter a caption or apply a template. Template placeholders are substituted from the selected branch/campaign; rendered text remains editable.
 
-Attach eligible media or save the draft and Open Designer. In Designer, choose a layout or add layers, format/arrange the image, then Save JPEG to post. Explicitly confirm replacement if the post already selects other media. Saving stores the editable document and a 1080-square JPEG; old detached attachments are not deleted by Designer.
+Attach eligible media or save the draft and Open Designer. In Designer, choose a layout or add layers, format/arrange the image, then Save JPEG to post. Explicitly confirm replacement if the post already selects other media. Saving stores the editable document and a square (1080 × 1080) or portrait (1080 × 1350) JPEG; old detached attachments are not deleted by Designer.
+
+Designer’s Templates panel contains built-in layouts and shared visual designs. A manager may save a named copy without saving or approving the post. Applying a saved design imports an independent copy into the current draft editor; it does not modify the saved template and can be undone. Managers archive old layouts; ordinary Marketing Users can apply them but cannot manage the library. Caption/message templates and visual design templates are separate features.
+
+Cropping uses Apply/Cancel before saving. Text side handles change wrapping width; corners resize. Choose square/portrait from the top toolbar, review layout boundaries and save/reopen to verify the selected format. See [Designer](../setup/POST_DESIGNER_SETUP.md).
 
 The local preview follows the selected platform. It is a layout approximation, not a remote rendering or a live platform feed.
 

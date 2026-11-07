@@ -1,6 +1,6 @@
 # Current functionality
 
-Updated: 2026-11-05. Source: `76f9e2b`. Declared addon version: `20.0.6.1.0`.
+Updated: 2026-11-07. Recorded code release: `5a98517`. Addon version: `20.0.7.0.0`.
 
 This is a retrospective implementation reference. Verification is recorded separately in [VERIFICATION.md](VERIFICATION.md); source availability and owner-reported results are different evidence levels.
 
@@ -20,11 +20,20 @@ Validation checks campaign presence, branch/account consistency, current campaig
 
 The post form provides side-by-side editing and a platform-specific preview, with Review, AI Review and Publishing details tabs. Previews are local representations; they are not embedded Facebook/Instagram renderers and do not guarantee the final platform layout.
 
-Post Designer is an Owl 3/canvas editor for a 1080 × 1080 image. It supports three starter layouts, background colour/photo, text/photo/logo layers, drag positioning, corner resizing, canvas alignment, duplication, layer ordering and removal. Text supports system font families, bold/regular, italic, multiline alignment and line spacing. There is an eight-layer limit.
+Post Designer is an Owl 3/canvas editor for **1080 × 1080 square** and **1080 × 1350 portrait** images, with up to eight text/image layers. A compact action/formatting toolbar, left Blocks/Templates/Layers/Background sidebar, neutral workspace and selected-object Properties replace the earlier large-heading layout.
 
-Undo/redo is bounded and session-only. Keyboard movement and shortcuts supplement mouse controls. Saving creates a private JPEG attachment and retains an editable JSON document; it replaces selected post media only with confirmation, clears the legacy Instagram URL, and resets validation/approval. Version-1 documents remain readable; new saves use version 2. Concurrent/stale saves are rejected.
+- Layer selection/naming, hide/show, lock/unlock, ordering, duplicate and removal.
+- Drag movement and canvas/visible-layer alignment guides; Option/Alt bypasses snapping. Hidden objects are excluded from snapping targets; visible locked objects remain targets.
+- Text family, bold/italic, alignment and spacing. Side midpoint handles set wrapping width without changing font size; corners resize text. Manual/blank line breaks are retained, and long words split to fit. Automatic-width layers retain manual breaks until a width is set.
+- Image crop frames (original, square, 4:3 landscape, 4:5 portrait), 100–400% zoom, drag positioning and Apply/Cancel/Reset. The stored source image is retained; full-canvas background cropping is unchanged.
+- Whole-layout square/portrait conversion preserves sizes/crops and centres layers vertically, including hidden/locked layers; templates adapt vertical spacing when applied. Review boundaries when shrinking a canvas.
+- Bounded session-only undo/redo and keyboard movement. Saving creates a private JPEG and editable JSON, clears a legacy Instagram URL and resets validation/approval through existing guarded content writes. Concurrent/stale saves are rejected.
 
-Designer is limited to unpublished drafts with no active/uncertain publication attempt and no video. It has no AI image generation, automatic text wrapping, freeform crop/rotation, multi-page layout or additional aspect ratios.
+The shared visual-template library is separate from caption templates. Marketing Managers save named immutable copies and archive layouts; Marketing Users browse/apply independent copies. Saving a template does not save/approve the post; applying changes the editor until Save JPEG to post. Python gates and model ACLs enforce manager management. The library is shared across the marketing application, without new branch/company isolation.
+
+Versions 1–5 remain readable; new saved documents use **schema 6**, with validated canvas dimensions. The server checks that the JPEG matches the selected dimensions. Addon version and document schema are different version numbers.
+
+Designer remains limited to unpublished drafts with write access, no active/uncertain publishing attempt and no video. It does not provide AI image generation, background removal, rotation, multi-page editing, multi-select/grouping or arbitrary canvas sizes. [Designer setup](../setup/POST_DESIGNER_SETUP.md) covers controls, permissions and storage limits.
 
 ## Platform publishing
 
@@ -32,7 +41,7 @@ Designer is limited to unpublished drafts with no active/uncertain publication a
 | --- | --- | --- |
 | Facebook | Text or one attached JPEG/PNG; immediate/scheduled publication; confirmed remote identifiers | Owner reported earlier live publication/scheduling; latest regression matrix pending |
 | Instagram attachment | One JPEG and caption; automatic Cloudinary hosting, media container and publish/check flow | Owner reported live immediate publication |
-| Instagram scheduling | Uses the Odoo scheduling action and adapter | Live scheduled test remains outstanding |
+| Instagram scheduling | Uses the Odoo scheduling action and adapter | Owner reported the scheduled flow working; latest-release regression and independent platform evidence remain pending |
 | Instagram legacy URL | Public HTTPS JPEG instead of an attachment | Earlier manual/public-URL publication reported; continued hosting is required |
 | TikTok | Manual-token video inbox-upload prototype and status actions remain | Incomplete, not end-to-end verified, postponed |
 | X / other | Platform selections | No publishing adapter; no LinkedIn integration |

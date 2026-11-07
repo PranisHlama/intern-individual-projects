@@ -1,6 +1,6 @@
 # Model reference
 
-Updated: 2026-11-05. Source: `76f9e2b`. Manifest version: `20.0.6.1.0`.
+Updated: 2026-11-07. Recorded code release: `5a98517`. Addon version: `20.0.7.0.0`.
 
 This is a source-based overview, not an introspected database schema. Source paths refer to [cafe_social_marketing/](../../cafe_social_marketing/).
 
@@ -12,11 +12,12 @@ This is a source-based overview, not an introspected database schema. Source pat
 | `cafe.social.account` | Required branch, platform/name/handle, platform credentials configuration and profile cache |
 | `cafe.social.campaign` | Required branch/dates, optional product, discount, allowed accounts, lifecycle state and computed inclusive duration |
 | `cafe.social.post.template` | Reusable caption and optional branch |
+| `cafe.social.design.template` | Shared immutable visual design document/thumbnail; manager-managed and independent of individual post copies |
 | `cafe.social.post` | Caption/media, branch/campaign/accounts/template, compliance, review, schedule and platform results |
 | `cafe.social.request.changes` | Transient wizard collecting the manager's required reason and selected post |
 | `cafe.social.account.picker` | Transient platform chooser opening an ordinary new account form |
 
-Posts and campaigns inherit mail tracking/activity functionality. Facebook, Instagram, Designer, workspace, rescheduling and profile classes extend existing models; they do not create separate platform post models. Cloudinary and Ollama are services, not business models.
+Posts and campaigns inherit mail tracking/activity functionality. Facebook, Instagram, workspace, rescheduling and profile classes extend existing models; they do not create separate platform post models. `models/post_designer.py` both extends posts and declares the separate saved-design template model. Cloudinary and Ollama are services, not business models.
 
 ## Post status dimensions
 
@@ -84,13 +85,43 @@ Declared in [models/post_designer.py](../../cafe_social_marketing/models/post_de
 
 | Field/API | Responsibility |
 | --- | --- |
-| `designer_document` | Readonly, non-copied JSON document; schema versions 1 and 2 accepted |
-| `designer_attachment_id` | Readonly, non-copied generated JPEG attachment relation |
+| `designer_document` | Readonly, non-copied JSON; versions 1–6 accepted, with new saves using 6 |
+| `designer_attachment_id` | Readonly, non-copied generated JPEG relation |
 | `action_open_post_designer()` | Unpublished-draft/write-access guard and client action |
-| `get_post_designer()` | Document, revision fingerprint and existing-media indicator |
-| `save_post_designer()` | Validation, JPEG checks, row lock/revision recheck, replacement confirmation and inherited content write |
+| `get_post_designer()` | Document, revision, existing-media indicator and `can_manage_templates` capability |
+| `save_post_designer()` | Document/JPEG dimension checks, row lock/revision recheck, replacement confirmation and inherited content write |
+| `list_designer_templates(offset)` | Active metadata/thumbnail page (20 items and `has_more`); checks current post access |
+| `get_designer_template(id)` | Read-access/active checks and selected template document |
+| `save_designer_template(name, document, thumbnail)` | Manager-only immutable snapshot create; no post media/approval write |
+| `archive_designer_template(id)` | Manager-only archive; no mutation of existing post copies |
 
-Documents contain background colour/photo and up to eight text/image layers. Version 2 text adds `font`, `bold`, `italic`, `align` and `lineHeight`. Sources are embedded in the document; history is not persisted. The selected JPEG replaces the post's media relation without deleting detached attachments. Saving clears `instagram_image_url` and triggers existing approval/validation resets.
+Document schema history:
+
+| Version | Addition |
+| --- | --- |
+| 1 | Background and text/image layers |
+| 2 | Text `font`, `bold`, `italic`, `align`, `lineHeight` |
+| 3 | All-layer `name`, `hidden`, `locked` |
+| 4 | Text `width`: 0 for automatic/manual-break layout, otherwise 80–1080 logical pixels |
+| 5 | Image `cropRatio` (0/750/1000/1250), `cropZoom` (100–400), `cropX`/`cropY` (0–1000) |
+| 6 | Root `width: 1080` and `height: 1080` or `1350`; y-coordinate bounds follow height |
+
+Older documents are normalised in the editor without implicit layout changes. Image sources remain embedded; crop settings are non-destructive to that stored source. History and snap guides are not persisted. Export excludes selection/guide controls and hidden layers. The JPEG replaces selected media without deleting detached attachments, clears `instagram_image_url` and resets existing approval/validation.
+
+## Saved visual design model
+
+Also declared in `models/post_designer.py`; the existing import loads both classes.
+
+| Field | Meaning |
+| --- | --- |
+| `name` | Required trimmed 1–80-character label |
+| `document` | Required readonly/non-copied validated JSON snapshot; normal writes cannot overwrite it |
+| `thumbnail` | Required readonly/non-copied validated JPEG base64 **Text** field; not an Odoo Binary field |
+| `active` | Archive flag, default True |
+
+Thumbnails are 216 × 216 or 216 × 270 and at most 128 KiB. Full documents use the same 7 MiB/embedded-image validation as post designs. Base model audit fields record creation/update metadata; no post foreign key or live dependency binds a draft to its source template.
+
+The unified ACL grants Marketing User `r` and Marketing Manager `crud` for this model. Python requires manager membership for create/write/unlink; create validates all payload fields and write permits only valid `name`/boolean `active`. There is no sudo/public route. These are shared marketing layouts, not a company/branch-isolated library. Templates are revised by saving a new copy; the UI uses archive rather than permanent deletion.
 
 ## Implementation responsibilities
 
@@ -101,7 +132,7 @@ Documents contain background colour/photo and up to eight text/image layers. Ver
 | `models/social_post_ai.py` | Advisory review results and suggested rewrite application |
 | `models/facebook.py` | Facebook publishing, credentials, photo hash, guarded shared publishing hooks |
 | `models/instagram.py` | Instagram approval fingerprint, hosting/container publishing and refresh/repeat-send behavior |
-| `models/post_designer.py` | Editable document validation and guarded JPEG persistence |
+| `models/post_designer.py` | Editable document/JPEG validation, guarded post persistence and shared immutable design model/APIs |
 | `models/post_workspace.py` | Confirmed Facebook result URL action |
 | `models/calendar_reschedule.py` | Manager-only date moves, timezone handling, row locks and due-time recheck |
 | `models/social_profile.py` | Account profile cache, sync permission checks and computed feed headers |
@@ -115,7 +146,7 @@ Documents contain background colour/photo and up to eight text/image layers. Ver
 
 ## Access and history boundaries
 
-Marketing Managers imply Marketing Users. The unified `security/ir.access.csv` grants business-model `cru` to Users and `crud` to Managers; wizard grants are separate. Action guards add requirements, but this source review is not a comprehensive security certification. Branch filters do not establish branch isolation.
+Marketing Managers imply Marketing Users. The unified `security/ir.access.csv` grants the original business models `cru` to Users and `crud` to Managers; visual design templates grant Users read only and Managers `crud`. Wizard grants are separate. Action guards add requirements, but this source review is not a comprehensive security certification. Branch filters do not establish branch isolation.
 
 Chatter holds selected changes/feedback. No dedicated publishing-attempt or content-version model exists. The constitution and attempt-history specification describe desired future standards/features, not proof of current completeness.
 

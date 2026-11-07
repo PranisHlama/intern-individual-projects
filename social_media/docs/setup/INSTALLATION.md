@@ -55,7 +55,9 @@ docker compose run --rm --no-deps odoo \
 
 A failed upgrade should leave the normal service stopped for investigation. Do not ignore a traceback and restart as if the schema were upgraded. New stored fields require an upgrade; restart alone can cause `UndefinedColumn`. Pure frontend/Python edits without schema changes generally need a restart and browser refresh rather than a model upgrade.
 
-The first page load may rebuild backend assets. Hard-refresh with Cmd+Shift+R on Mac if the old Designer UI remains. Do not delete arbitrary assets or database records as a first troubleshooting step.
+Release `20.0.7.0.0` adds `cafe.social.design.template` and its access rules. Existing installations must run the module upgrade even if the editor assets already load; restarting cannot create the new template table or access definitions. The model lives in the already-imported `models/post_designer.py`.
+
+The first page load may rebuild backend assets. Hard-refresh with Cmd+Shift+R on Mac if the old Designer UI remains. Do not delete arbitrary assets or database records as a first troubleshooting step. The initial redesigned-editor package had an Owl 3 `t-model` error; the corrected release uses explicit value/checked bindings and event handlers. If that error returns, inspect the installed XML and active asset version rather than assuming the database upgrade failed. See [Designer troubleshooting](POST_DESIGNER_SETUP.md#troubleshooting).
 
 ## Inject existing credentials
 

@@ -1,6 +1,6 @@
 # Documentation
 
-Current source reviewed: `76f9e2b` (2026-11-05). Manifest version: `20.0.6.1.0`.
+Recorded code release: `5a98517` (2026-11-07). Addon version: `20.0.7.0.0`. Documentation is based on the earlier repository archive plus the delivered designer files and the owner’s push/runtime reports; the remote branch was not independently fetched for this update.
 
 This is documentation of implemented code and owner-reported verification, written after those features were built. It is not evidence that the existing implementation followed every current development principle from its inception.
 
@@ -31,7 +31,9 @@ This is documentation of implemented code and owner-reported verification, writt
 
 Specifications and the constitution stay in their established locations; they are linked here rather than moved into setup documentation. Changes to governance or implementation are outside this documentation-only update.
 
-## Historical documents
+## Release history and historical documents
+
+- [Designer releases and evidence](history/DESIGNER_RELEASES.md) — layers through the editor/template-library release.
 
 - [Original Odoo 20 migration notes](history/MIGRATION_ODOO20.md) — moved from the addon and labelled historical.
 - [October 28 functionality baseline](baseline-2026-10-28/CURRENT_FUNCTIONALITY.md)

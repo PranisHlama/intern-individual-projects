@@ -1,20 +1,33 @@
 # Next phases
 
-Source baseline: `76f9e2b` (2026-11-05). This is prioritisation, not a promise that the listed features are implemented.
+Updated: 2026-11-07. Recorded release: `5a98517`, addon `20.0.7.0.0`.
+This is prioritisation with explicit evidence boundaries, not a claim that source code alone proves runtime completeness.
+
+## Delivered code
+
+The project README/guides were reorganised in `2eabc9e`. The designer then gained layer naming/hide/lock,
+compact controls, snapping, text wrapping, cropping, portrait format and a redesigned workspace with shared saved layouts.
+See [release history](history/DESIGNER_RELEASES.md) and [verification](reference/VERIFICATION.md) for what the owner actually confirmed.
+Saving/applying independent templates and live template-role restrictions still need explicit Odoo results.
+
+## Priority order
 
 | Phase | Scope | Completion evidence |
 | --- | --- | --- |
-| 1. Consolidate documentation | Project README, organised guides, accurate functionality/workflow/model references | Working links, preserved historical baseline and clear implemented/planned boundaries |
-| 2. Verify reliability | Designer → validation → review → immediate/scheduled publishing; permission, token, date and uncertain-outcome cases | Recorded checklist from [Verification](reference/VERIFICATION.md), with live results separated from mocks |
-| 3. Publishing history | Review and implement the existing Facebook attempt-history Draft | Acceptance criteria, server-side permissions, current workflow regression and explicit transaction limits |
-| 4. Designer refinement | Prioritise actual usability gaps: crop, wrapping, snapping and useful layouts | Reviewed scope, old-document compatibility and save/export acceptance checks |
-| 5. Account onboarding | Revisit Facebook/Instagram OAuth and token handling | Verified provider callback/configuration flow, state/permissions/storage tests and repeatable deployment setup |
-| 6. Additional platforms | Reassess TikTok or LinkedIn after core reliability | Current platform access requirements, agreed scope, consent UX and real supported publication evidence |
+| 1. Finish editor/template acceptance | Save/reopen all new editing tools, template independence/archive, live roles/RPC, stale saves and approval reset | Recorded checklist tied to the current build; maintain the existing editor before adding more tools |
+| 2. End-to-end publishing reliability | Designer → validation → review → immediate/scheduled Facebook/Instagram; failure/uncertainty scenarios | Local versus live evidence separated; exact output/media and duplicate-risk cases recorded |
+| 3. Reproducible checks | Review and migrate suitable package tests into the repository; add meaningful Odoo runtime cases | Test commands runnable from a fresh checkout; mocks not labelled integration tests |
+| 4. Publishing history | Review/implement the existing Facebook attempt-history Draft | Requirements, permission/failure criteria, regression and explicit transaction limits |
+| 5. Selective designer follow-up | Only demonstrated needs: branch brand presets or multi-select/grouping | Reviewed scope, legacy compatibility and save/export checks; background removal remains postponed |
+| 6. Account onboarding | Revisit Facebook/Instagram OAuth and token lifecycle | Full callback/configuration/storage/permission flow and repeatable deployment, without requiring foreground Terminal sessions |
+| 7. Additional platforms | Reassess TikTok/LinkedIn after core reliability | Current provider access requirements, agreed scope, consent UX and real supported publication evidence |
 
-The completed Designer controls and profile sync do not remove the need for end-to-end regression tests. Avoid treating commit count or source volume as evidence of completeness.
+The application does not need another designer feature to justify the existing work. Commit count/source volume is not evidence of correctness.
+First finish the template/permission regression and update the evidence record as tests are actually performed.
 
-OAuth is not installed in this source. A local HTTPS callback was configured during an experiment, but a complete Meta login flow was not verified and the addon changes were rolled back. Future work should avoid requiring users to manage foreground Terminal sessions; whether using local HTTPS or hosted Odoo, validate the full flow before claiming it works.
+OAuth is absent from this source. Local HTTPS was configured during an experiment, but a complete Meta login was not verified and the addon changes were rolled back.
+TikTok remains [incomplete/postponed](planned/TIKTOK_SETUP.md), and no LinkedIn adapter exists.
+The [attempt-history spec](../specs/001-facebook-attempt-history/spec.md) remains Draft/unimplemented.
 
-TikTok remains [incomplete and postponed](planned/TIKTOK_SETUP.md). No LinkedIn adapter exists. The [attempt-history spec](../specs/001-facebook-attempt-history/spec.md) remains Draft and unimplemented; do not relabel it as completed merely because the documentation is organised.
-
-Keep the project [constitution](../.specify/memory/constitution.md) at its existing path. Review requirements and acceptance criteria before implementation, record limitations honestly, and keep credentials/machine-specific files out of Git. The repository collaboration workflow should follow the maintainer's current instructions; this documentation update does not amend governance.
+The [constitution](../.specify/memory/constitution.md) stays at its tooling path. This retrospective documentation update does not amend governance,
+turn old code into evidence of earlier spec-driven development, or replace reviewed requirements for future work.
