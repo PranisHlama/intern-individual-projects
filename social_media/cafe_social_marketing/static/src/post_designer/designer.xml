@@ -1,81 +1,82 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-  <t t-name="cafe_social_marketing.PostDesigner">
-    <div class="o_cafe_designer" t-on-keydown="this.keyDown">
-      <header class="o_cafe_designer_bar">
-        <div>
-          <div class="o_cafe_designer_kicker">CAFE SOCIAL MARKETING</div>
-          <h1>Post Designer</h1>
-        </div>
-        <div class="d-flex gap-2 flex-wrap o_cafe_designer_actions">
-          <span class="o_cafe_designer_save_state" role="status"><t t-if="this.state.dirty">Unsaved changes</t><t t-else="">No unsaved changes</t></span>
-          <button type="button" class="btn btn-outline-secondary" title="Undo (Cmd/Ctrl+Z)"
-            t-att-disabled="this.busy or this.state.interacting or !this.state.undoCount" t-on-click="this.undo">Undo</button>
-          <button type="button" class="btn btn-outline-secondary" title="Redo (Shift+Cmd/Ctrl+Z)"
-            t-att-disabled="this.busy or this.state.interacting or !this.state.redoCount" t-on-click="this.redo">Redo</button>
-          <button class="btn btn-secondary" t-on-click="this.goBack" t-att-disabled="this.state.saving or this.state.importing or this.state.interacting">Back to post</button>
-          <button class="btn btn-primary" t-on-click="this.save" t-att-disabled="this.busy or this.state.interacting or (this.state.hasOtherMedia and !this.state.replace)">
-            <t t-if="this.state.saving">Saving…</t><t t-else="">Save JPEG to post</t>
-          </button>
-        </div>
-      </header>
-      <div t-if="this.state.error" class="alert alert-danger" role="alert" t-esc="this.state.error"/>
-      <div t-if="this.state.loading" class="alert alert-info" role="status">Loading your design…</div>
-      <div t-if="this.state.importing" class="alert alert-info" role="status">Preparing your image…</div>
-      <div t-if="this.state.hasOtherMedia" class="alert alert-warning">
-        <label><input type="checkbox" t-model="this.state.replace" t-att-disabled="this.busy"/> Replace the post’s current attachments or legacy image URL with this design.</label>
-      </div>
-      <div class="o_cafe_designer_workspace">
-        <section class="o_cafe_designer_preview" aria-label="Design preview">
-          <div class="o_cafe_designer_preview_bar">
-            <strong>Post preview</strong><span>1080 × 1080</span>
-          </div>
-          <canvas width="1080" height="1080" t-att-id="this.canvasId" aria-label="Square social post canvas. Select a layer and use arrow keys to move it." tabindex="0"
-            t-on-pointerdown="this.pointerDown" t-on-pointermove="this.pointerMove"
-            t-on-pointerup="this.pointerEnd" t-on-pointercancel="this.pointerEnd" t-on-lostpointercapture="this.pointerEnd"
-            t-on-dragover="this.allowBlockDrop" t-on-drop="this.dropBlock"/>
-          <div class="o_cafe_designer_hint">Select a layer to edit. Drag inside to move; drag a corner to resize. Text side handles change wrapping width. Drag near edges or centres to align. Hold Option/Alt to bypass snapping. Arrow keys move 1 px, Shift + arrows move 10 px.</div>
-        </section>
-        <fieldset class="o_cafe_designer_controls" t-att-disabled="this.busy or this.state.interacting">
-          <div class="o_cafe_designer_tabs" aria-label="Designer panels">
-            <t t-foreach="[['blocks', 'Blocks'], ['layers', 'Layers'], ['customize', 'Customize'], ['design', 'Design']]" t-as="tab" t-key="tab[0]">
-              <button type="button" t-att-class="{active: this.state.tab === tab[0]}"
-                t-att-aria-pressed="this.state.tab === tab[0]" t-on-click="() => this.setTab(tab[0])" t-esc="tab[1]"/>
-            </t>
-          </div>
-          <section t-if="this.state.tab === 'blocks'">
-            <h2>Start with a template</h2>
-            <p class="o_cafe_designer_hint">Choose a layout, then change the sample text and add your own photo.</p>
-            <div class="o_cafe_designer_templates">
-              <t t-foreach="this.templates" t-as="preset" t-key="preset.id">
-                <button type="button" class="o_cafe_designer_template" t-on-click="() => this.chooseTemplate(preset.id)">
-                  <img t-if="this.state.previews[preset.id]" t-att-src="this.state.previews[preset.id]" alt=""/>
-                  <span t-esc="preset.label"/>
-                </button>
-              </t>
-            </div>
+<t t-name="cafe_social_marketing.PostDesigner">
+<div class="o_cafe_designer" t-on-keydown="this.keyDown">
+  <header class="o_cafe_designer_bar">
+    <div class="o_cafe_designer_title_group">
+      <button type="button" class="btn btn-sm btn-outline-secondary" t-on-click="this.goBack" t-att-disabled="this.state.saving or this.state.importing or this.state.templateSaving or this.state.applyingTemplate or this.state.interacting or this.state.cropping">Back to post</button>
+      <h1>Post designer</h1>
+      <span class="o_cafe_designer_save_state" role="status"><t t-if="this.state.dirty">Unsaved changes</t><t t-else="">Saved</t></span>
+    </div>
+    <div class="o_cafe_designer_actions">
+      <button type="button" class="btn btn-sm btn-outline-secondary" title="Undo (Cmd/Ctrl+Z)" t-att-disabled="this.editingBlocked or this.state.interacting or !this.state.undoCount" t-on-click="this.undo">Undo</button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" title="Redo (Shift+Cmd/Ctrl+Z)" t-att-disabled="this.editingBlocked or this.state.interacting or !this.state.redoCount" t-on-click="this.redo">Redo</button>
+      <label class="o_cafe_designer_canvas_picker"><span class="visually-hidden">Canvas size</span><select class="form-select form-select-sm" t-att-value="this.canvasHeight" t-att-disabled="this.editingBlocked or this.state.interacting" t-on-change="this.changeCanvasFormat"><option value="1080" t-att-selected="this.canvasHeight === 1080">Square · 1080 × 1080</option><option value="1350" t-att-selected="this.canvasHeight === 1350">Portrait · 1080 × 1350</option></select></label>
+      <button t-if="this.state.canManageTemplates" type="button" class="btn btn-sm btn-outline-secondary" t-att-disabled="this.editingBlocked or this.state.interacting" t-on-click="() => this.setTab('templates')">Save template</button>
+      <button type="button" class="btn btn-sm btn-primary" t-att-disabled="this.editingBlocked or this.state.interacting or (this.state.hasOtherMedia and !this.state.replace)" t-on-click="this.save"><t t-if="this.state.saving">Saving…</t><t t-else="">Save JPEG to post</t></button>
+    </div>
+  </header>
+  <div class="o_cafe_designer_contextbar">
+    <span class="o_cafe_designer_context_name"><t t-if="this.active" t-esc="this.layerLabel(this.active, this.state.selected)"/><t t-else="">No selection</t></span>
+    <fieldset t-att-disabled="this.editingBlocked or this.state.interacting or !this.active or this.active.locked or this.active.hidden">
+      <t t-if="this.active and this.active.kind === 'text'">
+        <label><span class="visually-hidden">Font family</span><select class="form-select form-select-sm" t-att-value="this.active.font" t-on-change="(ev) => this.updateLayer(ev, 'font')"><option value="sans" t-att-selected="this.active.font === 'sans'">Sans serif</option><option value="serif" t-att-selected="this.active.font === 'serif'">Serif</option><option value="mono" t-att-selected="this.active.font === 'mono'">Monospace</option></select></label>
+        <label class="o_cafe_designer_numeric">Size<input aria-label="Font size" type="number" class="form-control form-control-sm" min="18" max="160" t-att-value="this.active.size" t-on-change="(ev) => this.updateLayer(ev, 'size')"/></label>
+        <button type="button" class="btn btn-sm btn-outline-secondary" t-att-class="{active: this.active.bold}" t-att-aria-pressed="this.active.bold" t-on-click="() => this.toggleStyle('bold')"><strong>Bold</strong></button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" t-att-class="{active: this.active.italic}" t-att-aria-pressed="this.active.italic" t-on-click="() => this.toggleStyle('italic')"><em>Italic</em></button>
+        <label><span class="visually-hidden">Text alignment</span><select class="form-select form-select-sm" t-att-value="this.active.align" t-on-change="(ev) => this.updateLayer(ev, 'align')"><option value="left" t-att-selected="this.active.align === 'left'">Align left</option><option value="center" t-att-selected="this.active.align === 'center'">Centre</option><option value="right" t-att-selected="this.active.align === 'right'">Align right</option></select></label>
+        <input type="color" aria-label="Text colour" t-att-value="this.active.color" t-on-input="(ev) => this.updateLayer(ev, 'color')" t-on-change="this.finishEdit"/>
+      </t>
+      <t t-elif="this.active and this.active.kind === 'image'"><span>Photo</span><button type="button" class="btn btn-sm btn-outline-secondary" t-on-click="this.beginCrop">Crop / reposition</button></t>
+      <span t-else="" class="o_cafe_designer_hint">Select text or a photo on the canvas to edit it.</span>
+    </fieldset>
+  </div>
+  <div t-if="this.state.error" class="alert alert-danger" role="alert" t-esc="this.state.error"/>
+  <div t-if="this.state.loading or this.state.importing or this.state.applyingTemplate" class="alert alert-info" role="status"><t t-if="this.state.loading">Loading design…</t><t t-elif="this.state.importing">Preparing image…</t><t t-else="">Applying template…</t></div>
+  <div t-if="this.state.hasOtherMedia" class="alert alert-warning"><label><input type="checkbox" t-att-checked="this.state.replace" t-on-change="this.setReplaceMedia" t-att-disabled="this.editingBlocked"/> Replace the post’s current attachments or legacy image URL with this design.</label></div>
+  <div class="o_cafe_designer_workspace">
+    <fieldset class="o_cafe_designer_sidebar" t-att-disabled="this.busy or this.state.interacting or this.state.cropping">
+      <nav class="o_cafe_designer_tabs" aria-label="Content panels"><t t-foreach="[['blocks','Blocks'],['templates','Templates'],['layers','Layers'],['design','Background']]" t-as="tab" t-key="tab[0]"><button type="button" t-att-class="{active: this.state.tab === tab[0] or (tab[0] === 'blocks' and this.state.tab === 'customize')}" t-att-aria-pressed="this.state.tab === tab[0] or (tab[0] === 'blocks' and this.state.tab === 'customize')" t-on-click="() => this.setTab(tab[0])" t-esc="tab[1]"/></t></nav>
+      <div class="o_cafe_designer_sidebar_body">
+<section t-if="this.state.tab === 'blocks' or this.state.tab === 'customize'">
             <h2>Add a block <small><t t-esc="this.state.design.layers.length"/> / 8</small></h2>
             <p class="o_cafe_designer_hint">Click to add, or drag a text block onto the preview.</p>
             <div class="o_cafe_designer_blocks">
-              <button class="btn btn-outline-secondary" type="button" draggable="true"
-                t-att-disabled="this.state.design.layers.length >= 8"
-                t-on-dragstart="(ev) => this.dragBlock(ev, 'headline')"
-                t-on-click="() => this.addText('headline')">Headline</button>
-              <button class="btn btn-outline-secondary" type="button" draggable="true"
-                t-att-disabled="this.state.design.layers.length >= 8"
-                t-on-dragstart="(ev) => this.dragBlock(ev, 'offer')"
-                t-on-click="() => this.addText('offer')">Offer text</button>
+              <button class="btn btn-outline-secondary" type="button" draggable="true" t-att-disabled="this.state.design.layers.length &gt;= 8" t-on-dragstart="(ev) =&gt; this.dragBlock(ev, 'headline')" t-on-click="() =&gt; this.addText('headline')">Headline</button>
+              <button class="btn btn-outline-secondary" type="button" draggable="true" t-att-disabled="this.state.design.layers.length &gt;= 8" t-on-dragstart="(ev) =&gt; this.dragBlock(ev, 'offer')" t-on-click="() =&gt; this.addText('offer')">Offer text</button>
             </div>
             <label class="o_cafe_designer_field">Photo block
-              <input class="form-control" type="file" accept="image/jpeg,image/png"
-                t-att-disabled="this.state.design.layers.length >= 8" t-on-change="(ev) => this.importImage(ev, 'photo')"/>
+              <input class="form-control" type="file" accept="image/jpeg,image/png" t-att-disabled="this.state.design.layers.length &gt;= 8" t-on-change="(ev) =&gt; this.importImage(ev, 'photo')"/>
             </label>
             <label class="o_cafe_designer_field">Logo block
-              <input class="form-control" type="file" accept="image/jpeg,image/png"
-                t-att-disabled="this.state.design.layers.length >= 8" t-on-change="(ev) => this.importImage(ev, 'logo')"/>
+              <input class="form-control" type="file" accept="image/jpeg,image/png" t-att-disabled="this.state.design.layers.length &gt;= 8" t-on-change="(ev) =&gt; this.importImage(ev, 'logo')"/>
             </label>
           </section>
-          <section t-elif="this.state.tab === 'layers'">
+
+<section t-elif="this.state.tab === 'templates'">
+  <h2>Saved designs</h2>
+  <div t-if="this.state.canManageTemplates" class="o_cafe_designer_template_save">
+    <label class="o_cafe_designer_field">Template name<input class="form-control form-control-sm" maxlength="80" placeholder="e.g. Weekend offer" t-att-value="this.state.templateName" t-on-input="this.setTemplateName"/></label>
+    <button type="button" class="btn btn-sm btn-primary" t-on-click="this.saveTemplate" t-att-disabled="!this.state.templateName.trim()"><t t-if="this.state.templateSaving">Saving…</t><t t-else="">Save current design</t></button>
+    <p class="o_cafe_designer_hint">Shared with the marketing team. Saving a template does not save or approve the post.</p>
+  </div>
+  <p t-else="" class="o_cafe_designer_hint">Choose a saved layout. Managers can add new designs.</p>
+  <button type="button" class="btn btn-sm btn-outline-secondary mb-2" t-att-disabled="this.state.templateLoading" t-on-click="() => this.loadTemplates()">Refresh</button>
+  <p t-if="this.state.templateLoading" role="status" class="o_cafe_designer_hint">Loading templates…</p>
+  <p t-if="this.state.templatesLoaded and !this.state.templateItems.length" class="o_cafe_designer_hint">No saved designs yet. Start with a layout below.</p>
+  <div class="o_cafe_designer_templates">
+    <t t-foreach="this.state.templateItems" t-as="item" t-key="item.id">
+      <div class="o_cafe_designer_saved_template">
+        <button type="button" class="o_cafe_designer_template" t-on-click="() => this.applySavedTemplate(item.id)"><img t-att-src="'data:image/jpeg;base64,' + item.thumbnail" alt=""/><span t-esc="item.name"/></button>
+        <button t-if="this.state.canManageTemplates" type="button" class="o_cafe_designer_archive" t-att-aria-label="'Archive ' + item.name" t-on-click="() => this.archiveTemplate(item.id)">Archive</button>
+      </div>
+    </t>
+  </div>
+  <button t-if="this.state.templateMore" type="button" class="btn btn-sm btn-outline-secondary mt-2" t-att-disabled="this.state.templateLoading" t-on-click="() => this.loadTemplates(true)">Load more</button>
+  <h2 class="mt-3">Starter layouts</h2>
+  <div class="o_cafe_designer_templates"><t t-foreach="this.templates" t-as="preset" t-key="preset.id"><button type="button" class="o_cafe_designer_template" t-on-click="() => this.chooseTemplate(preset.id)"><img t-if="this.state.previews[preset.id]" t-att-src="this.state.previews[preset.id]" alt=""/><span t-esc="preset.label"/></button></t></div>
+</section>
+<section t-elif="this.state.tab === 'layers'">
             <div class="o_cafe_designer_section_heading"><h2>Layers</h2><span><t t-esc="this.state.design.layers.length"/> / 8</span></div>
             <p class="o_cafe_designer_hint">Top rows appear in front. Select a row, or choose Edit to change its content.</p>
             <p t-if="!this.layerRows.length" class="o_cafe_designer_hint">Your canvas is empty. Add text or an image under Blocks.</p>
@@ -83,20 +84,20 @@
               <t t-foreach="this.layerRows" t-as="row" t-key="row.index">
                 <div class="o_cafe_designer_layer_row" t-att-class="{selected: this.state.selected === row.index, muted: row.layer.hidden}">
                   <div class="o_cafe_designer_layer_top">
-                    <button type="button" class="o_cafe_designer_layer_select" t-att-aria-pressed="this.state.selected === row.index" t-on-click="() => this.select(row.index, false)">
+                    <button type="button" class="o_cafe_designer_layer_select" t-att-aria-pressed="this.state.selected === row.index" t-on-click="() =&gt; this.select(row.index, false)">
                       <span t-esc="this.layerLabel(row.layer, row.index)"/>
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" t-att-title="row.layer.hidden ? 'Show layer' : 'Hide layer'" t-att-aria-label="(row.layer.hidden ? 'Show ' : 'Hide ') + this.layerLabel(row.layer, row.index)" t-att-aria-pressed="row.layer.hidden" t-on-click="() => this.toggleLayer(row.index, 'hidden')"><t t-if="row.layer.hidden">Show</t><t t-else="">Hide</t></button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" t-att-title="row.layer.locked ? 'Unlock layer' : 'Lock layer'" t-att-aria-label="(row.layer.locked ? 'Unlock ' : 'Lock ') + this.layerLabel(row.layer, row.index)" t-att-aria-pressed="row.layer.locked" t-on-click="() => this.toggleLayer(row.index, 'locked')"><t t-if="row.layer.locked">Unlock</t><t t-else="">Lock</t></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" t-att-title="row.layer.hidden ? 'Show layer' : 'Hide layer'" t-att-aria-label="(row.layer.hidden ? 'Show ' : 'Hide ') + this.layerLabel(row.layer, row.index)" t-att-aria-pressed="row.layer.hidden" t-on-click="() =&gt; this.toggleLayer(row.index, 'hidden')"><t t-if="row.layer.hidden">Show</t><t t-else="">Hide</t></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" t-att-title="row.layer.locked ? 'Unlock layer' : 'Lock layer'" t-att-aria-label="(row.layer.locked ? 'Unlock ' : 'Lock ') + this.layerLabel(row.layer, row.index)" t-att-aria-pressed="row.layer.locked" t-on-click="() =&gt; this.toggleLayer(row.index, 'locked')"><t t-if="row.layer.locked">Unlock</t><t t-else="">Lock</t></button>
                   </div>
                   <div t-if="this.state.selected === row.index" class="o_cafe_designer_layer_details">
                     <label class="o_cafe_designer_field">Layer name
-                      <input class="form-control form-control-sm" maxlength="60" t-att-value="row.layer.name" t-att-placeholder="this.layerLabel(row.layer, row.index)" t-att-disabled="row.layer.locked" t-on-change="(ev) => this.renameLayer(ev, row.index)"/>
+                      <input class="form-control form-control-sm" maxlength="60" t-att-value="row.layer.name" t-att-placeholder="this.layerLabel(row.layer, row.index)" t-att-disabled="row.layer.locked" t-on-change="(ev) =&gt; this.renameLayer(ev, row.index)"/>
                     </label>
                     <div class="d-flex flex-wrap gap-2">
-                      <button type="button" class="btn btn-sm btn-outline-secondary" t-att-disabled="row.layer.locked or row.index === 0" t-on-click="() => this.moveLayer(-1)">Backward</button>
-                      <button type="button" class="btn btn-sm btn-outline-secondary" t-att-disabled="row.layer.locked or row.index === this.state.design.layers.length - 1" t-on-click="() => this.moveLayer(1)">Forward</button>
-                      <button type="button" class="btn btn-sm btn-secondary" t-att-disabled="row.layer.hidden or row.layer.locked" t-on-click="() => this.select(row.index)">Edit</button>
+                      <button type="button" class="btn btn-sm btn-outline-secondary" t-att-disabled="row.layer.locked or row.index === 0" t-on-click="() =&gt; this.moveLayer(-1)">Backward</button>
+                      <button type="button" class="btn btn-sm btn-outline-secondary" t-att-disabled="row.layer.locked or row.index === this.state.design.layers.length - 1" t-on-click="() =&gt; this.moveLayer(1)">Forward</button>
+                      <button type="button" class="btn btn-sm btn-secondary" t-att-disabled="row.layer.hidden or row.layer.locked" t-on-click="() =&gt; this.select(row.index)">Edit</button>
                     </div>
                   </div>
                 </div>
@@ -104,100 +105,115 @@
             </div>
             <p class="o_cafe_designer_hint">Hidden layers are omitted from the saved JPEG. Locked layers stay visible but cannot be edited or moved. Both settings are saved with the design.</p>
           </section>
-          <section t-elif="this.state.tab === 'customize'">
+          <section t-elif="this.state.tab === 'design'">
+            <h2>Background</h2>
+            <div class="o_cafe_designer_swatches">
+              <t t-foreach="[['#233b32', 'Forest'], ['#f7dfbd', 'Cream'], ['#572d43', 'Plum'], ['#ffffff', 'White']]" t-as="swatch" t-key="swatch[0]">
+                <button type="button" t-att-style="'background-color: ' + swatch[0]" t-att-title="swatch[1]" t-att-aria-label="swatch[1]" t-att-aria-pressed="this.state.design.color === swatch[0]" t-on-click="() =&gt; this.setDesignColor(swatch[0])"/>
+              </t>
+            </div>
+            <label class="o_cafe_designer_field">Custom colour <input type="color" t-att-value="this.state.design.color" t-on-input="this.setColor" t-on-change="this.finishEdit"/></label>
+            <label class="o_cafe_designer_field">Full-canvas photo
+              <input class="form-control" type="file" accept="image/jpeg,image/png" t-on-change="(ev) =&gt; this.importImage(ev, 'background')"/>
+            </label>
+            <button t-if="this.state.design.background" class="btn btn-outline-secondary btn-sm" type="button" t-on-click="this.removeBackground">Remove background photo</button>
+          </section>
+
+      </div>
+    </fieldset>
+    <section class="o_cafe_designer_preview" aria-label="Design workspace">
+      <div class="o_cafe_designer_preview_bar"><span><t t-if="this.canvasHeight === 1350">Portrait</t><t t-else="">Square</t></span><span>1080 × <t t-esc="this.canvasHeight"/></span></div>
+      <canvas width="1080" height="1080" t-att-id="this.canvasId" t-att-aria-label="'Social post canvas, 1080 by ' + this.canvasHeight + '. Select a layer and use arrow keys to move it.'" tabindex="0" t-on-pointerdown="this.pointerDown" t-on-pointermove="this.pointerMove" t-on-pointerup="this.pointerEnd" t-on-pointercancel="this.pointerEnd" t-on-lostpointercapture="this.pointerEnd" t-on-dragover="this.allowBlockDrop" t-on-drop="this.dropBlock"/>
+
+      <p t-if="this.state.cropping" class="o_cafe_designer_hint" role="status">Crop mode: drag the photo, then Apply or Cancel.</p>
+      <p t-else="" class="o_cafe_designer_hint">Drag to move · Corners resize · Text side handles wrap · Option/Alt bypasses snapping</p>
+    </section>
+    <fieldset class="o_cafe_designer_controls" t-att-disabled="this.busy or this.state.interacting">
+      <div class="o_cafe_designer_inspector_title">Properties</div>
+      <section class="o_cafe_designer_property_body">
             <p t-if="!this.active" class="o_cafe_designer_hint">Select a layer on the preview or add one under Blocks.</p>
             <t t-else="">
-              <div class="o_cafe_designer_selected_heading"><strong t-esc="this.layerLabel(this.active, this.state.selected)"/><button type="button" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.setTab('layers')">Layers</button></div>
+              <div class="o_cafe_designer_selected_heading"><strong t-esc="this.layerLabel(this.active, this.state.selected)"/><button type="button" class="btn btn-sm btn-outline-secondary" t-on-click="() =&gt; this.setTab('layers')">Layers</button></div>
               <p t-if="this.active.locked or this.active.hidden" class="alert alert-info py-2">Unlock or show this layer in Layers to edit it.</p>
-              <fieldset class="o_cafe_designer_block_fields" t-att-disabled="this.active.locked or this.active.hidden">
+              <section t-if="this.state.cropping" class="o_cafe_designer_crop_panel">
+                <h2>Crop photo</h2>
+                <p class="o_cafe_designer_hint">Choose a frame or zoom in, then drag the photo on the canvas to reposition it.</p>
+                <label class="o_cafe_designer_field">Frame shape
+                  <select class="form-select" t-att-value="this.active.cropRatio" t-on-change="(ev) =&gt; this.updateCrop(ev, 'cropRatio')">
+                    <option value="0" t-att-selected="this.active.cropRatio === 0">Original proportions</option>
+                    <option value="1000" t-att-selected="this.active.cropRatio === 1000">Square (1:1)</option>
+                    <option value="750" t-att-selected="this.active.cropRatio === 750">Landscape (4:3)</option>
+                    <option value="1250" t-att-selected="this.active.cropRatio === 1250">Portrait (4:5)</option>
+                  </select>
+                </label>
+                <label class="o_cafe_designer_field">Zoom: <t t-esc="this.active.cropZoom"/>%
+                  <input class="form-range" type="range" min="100" max="400" t-att-value="this.active.cropZoom" t-on-input="(ev) =&gt; this.updateCrop(ev, 'cropZoom')"/>
+                </label>
+                <details class="o_cafe_designer_advanced"><summary>Fine position</summary>
+                  <label class="o_cafe_designer_field">Horizontal position
+                    <input class="form-range" type="range" min="0" max="1000" t-att-value="this.active.cropX" t-on-input="(ev) =&gt; this.updateCrop(ev, 'cropX')"/>
+                  </label>
+                  <label class="o_cafe_designer_field">Vertical position
+                    <input class="form-range" type="range" min="0" max="1000" t-att-value="this.active.cropY" t-on-input="(ev) =&gt; this.updateCrop(ev, 'cropY')"/>
+                  </label>
+                </details>
+                <div class="d-flex gap-2 flex-wrap mt-3">
+                  <button type="button" class="btn btn-primary" t-on-click="() =&gt; this.finishCrop(true)">Apply crop</button>
+                  <button type="button" class="btn btn-secondary" t-on-click="() =&gt; this.finishCrop(false)">Cancel</button>
+                  <button type="button" class="btn btn-outline-secondary" t-on-click="this.resetCrop">Reset crop</button>
+                </div>
+                <p class="o_cafe_designer_hint">Your original image is kept. Apply confirms this crop; Save JPEG to post saves the design.</p>
+              </section>
+              <fieldset t-else="" class="o_cafe_designer_block_fields" t-att-disabled="this.active.locked or this.active.hidden">
               <t t-if="this.active.kind === 'text'">
                 <label class="o_cafe_designer_field">Text
-                  <textarea rows="3" maxlength="180" class="form-control" t-att-value="this.active.text"
-                    t-on-input="(ev) => this.updateLayer(ev, 'text')" t-on-change="this.finishEdit" t-on-blur="this.finishEdit"/>
+                  <textarea rows="3" maxlength="180" class="form-control" t-att-value="this.active.text" t-on-input="(ev) =&gt; this.updateLayer(ev, 'text')" t-on-change="this.finishEdit" t-on-blur="this.finishEdit"/>
                   <span class="o_cafe_designer_hint">Drag a side handle to wrap text. Enter keeps a manual line break.</span>
                 </label>
-                <label class="o_cafe_designer_field">Font family
-                  <select class="form-select" t-att-value="this.active.font" t-on-change="(ev) => this.updateLayer(ev, 'font')">
-                    <option value="sans" t-att-selected="this.active.font === 'sans'">Sans serif</option><option value="serif" t-att-selected="this.active.font === 'serif'">Serif</option><option value="mono" t-att-selected="this.active.font === 'mono'">Monospace</option>
-                  </select>
-                </label>
-                <div class="o_cafe_designer_format" role="group" aria-label="Text style">
-                  <button type="button" class="btn btn-outline-secondary" t-att-class="{active: this.active.bold}"
-                    t-att-aria-pressed="this.active.bold" t-on-click="() => this.toggleStyle('bold')"><strong>Bold</strong></button>
-                  <button type="button" class="btn btn-outline-secondary" t-att-class="{active: this.active.italic}"
-                    t-att-aria-pressed="this.active.italic" t-on-click="() => this.toggleStyle('italic')"><em>Italic</em></button>
-                </div>
-                <label class="o_cafe_designer_field">Text alignment
-                  <select class="form-select" t-att-value="this.active.align" t-on-change="(ev) => this.updateLayer(ev, 'align')">
-                    <option value="left" t-att-selected="this.active.align === 'left'">Left</option><option value="center" t-att-selected="this.active.align === 'center'">Centre</option><option value="right" t-att-selected="this.active.align === 'right'">Right</option>
-                  </select>
-                </label>
-                <label class="o_cafe_designer_field">Text colour
-                  <input type="color" t-att-value="this.active.color" t-on-input="(ev) => this.updateLayer(ev, 'color')" t-on-change="this.finishEdit"/>
-                </label>
-              </t>
+                </t>
+              <div t-if="this.active.kind === 'image'" class="mb-3"><button type="button" class="btn btn-outline-secondary" t-on-click="this.beginCrop">Crop / reposition photo</button></div>
               <label class="o_cafe_designer_field">Size: <t t-esc="this.active.size"/> px
-                <input class="form-range" type="range" t-att-min="this.active.kind === 'text' ? 18 : 32"
-                  t-att-max="this.active.kind === 'text' ? 160 : 1080" t-att-value="this.active.size"
-                  t-on-input="(ev) => this.updateLayer(ev, 'size')" t-on-change="this.finishEdit"/>
+                <input class="form-range" type="range" t-att-min="this.active.kind === 'text' ? 18 : 32" t-att-max="this.active.kind === 'text' ? 160 : 1080" t-att-value="this.active.size" t-on-input="(ev) =&gt; this.updateLayer(ev, 'size')" t-on-change="this.finishEdit"/>
               </label>
               <details class="o_cafe_designer_advanced"><summary>Position and alignment</summary>
               <div t-if="this.active.kind === 'text'" class="o_cafe_designer_position">
                 <label class="o_cafe_designer_field">Text box width (px)
-                  <input type="number" class="form-control" min="80" max="1080" t-att-value="this.textBoxWidth" t-on-change="(ev) => this.updateLayer(ev, 'width')"/>
+                  <input type="number" class="form-control" min="80" max="1080" t-att-value="this.textBoxWidth" t-on-change="(ev) =&gt; this.updateLayer(ev, 'width')"/>
                 </label>
-                <div class="align-self-end mb-2"><button type="button" class="btn btn-sm btn-outline-secondary" t-att-disabled="!this.active.width" t-on-click="() => this.updateLayer({target: {value: '0'}}, 'width')">Auto width</button></div>
+                <div class="align-self-end mb-2"><button type="button" class="btn btn-sm btn-outline-secondary" t-att-disabled="!this.active.width" t-on-click="() =&gt; this.updateLayer({target: {value: '0'}}, 'width')">Auto width</button></div>
               </div>
               <p t-if="this.active.kind === 'text'" class="o_cafe_designer_hint"><t t-if="!this.active.width">Automatic width: only manual line breaks apply.</t><t t-else="">Text wraps at the box width. Very wide glyphs set its minimum visible width.</t></p>
               <h2>Align to canvas</h2>
               <div class="o_cafe_designer_align" role="group" aria-label="Align selected block to canvas">
                 <t t-foreach="[['left', 'Left'], ['center', 'Centre'], ['right', 'Right'], ['top', 'Top'], ['middle', 'Middle'], ['bottom', 'Bottom']]" t-as="position" t-key="position[0]">
-                  <button type="button" class="btn btn-outline-secondary btn-sm" t-on-click="() => this.alignLayer(position[0])" t-esc="position[1]"/>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" t-on-click="() =&gt; this.alignLayer(position[0])" t-esc="position[1]"/>
                 </t>
               </div>
               <div class="o_cafe_designer_position">
                 <label class="o_cafe_designer_field">Left (px)
-                  <input class="form-control" type="number" min="-1080" max="1080"
-                    t-att-value="this.active.x" t-on-change="(ev) => this.updateLayer(ev, 'x')"/>
+                  <input class="form-control" type="number" min="-1080" max="1080" t-att-value="this.active.x" t-on-change="(ev) =&gt; this.updateLayer(ev, 'x')"/>
                 </label>
                 <label class="o_cafe_designer_field">Top (px)
-                  <input class="form-control" type="number" min="-1080" max="1080"
-                    t-att-value="this.active.y" t-on-change="(ev) => this.updateLayer(ev, 'y')"/>
+                  <input class="form-control" type="number" t-att-min="-this.canvasHeight" t-att-max="this.canvasHeight" t-att-value="this.active.y" t-on-change="(ev) =&gt; this.updateLayer(ev, 'y')"/>
                 </label>
               </div>
               </details>
               <details t-if="this.active.kind === 'text'" class="o_cafe_designer_advanced"><summary>Text spacing</summary>
                 <label class="o_cafe_designer_field">Line spacing: <t t-esc="this.active.lineHeight"/>%
-                  <input class="form-range" type="range" min="100" max="180" t-att-value="this.active.lineHeight"
-                    t-on-input="(ev) => this.updateLayer(ev, 'lineHeight')" t-on-change="this.finishEdit"/>
+                  <input class="form-range" type="range" min="100" max="180" t-att-value="this.active.lineHeight" t-on-input="(ev) =&gt; this.updateLayer(ev, 'lineHeight')" t-on-change="this.finishEdit"/>
                 </label>
               </details>
               <div class="d-flex gap-2 flex-wrap">
-                <button type="button" class="btn btn-outline-secondary btn-sm" t-att-disabled="this.state.design.layers.length >= 8" t-on-click="this.duplicateLayer">Duplicate</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" t-att-disabled="this.state.design.layers.length &gt;= 8" t-on-click="this.duplicateLayer">Duplicate</button>
                 <button type="button" class="btn btn-outline-danger btn-sm" t-on-click="this.removeLayer">Remove block</button>
               </div>
               </fieldset>
             </t>
           </section>
-          <section t-else="">
-            <h2>Background</h2>
-            <div class="o_cafe_designer_swatches">
-              <t t-foreach="[['#233b32', 'Forest'], ['#f7dfbd', 'Cream'], ['#572d43', 'Plum'], ['#ffffff', 'White']]" t-as="swatch" t-key="swatch[0]">
-                <button type="button" t-att-style="'background-color: ' + swatch[0]" t-att-title="swatch[1]"
-                  t-att-aria-label="swatch[1]" t-att-aria-pressed="this.state.design.color === swatch[0]"
-                  t-on-click="() => this.setDesignColor(swatch[0])"/>
-              </t>
-            </div>
-            <label class="o_cafe_designer_field">Custom colour <input type="color" t-att-value="this.state.design.color" t-on-input="this.setColor" t-on-change="this.finishEdit"/></label>
-            <label class="o_cafe_designer_field">Full-canvas photo
-              <input class="form-control" type="file" accept="image/jpeg,image/png" t-on-change="(ev) => this.importImage(ev, 'background')"/>
-            </label>
-            <button t-if="this.state.design.background" class="btn btn-outline-secondary btn-sm" type="button"
-              t-on-click="this.removeBackground">Remove background photo</button>
-          </section>
-          <p class="o_cafe_designer_hint mt-3 mb-0">Saving attaches a JPEG and resets approval. You can reopen and edit the design later.</p>
-        </fieldset>
-      </div>
-    </div>
-  </t>
+
+      <p class="o_cafe_designer_hint o_cafe_designer_inspector_footer">Saving a JPEG resets approval. Submit the updated post for review.</p>
+    </fieldset>
+  </div>
+</div>
+</t>
 </templates>

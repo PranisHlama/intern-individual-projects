@@ -38,9 +38,19 @@ def _validate_document(document):
         raise ValidationError("The editable design exceeds the size limit.")
     try:
         design = json.loads(document)
-        if not isinstance(design, dict) or set(design) != {"version", "color", "background", "layers"}:
+        if not isinstance(design, dict):
             raise ValueError()
-        if type(design["version"]) is not int or design["version"] not in (1, 2, 3, 4):
+        if type(design.get("version")) is not int or design["version"] not in (1, 2, 3, 4, 5, 6):
+            raise ValueError()
+        expected = {"version", "color", "background", "layers"}
+        height = 1080
+        if design["version"] >= 6:
+            expected |= {"width", "height"}
+            if (type(design.get("width")) is not int or design["width"] != 1080
+                    or type(design.get("height")) is not int or design["height"] not in (1080, 1350)):
+                raise ValueError()
+            height = design["height"]
+        if set(design) != expected:
             raise ValueError()
 
         def color(value):
@@ -67,11 +77,11 @@ def _validate_document(document):
                         or type(layer.get("hidden")) is not bool
                         or type(layer.get("locked")) is not bool):
                     raise ValueError()
-            if not number(layer.get("x"), -1080, 1080) or not number(layer.get("y"), -1080, 1080):
+            if not number(layer.get("x"), -1080, 1080) or not number(layer.get("y"), -height, height):
                 raise ValueError()
             if layer.get("kind") == "text":
                 text_fields = common | {"text", "color"}
-                if design["version"] == 4:
+                if design["version"] >= 4:
                     text_fields |= {"width"}
                     if layer.get("width") != 0 and not number(layer.get("width"), 80, 1080):
                         raise ValueError()
@@ -91,7 +101,16 @@ def _validate_document(document):
                 ):
                     raise ValueError()
             elif layer.get("kind") == "image":
-                if set(layer) != common | {"data"} or not number(layer["size"], 32, 1080):
+                image_fields = common | {"data"}
+                if design["version"] >= 5:
+                    image_fields |= {"cropRatio", "cropZoom", "cropX", "cropY"}
+                    if (layer.get("cropRatio") not in (0, 750, 1000, 1250)
+                            or type(layer.get("cropRatio")) is not int
+                            or not number(layer.get("cropZoom"), 100, 400)
+                            or not number(layer.get("cropX"), 0, 1000)
+                            or not number(layer.get("cropY"), 0, 1000)):
+                        raise ValueError()
+                if set(layer) != image_fields or not number(layer["size"], 32, 1080):
                     raise ValueError()
                 asset(layer["data"])
             else:
@@ -99,6 +118,12 @@ def _validate_document(document):
         return json.dumps(design, ensure_ascii=True, separators=(",", ":"))
     except (ValueError, TypeError, RecursionError):
         raise ValidationError("The editable design is invalid.") from None
+
+
+def _decode_design_export(jpeg, validated_document):
+    design = json.loads(validated_document)
+    dimensions = (design.get("width", 1080), design.get("height", 1080))
+    return _decode_image(jpeg, 5 * 1024 * 1024, {"JPEG"}, dimensions)
 
 
 class SocialPostDesigner(models.Model):
@@ -144,12 +169,53 @@ class SocialPostDesigner(models.Model):
             "document": self.designer_document or "",
             "revision": self._designer_revision(),
             "has_other_media": bool(self.attachment_ids - self.designer_attachment_id or self.instagram_image_url),
+            "can_manage_templates": self.env.user.has_group("cafe_social_marketing.group_cafe_social_manager"),
         }
+
+    def list_designer_templates(self, offset=0):
+        self._check_designer_access()
+        if type(offset) is not int or not 0 <= offset <= 100000:
+            raise ValidationError("Invalid template page.")
+        records = self.env["cafe.social.design.template"].search_read(
+            [("active", "=", True)], ["name", "thumbnail"], order="id desc", limit=21, offset=offset,
+        )
+        return {"items": records[:20], "has_more": len(records) > 20}
+
+    def get_designer_template(self, template_id):
+        self._check_designer_access()
+        if type(template_id) is not int or template_id <= 0:
+            raise ValidationError("Select a saved design template.")
+        template = self.env["cafe.social.design.template"].browse(template_id).exists()
+        if not template:
+            raise ValidationError("This template is no longer available.")
+        template.check_access("read")
+        if not template.active:
+            raise ValidationError("This template was archived. Refresh the template list.")
+        return {"document": template.document, "name": template.name}
+
+    def save_designer_template(self, name, document, thumbnail):
+        self._check_designer_access()
+        _require_template_manager(self.env)
+        template = self.env["cafe.social.design.template"].create({
+            "name": name, "document": document, "thumbnail": thumbnail,
+        })
+        return {"id": template.id, "name": template.name}
+
+    def archive_designer_template(self, template_id):
+        self._check_designer_access()
+        _require_template_manager(self.env)
+        if type(template_id) is not int or template_id <= 0:
+            raise ValidationError("Select a saved design template.")
+        template = self.env["cafe.social.design.template"].browse(template_id).exists()
+        if not template:
+            raise ValidationError("This template is no longer available.")
+        template.write({"active": False})
+        return True
 
     def save_post_designer(self, document, jpeg, revision, replace_media=False):
         self._check_designer_access()
         design = _validate_document(document)
-        raw = _decode_image(jpeg, 5 * 1024 * 1024, {"JPEG"}, (SIZE, SIZE))
+        raw = _decode_design_export(jpeg, design)
         self.env.cr.execute("SELECT id FROM cafe_social_post WHERE id = %s FOR UPDATE", (self.id,))
         self.invalidate_recordset()
         self._check_designer_access()
@@ -187,3 +253,59 @@ class SocialPostDesigner(models.Model):
         if any(DESIGN_FIELDS.intersection(vals) for vals in vals_list):
             raise ValidationError("Save editable designs through Post Designer.")
         return super().create(vals_list)
+
+
+def _require_template_manager(env):
+    if not env.user.has_group("cafe_social_marketing.group_cafe_social_manager"):
+        raise ValidationError("Only a Marketing Manager can save or manage design templates.")
+
+
+def _template_name(name):
+    if not isinstance(name, str) or not name.strip() or len(name.strip()) > 80:
+        raise ValidationError("Enter a template name between 1 and 80 characters.")
+    return name.strip()
+
+
+def _template_payload(values):
+    if not isinstance(values, dict) or set(values) != {"name", "document", "thumbnail"}:
+        raise ValidationError("Create design templates through Post Designer.")
+    name = _template_name(values["name"])
+    document = _validate_document(values["document"])
+    design = json.loads(document)
+    height = design.get("height", 1080)
+    _decode_image(values["thumbnail"], 128 * 1024, {"JPEG"}, (216, height // 5))
+    return {"name": name, "document": document, "thumbnail": values["thumbnail"]}
+
+
+class SocialDesignTemplate(models.Model):
+    _name = "cafe.social.design.template"
+    _description = "Reusable Social Post Design"
+    _order = "id desc"
+
+    name = fields.Char(required=True)
+    document = fields.Text(required=True, readonly=True, copy=False)
+    # Validated small JPEG stored as text to avoid binary API differences.
+    # Access is restricted by the same marketing-model ACL as the document.
+    thumbnail = fields.Text(required=True, readonly=True, copy=False)
+    active = fields.Boolean(default=True)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        _require_template_manager(self.env)
+        return super().create([_template_payload(vals) for vals in vals_list])
+
+    def write(self, vals):
+        _require_template_manager(self.env)
+        self.check_access("write")
+        if set(vals) - {"name", "active"}:
+            raise ValidationError("Saved layouts are immutable. Save an edited design as a new template.")
+        vals = dict(vals)
+        if "name" in vals:
+            vals["name"] = _template_name(vals["name"])
+        if "active" in vals and type(vals["active"]) is not bool:
+            raise ValidationError("Invalid template visibility.")
+        return super().write(vals)
+
+    def unlink(self):
+        _require_template_manager(self.env)
+        return super().unlink()

@@ -14,17 +14,17 @@ const textLayer = (text, x, y, size, color) => ({
 });
 const FONT_FAMILIES = { sans: "Arial, sans-serif", serif: "Georgia, serif", mono: "monospace" };
 const copyDesign = (design) => ({ ...design, layers: design.layers.map(layer => ({ ...layer })) });
-const sameDesign = (a, b) => a.color === b.color && a.background === b.background
+const sameDesign = (a, b) => a.width === b.width && a.height === b.height && a.color === b.color && a.background === b.background
     && a.layers.length === b.layers.length && a.layers.every((layer, i) => {
         const other = b.layers[i];
         return Object.keys(layer).length === Object.keys(other).length
             && Object.keys(layer).every(key => layer[key] === other[key]);
     });
-const normalizeDesign = (design) => ({ ...design, version: 4,
+const normalizeDesign = (design) => ({ ...design, version: 6, width: SIDE, height: design.height || SIDE,
     layers: design.layers.map(layer => layer.kind === "text" ? {
         name: "", hidden: false, locked: false, width: 0,
         font: "sans", bold: true, italic: false, align: "left", lineHeight: 122, ...layer,
-    } : { name: "", hidden: false, locked: false, ...layer }),
+    } : { name: "", hidden: false, locked: false, cropRatio: 0, cropZoom: 100, cropX: 500, cropY: 500, ...layer }),
 });
 const TEMPLATES = [
     { id: "weekend", label: "Weekend Offer", color: "#233b32", layers: [
@@ -47,7 +47,7 @@ const TEMPLATES = [
     ] },
 ];
 const MODEL = "cafe.social.post";
-const initialDesign = () => ({ version: 4, color: "#f4e8d4", background: "", layers: [] });
+const initialDesign = () => ({ version: 6, width: SIDE, height: SIDE, color: "#f4e8d4", background: "", layers: [] });
 const clamp = (n, min, max) => Math.max(min, Math.min(max, Math.round(n)));
 const srcFor = (data) => `data:image/${data.startsWith("/9j/") ? "jpeg" : "png"};base64,${data}`;
 
@@ -63,7 +63,8 @@ export class PostDesigner extends Component {
         this.canvasId = "o_cafe_designer_canvas_" + ++nextCanvasId;
         this.templates = TEMPLATES;
         this.state = proxy({
-            tab: "blocks", previews: {},
+            tab: "blocks", previews: {}, cropping: false,
+            templateItems: [], templateName: "", templateMore: false, templateLoading: false, templateSaving: false, applyingTemplate: false, canManageTemplates: false, templatesLoaded: false,
             design: initialDesign(), selected: -1, loading: true, saving: false,
             importing: false, dirty: false, failed: false, replace: false,
             hasOtherMedia: false, error: "", undoCount: 0, redoCount: 0, interacting: false,
@@ -89,19 +90,127 @@ export class PostDesigner extends Component {
     }
 
     setTab(tab) {
-        if (["blocks", "layers", "customize", "design"].includes(tab)) this.state.tab = tab;
+        if (this.state.cropping) return;
+        if (["blocks", "templates", "layers", "customize", "design"].includes(tab)) this.state.tab = tab;
+        if (tab === "templates" && !this.state.templatesLoaded) this.loadTemplates();
+    }
+
+    async loadTemplates(more = false) {
+        if (this.state.failed) return;
+        if (this.state.templateLoading) {
+            if (!more) this.templateRefreshPending = true;
+            return;
+        }
+        this.state.templateLoading = true;
+        try {
+            const offset = more ? this.state.templateItems.length : 0;
+            const result = await this.orm.call(MODEL, "list_designer_templates", [[this.postId], offset]);
+            this.state.templateItems = more
+                ? [...this.state.templateItems, ...result.items.filter(item => !this.state.templateItems.some(old => old.id === item.id))]
+                : result.items;
+            this.state.templateMore = result.has_more;
+            this.state.templatesLoaded = true;
+        } catch (error) { this.showError(error, "Could not load saved designs."); }
+        finally {
+            this.state.templateLoading = false;
+            if (this.templateRefreshPending) {
+                this.templateRefreshPending = false;
+                await this.loadTemplates();
+            }
+        }
+    }
+
+    setTemplateName(event) {
+        if (this.editingBlocked || this.state.interacting) return;
+        this.state.templateName = event.target.value;
+    }
+
+    setReplaceMedia(event) {
+        if (this.editingBlocked || this.state.interacting) return;
+        this.state.replace = event.target.checked === true;
+    }
+
+    async saveTemplate() {
+        if (this.editingBlocked || this.state.interacting || !this.state.canManageTemplates) return;
+        const name = this.state.templateName.trim();
+        if (!name || name.length > 80) { this.state.error = "Enter a template name between 1 and 80 characters."; return; }
+        this.finishEdit();
+        this.state.templateSaving = true;
+        this.state.error = "";
+        try {
+            const output = document.createElement("canvas");
+            output.width = 216; output.height = this.canvasHeight / 5;
+            this.draw(output, false);
+            const thumbnail = output.toDataURL("image/jpeg", 0.8).split(",")[1];
+            const documentJson = JSON.stringify(this.state.design);
+            await this.orm.call(MODEL, "save_designer_template", [[this.postId], name, documentJson, thumbnail]);
+            this.state.templateName = "";
+            this.notification.add("Design template saved. The post has not been changed.", { type: "success" });
+            await this.loadTemplates();
+        } catch (error) { this.showError(error, "Could not save this design template."); }
+        finally { this.state.templateSaving = false; }
+    }
+
+    async applySavedTemplate(id) {
+        if (this.editingBlocked || this.state.interacting) return;
+        const existing = this.state.design;
+        if ((this.state.dirty || existing.layers.length || existing.background)
+            && !window.confirm("Replace the current canvas with this saved design? You can undo this change. The post changes only when saved.")) return;
+        this.state.applyingTemplate = true;
+        this.state.error = "";
+        try {
+            const data = await this.orm.call(MODEL, "get_designer_template", [[this.postId], id]);
+            const design = normalizeDesign(JSON.parse(data.document));
+            await Promise.all([design.background, ...design.layers.map(layer => layer.data)].filter(Boolean).map(asset => this.loadImage(asset)));
+            this.finishEdit();
+            this.state.design = copyDesign(design);
+            this.state.selected = -1;
+            this.state.tab = "layers";
+            this.changed();
+        } catch (error) { this.pruneImages(); this.showError(error, "Could not apply this template."); }
+        finally { this.state.applyingTemplate = false; }
+    }
+
+    async archiveTemplate(id) {
+        if (this.editingBlocked || this.state.interacting || !this.state.canManageTemplates
+            || !window.confirm("Archive this shared template? Existing posts and designs will stay unchanged.")) return;
+        this.state.templateSaving = true;
+        this.state.error = "";
+        try {
+            await this.orm.call(MODEL, "archive_designer_template", [[this.postId], id]);
+            await this.loadTemplates();
+        } catch (error) { this.showError(error, "Could not archive this template."); }
+        finally { this.state.templateSaving = false; }
+    }
+
+    changeCanvasFormat(event) {
+        this.setCanvasHeight(Number(event.target.value));
+    }
+
+    get canvasHeight() {
+        return this.state.design.height || SIDE;
+    }
+
+    setCanvasHeight(height) {
+        if (this.editingBlocked || this.state.interacting || ![SIDE, 1350].includes(height) || height === this.canvasHeight) return;
+        if (this.state.design.layers.length && !window.confirm("Change canvas format? The layout will be centred vertically. Review the layout before saving.")) return;
+        const offset = (height - this.canvasHeight) / 2;
+        this.finishEdit();
+        this.state.design.height = height;
+        for (const layer of this.state.design.layers) layer.y = clamp(layer.y + offset, -height, height);
+        this.changed();
     }
 
     chooseTemplate(id) {
-        if (this.busy) return;
+        if (this.editingBlocked) return;
         const preset = this.templates.find(item => item.id === id);
         if (!preset) return;
         const existing = this.state.design;
         if ((this.state.dirty || existing.background || existing.layers.length)
             && !window.confirm("Replace the current canvas with this template? The post changes only when you save.")) return;
         this.state.design = {
-            version: 4, color: preset.color, background: "",
-            layers: preset.layers.map(layer => ({ ...layer })),
+            version: 6, width: SIDE, height: this.canvasHeight, color: preset.color, background: "",
+            layers: preset.layers.map(layer => ({ ...layer, y: clamp(layer.y * this.canvasHeight / SIDE, 0, this.canvasHeight) })),
         };
         this.state.selected = 1;
         this.state.tab = "customize";
@@ -113,7 +222,7 @@ export class PostDesigner extends Component {
         const i = this.state.selected;
         const j = i + delta;
         const layers = this.state.design.layers;
-        if (this.busy || this.state.interacting || this.active?.locked || i < 0 || j < 0 || j >= layers.length) return;
+        if (this.editingBlocked || this.state.interacting || this.active?.locked || i < 0 || j < 0 || j >= layers.length) return;
         const [layer] = layers.splice(i, 1);
         layers.splice(j, 0, layer);
         this.select(j, this.state.tab !== "layers");
@@ -121,7 +230,7 @@ export class PostDesigner extends Component {
     }
 
     dragBlock(event, kind) {
-        if (this.busy || this.state.design.layers.length >= 8) {
+        if (this.editingBlocked || this.state.design.layers.length >= 8) {
             event.preventDefault();
             return;
         }
@@ -130,7 +239,7 @@ export class PostDesigner extends Component {
     }
 
     allowBlockDrop(event) {
-        if (!this.busy && Array.from(event.dataTransfer.types).includes(BLOCK_TYPE)) {
+        if (!this.editingBlocked && Array.from(event.dataTransfer.types).includes(BLOCK_TYPE)) {
             event.preventDefault();
             event.dataTransfer.dropEffect = "copy";
         }
@@ -156,7 +265,7 @@ export class PostDesigner extends Component {
     }
 
     renameLayer(event, index) {
-        if (this.busy || this.state.interacting) return;
+        if (this.editingBlocked || this.state.interacting) return;
         const layer = this.state.design.layers[index];
         if (!layer || layer.locked) return;
         layer.name = event.target.value.trim().slice(0, 60);
@@ -164,7 +273,7 @@ export class PostDesigner extends Component {
     }
 
     toggleLayer(index, field) {
-        if (this.busy || this.state.interacting || !["hidden", "locked"].includes(field)) return;
+        if (this.editingBlocked || this.state.interacting || !["hidden", "locked"].includes(field)) return;
         const layer = this.state.design.layers[index];
         if (!layer) return;
         this.finishEdit();
@@ -172,8 +281,61 @@ export class PostDesigner extends Component {
         this.changed();
     }
 
+    get editingBlocked() {
+        return this.busy || this.state.cropping;
+    }
+
+    beginCrop() {
+        if (this.editingBlocked || this.state.interacting || this.active?.kind !== "image"
+            || this.active.locked || this.active.hidden || !this.images.has(this.active.data)) return;
+        this.finishEdit();
+        this.cropSession = { index: this.state.selected, original: { ...this.active } };
+        this.state.cropping = true;
+        this.draw();
+    }
+
+    updateCrop(event, field) {
+        if (!this.state.cropping || this.busy || this.state.interacting) return;
+        const value = Number(event.target.value);
+        if (!Number.isFinite(value)) return;
+        if (field === "cropRatio" && ![0, 750, 1000, 1250].includes(value)) return;
+        if (!["cropRatio", "cropZoom", "cropX", "cropY"].includes(field)) return;
+        this.active[field] = field === "cropZoom" ? clamp(value, 100, 400)
+            : ["cropX", "cropY"].includes(field) ? clamp(value, 0, 1000) : value;
+        this.changed(null, false);
+    }
+
+    resetCrop() {
+        if (!this.state.cropping || this.busy || this.state.interacting) return;
+        Object.assign(this.active, { cropRatio: 0, cropZoom: 100, cropX: 500, cropY: 500 });
+        this.changed(null, false);
+    }
+
+    finishCrop(apply) {
+        if (!this.state.cropping || this.busy || this.drag) return;
+        if (!apply) Object.assign(this.state.design.layers[this.cropSession.index], this.cropSession.original);
+        this.cropSession = null;
+        this.state.cropping = false;
+        this.finishEdit();
+        this.changed(null, apply);
+    }
+
+    imageCrop(layer) {
+        const image = this.images.get(layer.data);
+        if (!image) return null;
+        const w = layer.size;
+        const h = layer.cropRatio ? w * layer.cropRatio / 1000 : w * image.height / image.width;
+        const scale = Math.max(w / image.width, h / image.height) * (layer.cropZoom || 100) / 100;
+        const sw = w / scale, sh = h / scale;
+        return { image, w, h, sw, sh, scale,
+            sx: (image.width - sw) * (layer.cropX ?? 500) / 1000,
+            sy: (image.height - sh) * (layer.cropY ?? 500) / 1000,
+            overflowX: Math.max(0, image.width * scale - w),
+            overflowY: Math.max(0, image.height * scale - h) };
+    }
+
     get busy() {
-        return this.state.loading || this.state.saving || this.state.importing || this.state.failed;
+        return this.state.loading || this.state.saving || this.state.importing || this.state.failed || this.state.templateSaving || this.state.applyingTemplate;
     }
 
     async load() {
@@ -181,6 +343,7 @@ export class PostDesigner extends Component {
             const data = await this.orm.call(MODEL, "get_post_designer", [[this.postId]]);
             this.revision = data.revision;
             this.state.hasOtherMedia = data.has_other_media;
+            this.state.canManageTemplates = Boolean(data.can_manage_templates);
             if (data.document) {
                 const design = JSON.parse(data.document);
                 await Promise.all([design.background, ...design.layers.map(l => l.data)]
@@ -258,7 +421,7 @@ export class PostDesigner extends Component {
     redo() { this.restoreHistory(1); }
 
     restoreHistory(delta) {
-        if (this.busy || this.drag) return;
+        if (this.editingBlocked || this.drag) return;
         const index = this.historyIndex + delta;
         if (index < 0 || index >= this.history.length) return;
         this.historyIndex = index;
@@ -274,7 +437,7 @@ export class PostDesigner extends Component {
         const background = mode === "background";
         const file = event.target.files?.[0];
         event.target.value = "";
-        if (!file || this.busy) {
+        if (!file || this.editingBlocked) {
             return;
         }
         if (!["image/jpeg", "image/png"].includes(file.type) || file.size > 8 * 1024 * 1024) {
@@ -313,8 +476,8 @@ export class PostDesigner extends Component {
                 const photo = mode === "photo";
                 const size = photo ? clamp(Math.min(880, 480 * image.naturalWidth / image.naturalHeight), 32, 880) : 185;
                 this.state.design.layers.push({
-                    kind: "image", data, name: mode === "logo" ? "Logo" : "Photo", hidden: false, locked: false, x: photo ? Math.round((SIDE - size) / 2) : 810,
-                    y: photo ? 455 : 78, size,
+                    kind: "image", data, cropRatio: 0, cropZoom: 100, cropX: 500, cropY: 500, name: mode === "logo" ? "Logo" : "Photo", hidden: false, locked: false, x: photo ? Math.round((SIDE - size) / 2) : 810,
+                    y: (photo ? 455 : 78) + (this.canvasHeight - SIDE) / 2, size,
                 });
                 this.select(this.state.design.layers.length - 1);
             }
@@ -340,22 +503,23 @@ export class PostDesigner extends Component {
     }
 
     addText(kind, point) {
-        if (this.busy || this.state.design.layers.length >= 8) return;
+        if (this.editingBlocked || this.state.design.layers.length >= 8) return;
         const offer = kind === "offer";
         const hex = this.state.design.color;
         const channels = [1, 3, 5].map(i => Number.parseInt(hex.slice(i, i + 2), 16));
         const dark = channels[0] * 0.299 + channels[1] * 0.587 + channels[2] * 0.114 < 145;
         const color = this.state.design.background || dark ? "#ffffff" : "#273831";
-        const [x, y] = point || [82, offer ? 780 : 180];
+        const [x, y] = point || [82, (offer ? 780 : 180) + (this.canvasHeight - SIDE) / 2];
         this.state.design.layers.push(textLayer(
             offer ? "20% OFF" : "Your headline",
-            clamp(x, 0, 960), clamp(y, 0, 960), offer ? 78 : 92, color,
+            clamp(x, 0, 960), clamp(y, 0, this.canvasHeight - 120), offer ? 78 : 92, color,
         ));
         this.select(this.state.design.layers.length - 1);
         this.changed();
     }
 
     select(index, customize = true) {
+        if (this.state.cropping) return;
         this.finishEdit();
         this.state.selected = index;
         if (index >= 0 && customize) this.state.tab = "customize";
@@ -363,7 +527,7 @@ export class PostDesigner extends Component {
     }
 
     removeLayer() {
-        if (!this.active || this.busy || this.active.locked || this.active.hidden) return;
+        if (!this.active || this.editingBlocked || this.active.locked || this.active.hidden) return;
         this.state.design.layers.splice(this.state.selected, 1);
         this.state.selected = -1;
         this.pruneImages();
@@ -371,19 +535,20 @@ export class PostDesigner extends Component {
     }
 
     removeBackground() {
-        if (this.busy) return;
+        if (this.editingBlocked) return;
         this.state.design.background = "";
         this.pruneImages();
         this.changed();
     }
 
     updateLayer(event, field) {
-        if (!this.active || this.busy || this.active.locked || this.active.hidden) return;
+        if (!this.active || this.editingBlocked || this.active.locked || this.active.hidden) return;
         let value = event.target.value;
         if (field === "size") {
             value = this.active.kind === "text" ? clamp(Number(value), 18, 160) : clamp(Number(value), 32, 1080);
         } else if (field === "x" || field === "y") {
-            value = clamp(Number(value), -SIDE, SIDE);
+            const limit = field === "y" ? this.canvasHeight : SIDE;
+            value = clamp(Number(value), -limit, limit);
         }
         if (field === "font" && !Object.hasOwn(FONT_FAMILIES, value)) return;
         if (field === "align" && !["left", "center", "right"].includes(value)) return;
@@ -403,15 +568,15 @@ export class PostDesigner extends Component {
     }
 
     setDesignColor(color, group = null) {
-        if (this.busy) return;
+        if (this.editingBlocked) return;
         this.state.design.color = color;
         this.changed(group);
     }
 
     bounds(ctx, layer) {
         if (layer.kind === "image") {
-            const img = this.images.get(layer.data);
-            return [layer.size, img ? layer.size * img.height / img.width : layer.size];
+            const crop = this.imageCrop(layer);
+            return crop ? [crop.w, crop.h] : [layer.size, layer.size];
         }
         const layout = this.textLayout(ctx, layer);
         return [layout.width, layout.lines.length * layer.size * (layer.lineHeight || 122) / 100];
@@ -463,22 +628,29 @@ export class PostDesigner extends Component {
 
     draw(out = this.canvasElement, selection = true, design = this.state.design) {
         if (!out) return;
+        const height = design.height || SIDE;
+        if (out === this.canvasElement && design === this.state.design) {
+            // Own the bitmap dimensions here: changing them clears the canvas,
+            // so it must happen immediately before drawing, not on a later render.
+            if (out.width !== SIDE) out.width = SIDE;
+            if (out.height !== height) out.height = height;
+        }
         const ctx = out.getContext("2d");
-        ctx.setTransform(out.width / SIDE, 0, 0, out.height / SIDE, 0, 0);
+        ctx.setTransform(out.width / SIDE, 0, 0, out.height / height, 0, 0);
         ctx.fillStyle = design.color;
-        ctx.fillRect(0, 0, SIDE, SIDE);
+        ctx.fillRect(0, 0, SIDE, height);
         const background = this.images.get(design.background);
         if (background) {
-            const scale = Math.max(SIDE / background.width, SIDE / background.height);
+            const scale = Math.max(SIDE / background.width, height / background.height);
             const w = background.width * scale, h = background.height * scale;
-            ctx.drawImage(background, (SIDE - w) / 2, (SIDE - h) / 2, w, h);
+            ctx.drawImage(background, (SIDE - w) / 2, (height - h) / 2, w, h);
         }
         for (const layer of design.layers) {
             if (layer.hidden) continue;
             const [w, h] = this.bounds(ctx, layer);
             if (layer.kind === "image") {
-                const img = this.images.get(layer.data);
-                if (img) ctx.drawImage(img, layer.x, layer.y, w, h);
+                const crop = this.imageCrop(layer);
+                if (crop) ctx.drawImage(crop.image, crop.sx, crop.sy, crop.sw, crop.sh, layer.x, layer.y, w, h);
             } else {
                 ctx.fillStyle = layer.color;
                 ctx.textBaseline = "top";
@@ -498,7 +670,7 @@ export class PostDesigner extends Component {
             ctx.strokeRect(this.active.x - 5, this.active.y - 5, w + 10, h + 10);
             ctx.setLineDash([]);
             const handleSize = this.handleRadius() * 1.4;
-            for (const handle of this.handles(this.active, w, h)) {
+            for (const handle of (this.state.cropping ? [] : this.handles(this.active, w, h))) {
                 ctx.fillStyle = "#ffffff";
                 ctx.fillRect(handle.x - handleSize / 2, handle.y - handleSize / 2, handleSize, handleSize);
                 ctx.strokeRect(handle.x - handleSize / 2, handle.y - handleSize / 2, handleSize, handleSize);
@@ -507,32 +679,37 @@ export class PostDesigner extends Component {
     }
 
     toggleStyle(field) {
-        if (this.busy || this.active?.locked || this.active?.hidden || this.active?.kind !== "text" || !["bold", "italic"].includes(field)) return;
+        if (this.editingBlocked || this.active?.locked || this.active?.hidden || this.active?.kind !== "text" || !["bold", "italic"].includes(field)) return;
         this.active[field] = !this.active[field];
         this.changed();
     }
 
     duplicateLayer() {
-        if (!this.active || this.busy || this.active.locked || this.active.hidden || this.state.design.layers.length >= 8) return;
+        if (!this.active || this.editingBlocked || this.active.locked || this.active.hidden || this.state.design.layers.length >= 8) return;
         const layer = { ...this.active, x: clamp(this.active.x + 24, -SIDE, SIDE),
-            y: clamp(this.active.y + 24, -SIDE, SIDE) };
+            y: clamp(this.active.y + 24, -this.canvasHeight, this.canvasHeight) };
         this.state.design.layers.splice(this.state.selected + 1, 0, layer);
         this.select(this.state.selected + 1);
         this.changed();
     }
 
     alignLayer(direction) {
-        if (!this.active || this.busy || this.active.locked || this.active.hidden) return;
+        if (!this.active || this.editingBlocked || this.active.locked || this.active.hidden) return;
         const [w, h] = this.bounds(this.canvasElement.getContext("2d"), this.active);
         const positions = { left: ["x", 0], center: ["x", (SIDE - w) / 2], right: ["x", SIDE - w],
-            top: ["y", 0], middle: ["y", (SIDE - h) / 2], bottom: ["y", SIDE - h] };
+            top: ["y", 0], middle: ["y", (this.canvasHeight - h) / 2], bottom: ["y", this.canvasHeight - h] };
         if (!Object.hasOwn(positions, direction)) return;
         const [axis, value] = positions[direction];
-        this.active[axis] = clamp(value, -SIDE, SIDE);
+        const limit = axis === "y" ? this.canvasHeight : SIDE;
+        this.active[axis] = clamp(value, -limit, limit);
         this.changed();
     }
 
     keyDown(event) {
+        if (this.state.cropping) {
+            if (event.key === "Escape" && !this.drag) { event.preventDefault(); this.finishCrop(false); }
+            return;
+        }
         if (this.busy || this.drag || event.target.closest("input, textarea, select, [contenteditable]")) return;
         const modifier = event.ctrlKey || event.metaKey;
         const key = event.key.toLowerCase();
@@ -547,7 +724,7 @@ export class PostDesigner extends Component {
                 event.preventDefault();
                 const step = event.shiftKey ? 10 : 1;
                 this.active.x = clamp(this.active.x + arrows[event.key][0] * step, -SIDE, SIDE);
-                this.active.y = clamp(this.active.y + arrows[event.key][1] * step, -SIDE, SIDE);
+                this.active.y = clamp(this.active.y + arrows[event.key][1] * step, -this.canvasHeight, this.canvasHeight);
                 this.changed();
             } else if (["Delete", "Backspace"].includes(event.key) && event.target === this.canvasElement) {
                 event.preventDefault(); this.removeLayer();
@@ -574,7 +751,7 @@ export class PostDesigner extends Component {
 
     point(event) {
         const r = this.canvasElement.getBoundingClientRect();
-        return [(event.clientX - r.left) * SIDE / r.width, (event.clientY - r.top) * SIDE / r.height];
+        return [(event.clientX - r.left) * SIDE / r.width, (event.clientY - r.top) * this.canvasHeight / r.height];
     }
 
     snapPosition(layer, x, y, bypass = false) {
@@ -585,7 +762,7 @@ export class PostDesigner extends Component {
         // Six CSS pixels at any displayed canvas size. Always use raw pointer
         // coordinates so a previous snap never accumulates into the next move.
         const tolerance = 6 * SIDE / (this.canvasElement.getBoundingClientRect().width || SIDE);
-        const targets = [[0, SIDE / 2, SIDE], [0, SIDE / 2, SIDE]];
+        const targets = [[0, SIDE / 2, SIDE], [0, this.canvasHeight / 2, this.canvasHeight]];
         for (const other of this.state.design.layers) {
             if (other === layer || other.hidden) continue;
             const [w, h] = this.bounds(ctx, other);
@@ -594,11 +771,12 @@ export class PostDesigner extends Component {
         }
         return [x, y].map((position, axis) => {
             const extent = axis === 0 ? width : height;
+            const limit = axis === 0 ? SIDE : this.canvasHeight;
             let best = null;
             for (const target of targets[axis]) {
-                if (target < 0 || target > SIDE) continue;
+                if (target < 0 || target > limit) continue;
                 for (const offset of [0, extent / 2, extent]) {
-                    const candidate = clamp(target - offset, -SIDE, SIDE);
+                    const candidate = clamp(target - offset, -limit, limit);
                     const distance = Math.abs(candidate - position);
                     if (Math.abs(candidate + offset - target) > 0.51) continue;
                     if (distance <= tolerance && (!best || distance < best.distance)) {
@@ -613,11 +791,11 @@ export class PostDesigner extends Component {
     }
 
     drawSnapGuides(ctx) {
-        if (!this.drag || this.drag.resize) return;
+        if (!this.drag || this.drag.resize || this.drag.crop) return;
         const thickness = 1.5 * SIDE / (this.canvasElement.getBoundingClientRect().width || SIDE);
         ctx.fillStyle = "#a341bb";
         for (const guide of this.snapGuides) {
-            if (guide.axis === 0) ctx.fillRect(guide.position - thickness / 2, 0, thickness, SIDE);
+            if (guide.axis === 0) ctx.fillRect(guide.position - thickness / 2, 0, thickness, this.canvasHeight);
             else ctx.fillRect(0, guide.position - thickness / 2, SIDE, thickness);
         }
     }
@@ -629,6 +807,17 @@ export class PostDesigner extends Component {
         this.canvasElement.focus({ preventScroll: true });
         const [x, y] = this.point(event);
         const ctx = this.canvasElement.getContext("2d");
+        if (this.state.cropping) {
+            const l = this.active;
+            const [w, h] = this.bounds(ctx, l);
+            if (x < l.x || x > l.x + w || y < l.y || y > l.y + h) return;
+            this.drag = { id: event.pointerId, index: this.state.selected, crop: true, x, y,
+                original: { cropX: l.cropX, cropY: l.cropY } };
+            this.state.interacting = true;
+            event.currentTarget.setPointerCapture(event.pointerId);
+            event.preventDefault();
+            return;
+        }
         if (this.active && !this.active.hidden && !this.active.locked) {
             const [w, h] = this.bounds(ctx, this.active);
             const handle = this.handles(this.active, w, h).filter(point =>
@@ -668,6 +857,15 @@ export class PostDesigner extends Component {
         const layer = this.state.design.layers[this.drag.index];
         if (!layer) return;
         this.snapGuides = [];
+        if (this.drag.crop) {
+            const crop = this.imageCrop(layer);
+            layer.cropX = crop.overflowX > 0.01
+                ? clamp(this.drag.original.cropX - (x - this.drag.x) * 1000 / crop.overflowX, 0, 1000) : layer.cropX;
+            layer.cropY = crop.overflowY > 0.01
+                ? clamp(this.drag.original.cropY - (y - this.drag.y) * 1000 / crop.overflowY, 0, 1000) : layer.cropY;
+            this.changed(null, false);
+            return;
+        }
         if (this.drag.resize && this.drag.handle.widthOnly) {
             const { handle, original } = this.drag;
             layer.width = clamp((x - handle.ax) * handle.sx, 80, SIDE);
@@ -685,10 +883,10 @@ export class PostDesigner extends Component {
             }
             const [newW, newH] = this.bounds(this.canvasElement.getContext("2d"), layer);
             layer.x = clamp(handle.sx < 0 ? handle.ax - newW : handle.ax, -SIDE, SIDE);
-            layer.y = clamp(handle.sy < 0 ? handle.ay - newH : handle.ay, -SIDE, SIDE);
+            layer.y = clamp(handle.sy < 0 ? handle.ay - newH : handle.ay, -this.canvasHeight, this.canvasHeight);
         } else {
             const rawX = clamp(x - this.drag.dx, -SIDE, SIDE);
-            const rawY = clamp(y - this.drag.dy, -SIDE, SIDE);
+            const rawY = clamp(y - this.drag.dy, -this.canvasHeight, this.canvasHeight);
             [layer.x, layer.y] = this.snapPosition(layer, rawX, rawY, event.altKey);
         }
         this.changed(null, false);
@@ -699,14 +897,15 @@ export class PostDesigner extends Component {
         if (event.type === "pointercancel") {
             Object.assign(this.state.design.layers[this.drag.index], this.drag.original);
         }
+        const cropping = this.drag.crop;
         this.drag = null;
         this.snapGuides = [];
         this.state.interacting = false;
-        this.changed();
+        this.changed(null, !cropping);
     }
 
     async goBack() {
-        if (this.state.saving || this.state.importing || this.drag) return;
+        if (this.state.saving || this.state.importing || this.state.templateSaving || this.state.applyingTemplate || this.drag || this.state.cropping) return;
         if (this.state.dirty && !window.confirm("Leave without saving the design?")) return;
         await this.openPost();
     }
@@ -719,12 +918,13 @@ export class PostDesigner extends Component {
     }
 
     async save() {
-        if (this.busy || this.drag || (this.state.hasOtherMedia && !this.state.replace)) return;
+        if (this.editingBlocked || this.drag || (this.state.hasOtherMedia && !this.state.replace)) return;
         this.state.saving = true;
         this.state.error = "";
         try {
             const output = document.createElement("canvas");
-            output.width = output.height = SIDE;
+            output.width = SIDE;
+            output.height = this.canvasHeight;
             this.draw(output, false);
             const jpeg = output.toDataURL("image/jpeg", 0.91).split(",")[1];
             const documentJson = JSON.stringify(this.state.design);

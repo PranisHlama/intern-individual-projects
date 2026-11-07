@@ -11,3 +11,5 @@ access_cafe_social_post_manager,cafe.social.post.manager,cafe.social.post,cafe_s
 access_cafe_social_template_manager,cafe.social.post.template.manager,cafe.social.post.template,cafe_social_marketing.group_cafe_social_manager,crud,
 access_cafe_request_changes_manager,cafe.social.request.changes.manager,cafe.social.request.changes,cafe_social_marketing.group_cafe_social_manager,crud,
 access_cafe_account_picker_user,cafe.social.account.picker.user,cafe.social.account.picker,cafe_social_marketing.group_cafe_social_user,cru,
+access_cafe_design_template_user,cafe.social.design.template.user,cafe.social.design.template,cafe_social_marketing.group_cafe_social_user,r,
+access_cafe_design_template_manager,cafe.social.design.template.manager,cafe.social.design.template,cafe_social_marketing.group_cafe_social_manager,crud,
