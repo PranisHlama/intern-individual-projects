@@ -1,0 +1,8 @@
+/* Loaded into the PDF.js viewer frame (its CSP blocks inline styles).
+   Save is the Odoo header button. Opening another file is hidden because
+   saving would then replace this document with it. */
+#downloadButton,
+#secondaryDownload,
+#secondaryOpenFile {
+    display: none !important;
+}
